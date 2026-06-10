@@ -1,0 +1,151 @@
+'use client';
+
+import Link from 'next/link';
+import { useState } from 'react';
+
+import { AuthCard } from '@/components/auth/AuthCard';
+import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+
+const INPUT_CLASS =
+  'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20';
+
+function getErrorMessage(message: string): string {
+  const map: Record<string, string> = {
+    'User already registered': '이미 가입된 이메일입니다.',
+    'Password should be at least 6 characters':
+      '비밀번호는 6자 이상이어야 합니다.',
+  };
+  return map[message] ?? message;
+}
+
+/** 이메일·비밀번호 회원가입 폼 */
+export function SignupForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    setLoading(false);
+
+    if (signUpError) {
+      setError(getErrorMessage(signUpError.message));
+      return;
+    }
+
+    setEmailSent(true);
+  };
+
+  if (emailSent) {
+    return (
+      <AuthCard title="회원가입">
+        <div className="text-center">
+          <p className="text-lg font-medium text-gray-900">
+            가입 확인 이메일을 보냈어요 📧
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            {email}로 발송된 링크를 클릭하면 가입이 완료됩니다.
+          </p>
+          <Link
+            href="/login"
+            className="mt-6 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
+          >
+            로그인으로 돌아가기
+          </Link>
+        </div>
+      </AuthCard>
+    );
+  }
+
+  return (
+    <AuthCard title="회원가입">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="signup-email" className="mb-1.5 block text-sm font-medium text-gray-700">
+            이메일
+          </label>
+          <input
+            id="signup-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            autoComplete="email"
+            className={INPUT_CLASS}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="signup-password" className="mb-1.5 block text-sm font-medium text-gray-700">
+            비밀번호
+          </label>
+          <input
+            id="signup-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="6자 이상"
+            required
+            minLength={6}
+            autoComplete="new-password"
+            className={INPUT_CLASS}
+          />
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-600" role="alert">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className={cn(
+            'w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors',
+            loading
+              ? 'cursor-not-allowed bg-blue-300'
+              : 'bg-brand-600 hover:bg-brand-700',
+          )}
+        >
+          {loading ? '가입 중...' : '회원가입'}
+        </button>
+      </form>
+
+      <div className="my-6 flex items-center gap-3">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span className="text-xs text-gray-400">또는</span>
+        <div className="h-px flex-1 bg-gray-200" />
+      </div>
+
+      <GoogleAuthButton
+        label="Google로 가입하기"
+        onError={(msg) => setError(getErrorMessage(msg))}
+      />
+
+      <p className="mt-6 text-center text-sm text-gray-500">
+        이미 계정이 있으신가요?{' '}
+        <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">
+          로그인
+        </Link>
+      </p>
+    </AuthCard>
+  );
+}

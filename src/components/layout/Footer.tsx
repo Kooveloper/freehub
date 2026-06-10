@@ -1,0 +1,43 @@
+import Link from 'next/link';
+
+import { BrandLogo } from '@/components/ui/BrandLogo';
+import { getTranslations } from '@/lib/locale';
+
+export async function Footer() {
+  const t = await getTranslations();
+
+  const footerLinks = [
+    { href: '/privacy', label: t('footer.privacy') },
+    { href: '/terms', label: t('footer.terms') },
+    { href: '/submit', label: t('footer.report') },
+  ] as const;
+
+  return (
+    <footer className="mt-auto bg-brand-950 text-brand-200">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
+          <div>
+            <BrandLogo className="text-brand-300 hover:text-white" />
+            <p className="mt-2 text-sm text-brand-300/80">{t('footer.tagline')}</p>
+          </div>
+
+          <nav className="flex flex-wrap gap-x-6 gap-y-2">
+            {footerLinks.map(({ href, label }) => (
+              <Link
+                key={href}
+                href={href}
+                className="text-sm font-semibold transition-colors hover:text-white"
+              >
+                {label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-8 border-t border-brand-800 pt-8 text-center text-xs text-brand-400/70">
+          © {new Date().getFullYear()} FREEHUB. {t('footer.copyright')}
+        </div>
+      </div>
+    </footer>
+  );
+}

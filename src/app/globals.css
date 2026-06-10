@@ -10,17 +10,37 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* 채도를 낮춘 브랜드 블루 */
+  --color-brand-50: #f3f6fa;
+  --color-brand-100: #e4ebf3;
+  --color-brand-200: #cdd9e8;
+  --color-brand-300: #a8bdd4;
+  --color-brand-400: #7d9ab8;
+  --color-brand-500: #5d7fa3;
+  --color-brand-600: #4a6d94;
+  --color-brand-700: #3d5a7c;
+  --color-brand-800: #344a66;
+  --color-brand-900: #2d3f56;
+  --color-brand-950: #1c2838;
+
+  --color-surface-muted: #f0f4f8;
+  --color-surface-tint: #e8eef5;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
