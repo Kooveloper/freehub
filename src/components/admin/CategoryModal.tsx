@@ -1,8 +1,7 @@
 'use client';
 
-import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { CategoryIcon } from '@/components/category/CategoryIcon';
 import {
@@ -39,7 +38,7 @@ interface CategoryModalProps {
 }
 
 const INPUT_CLASS =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20';
 
 const LABEL_CLASS = 'mb-1.5 block text-sm font-medium text-gray-700';
 
@@ -72,16 +71,16 @@ function buildInitialValues(
   };
 }
 
-function CategoryFormContent({
+function CategoryForm({
   category,
   nextSortOrder,
   onSubmit,
-  onOpenChange,
+  onClose,
 }: {
   category?: AdminCategory | null;
   nextSortOrder: number;
   onSubmit: (values: CategoryFormValues) => Promise<void>;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
 }) {
   const isEdit = Boolean(category);
   const [values, setValues] = useState<CategoryFormValues>(() =>
@@ -134,7 +133,7 @@ function CategoryFormContent({
         description_en: values.description_en.trim(),
         icon: values.icon.trim(),
       });
-      onOpenChange(false);
+      onClose();
     } catch (submitError) {
       setError(
         submitError instanceof Error
@@ -147,19 +146,28 @@ function CategoryFormContent({
   };
 
   return (
-    <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
+    <div
+      className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
+      onClick={(event) => event.stopPropagation()}
+      role="document"
+    >
       <div className="mb-6 flex items-start justify-between">
         <div>
-          <Dialog.Title className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900">
             {isEdit ? '카테고리 수정' : '카테고리 추가'}
-          </Dialog.Title>
-          <Dialog.Description className="mt-1 text-sm text-gray-500">
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">
             카테고리 정보를 입력하세요.
-          </Dialog.Description>
+          </p>
         </div>
-        <Dialog.Close className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          aria-label="닫기"
+        >
           <X className="h-5 w-5" />
-        </Dialog.Close>
+        </button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -190,7 +198,10 @@ function CategoryFormContent({
           <span className={LABEL_CLASS}>이름</span>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="category-name" className="mb-1 block text-xs text-gray-500">
+              <label
+                htmlFor="category-name"
+                className="mb-1 block text-xs text-gray-500"
+              >
                 한국어 *
               </label>
               <input
@@ -206,7 +217,10 @@ function CategoryFormContent({
               />
             </div>
             <div>
-              <label htmlFor="category-name-en" className="mb-1 block text-xs text-gray-500">
+              <label
+                htmlFor="category-name-en"
+                className="mb-1 block text-xs text-gray-500"
+              >
                 English
               </label>
               <input
@@ -214,7 +228,10 @@ function CategoryFormContent({
                 type="text"
                 value={values.name_en}
                 onChange={(event) =>
-                  setValues((prev) => ({ ...prev, name_en: event.target.value }))
+                  setValues((prev) => ({
+                    ...prev,
+                    name_en: event.target.value,
+                  }))
                 }
                 placeholder="AI Chat"
                 className={INPUT_CLASS}
@@ -227,7 +244,10 @@ function CategoryFormContent({
           <span className={LABEL_CLASS}>설명</span>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label htmlFor="category-description" className="mb-1 block text-xs text-gray-500">
+              <label
+                htmlFor="category-description"
+                className="mb-1 block text-xs text-gray-500"
+              >
                 한국어 *
               </label>
               <textarea
@@ -245,7 +265,10 @@ function CategoryFormContent({
               />
             </div>
             <div>
-              <label htmlFor="category-description-en" className="mb-1 block text-xs text-gray-500">
+              <label
+                htmlFor="category-description-en"
+                className="mb-1 block text-xs text-gray-500"
+              >
                 English
               </label>
               <textarea
@@ -273,7 +296,7 @@ function CategoryFormContent({
               className={cn(
                 'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
                 iconType === 'emoji'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
               )}
             >
@@ -285,7 +308,7 @@ function CategoryFormContent({
               className={cn(
                 'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
                 iconType === 'image'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-brand-600 text-white'
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
               )}
             >
@@ -294,10 +317,7 @@ function CategoryFormContent({
           </div>
 
           <div className="flex items-start gap-4">
-            <div
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50"
-              style={{ color: values.color ? undefined : undefined }}
-            >
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-gray-50">
               {values.icon ? (
                 <CategoryIcon name={values.icon} size={28} />
               ) : (
@@ -375,7 +395,7 @@ function CategoryFormContent({
                 className={cn(
                   'flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors',
                   values.color === option.value
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    ? 'border-brand-500 bg-brand-50 text-brand-700'
                     : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
                 )}
               >
@@ -396,22 +416,23 @@ function CategoryFormContent({
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <Dialog.Close
+          <button
             type="button"
+            onClick={onClose}
             className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             취소
-          </Dialog.Close>
+          </button>
           <button
             type="submit"
             disabled={loading}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? '저장 중...' : isEdit ? '수정' : '추가'}
           </button>
         </div>
       </form>
-    </Dialog.Content>
+    </div>
   );
 }
 
@@ -422,20 +443,41 @@ export function CategoryModal({
   nextSortOrder,
   onSubmit,
 }: CategoryModalProps) {
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onOpenChange(false);
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, onOpenChange]);
+
+  if (!open) return null;
+
+  const handleClose = () => onOpenChange(false);
+
   return (
-    <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/40" />
-        {open ? (
-          <CategoryFormContent
-            key={category?.id ?? `new-${nextSortOrder}`}
-            category={category}
-            nextSortOrder={nextSortOrder}
-            onSubmit={onSubmit}
-            onOpenChange={onOpenChange}
-          />
-        ) : null}
-      </Dialog.Portal>
-    </Dialog.Root>
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4"
+      onClick={handleClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="category-modal-title"
+    >
+      <CategoryForm
+        key={category?.id ?? `new-${nextSortOrder}`}
+        category={category}
+        nextSortOrder={nextSortOrder}
+        onSubmit={onSubmit}
+        onClose={handleClose}
+      />
+    </div>
   );
 }
