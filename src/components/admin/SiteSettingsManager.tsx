@@ -6,7 +6,7 @@ import { Toast, useToast } from '@/components/admin/Toast';
 import type { SiteSettings } from '@/types/site-settings';
 
 const INPUT_CLASS =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20';
 
 const LABEL_CLASS = 'mb-1.5 block text-sm font-medium text-gray-700';
 
@@ -26,7 +26,7 @@ function Toggle({
         role="switch"
         aria-checked={checked}
         onClick={() => onChange(!checked)}
-        className={`relative h-6 w-11 rounded-full transition-colors ${checked ? 'bg-blue-600' : 'bg-gray-300'}`}
+        className={`relative h-6 w-11 rounded-full transition-colors ${checked ? 'bg-brand-600' : 'bg-gray-300'}`}
       >
         <span
           className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-5' : ''}`}
@@ -46,22 +46,8 @@ function emptySettings(): Partial<SiteSettings> {
     ad_slot_sidebar: '',
     ad_slot_detail_btm: '',
     ad_slot_blog_mid: '',
-    ga_measurement_id: '',
-    google_site_verification: '',
-    naver_site_verification: '',
-    bing_site_verification: '',
-    site_name: '',
-    meta_title_ko: '',
-    meta_title_en: '',
-    meta_description_ko: '',
-    meta_description_en: '',
-    og_title_ko: '',
-    og_title_en: '',
-    og_description_ko: '',
-    og_description_en: '',
-    og_image_url: '',
-    favicon_url: '',
     extra_head_html: '',
+    extra_body_html: '',
   };
 }
 
@@ -158,175 +144,38 @@ export function SiteSettingsManager() {
         </section>
 
         <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">
-            분석 · 검색엔진 등록
+          <h2 className="mb-1 text-base font-semibold text-gray-900">
+            메타 태그 및 SEO 태그 추가
           </h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className={LABEL_CLASS}>Google Analytics (GA4) ID</label>
-              <input
-                type="text"
-                value={values.ga_measurement_id ?? ''}
-                onChange={(e) => update('ga_measurement_id', e.target.value)}
-                placeholder="G-XXXXXXXXXX"
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>Google Search Console 인증</label>
-              <input
-                type="text"
-                value={values.google_site_verification ?? ''}
-                onChange={(e) =>
-                  update('google_site_verification', e.target.value)
-                }
-                placeholder="google-site-verification content"
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>Naver 서치어드바이저 인증</label>
-              <input
-                type="text"
-                value={values.naver_site_verification ?? ''}
-                onChange={(e) =>
-                  update('naver_site_verification', e.target.value)
-                }
-                placeholder="naver-site-verification content"
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>Bing Webmaster 인증</label>
-              <input
-                type="text"
-                value={values.bing_site_verification ?? ''}
-                onChange={(e) => update('bing_site_verification', e.target.value)}
-                placeholder="msvalidate.01 content"
-                className={INPUT_CLASS}
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-base font-semibold text-gray-900">SEO · 메타 · OG</h2>
+          <p className="mb-4 text-sm text-gray-500">
+            검색엔진 인증, GA, OG 등 필요한 코드를 HTML 그대로 붙여넣으세요.
+          </p>
           <div className="space-y-4">
             <div>
-              <label className={LABEL_CLASS}>사이트명</label>
-              <input
-                type="text"
-                value={values.site_name ?? ''}
-                onChange={(e) => update('site_name', e.target.value)}
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={LABEL_CLASS}>기본 제목 (한국어)</label>
-                <input
-                  type="text"
-                  value={values.meta_title_ko ?? ''}
-                  onChange={(e) => update('meta_title_ko', e.target.value)}
-                  className={INPUT_CLASS}
-                />
-              </div>
-              <div>
-                <label className={LABEL_CLASS}>기본 제목 (English)</label>
-                <input
-                  type="text"
-                  value={values.meta_title_en ?? ''}
-                  onChange={(e) => update('meta_title_en', e.target.value)}
-                  className={INPUT_CLASS}
-                />
-              </div>
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>메타 설명 (한국어)</label>
+              <label className={LABEL_CLASS}>head 상단</label>
+              <p className="mb-2 text-xs text-gray-400">
+                {'<head>'} 안 최상단에 삽입됩니다. meta, link, script 태그를
+                입력하세요.
+              </p>
               <textarea
-                rows={3}
-                value={values.meta_description_ko ?? ''}
-                onChange={(e) => update('meta_description_ko', e.target.value)}
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>메타 설명 (English)</label>
-              <textarea
-                rows={3}
-                value={values.meta_description_en ?? ''}
-                onChange={(e) => update('meta_description_en', e.target.value)}
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={LABEL_CLASS}>OG 제목 (한국어)</label>
-                <input
-                  type="text"
-                  value={values.og_title_ko ?? ''}
-                  onChange={(e) => update('og_title_ko', e.target.value)}
-                  className={INPUT_CLASS}
-                />
-              </div>
-              <div>
-                <label className={LABEL_CLASS}>OG 제목 (English)</label>
-                <input
-                  type="text"
-                  value={values.og_title_en ?? ''}
-                  onChange={(e) => update('og_title_en', e.target.value)}
-                  className={INPUT_CLASS}
-                />
-              </div>
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>OG 설명 (한국어)</label>
-              <textarea
-                rows={2}
-                value={values.og_description_ko ?? ''}
-                onChange={(e) => update('og_description_ko', e.target.value)}
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>OG 설명 (English)</label>
-              <textarea
-                rows={2}
-                value={values.og_description_en ?? ''}
-                onChange={(e) => update('og_description_en', e.target.value)}
-                className={INPUT_CLASS}
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={LABEL_CLASS}>파비콘 URL</label>
-                <input
-                  type="url"
-                  value={values.favicon_url ?? ''}
-                  onChange={(e) => update('favicon_url', e.target.value)}
-                  placeholder="https://..."
-                  className={INPUT_CLASS}
-                />
-              </div>
-              <div>
-                <label className={LABEL_CLASS}>OG 이미지 URL</label>
-                <input
-                  type="url"
-                  value={values.og_image_url ?? ''}
-                  onChange={(e) => update('og_image_url', e.target.value)}
-                  placeholder="https://..."
-                  className={INPUT_CLASS}
-                />
-              </div>
-            </div>
-            <div>
-              <label className={LABEL_CLASS}>추가 head HTML (고급)</label>
-              <textarea
-                rows={4}
+                rows={6}
                 value={values.extra_head_html ?? ''}
                 onChange={(e) => update('extra_head_html', e.target.value)}
-                placeholder="추가 meta/script 태그 (선택)"
-                className={INPUT_CLASS}
+                placeholder={'<meta name="google-site-verification" content="..." />'}
+                className={`${INPUT_CLASS} font-mono text-xs`}
+              />
+            </div>
+            <div>
+              <label className={LABEL_CLASS}>body 상단</label>
+              <p className="mb-2 text-xs text-gray-400">
+                {'<body>'} 시작 직후에 삽입됩니다. GTM noscript 등.
+              </p>
+              <textarea
+                rows={6}
+                value={values.extra_body_html ?? ''}
+                onChange={(e) => update('extra_body_html', e.target.value)}
+                placeholder={'<noscript>...</noscript>'}
+                className={`${INPUT_CLASS} font-mono text-xs`}
               />
             </div>
           </div>
@@ -336,7 +185,7 @@ export function SiteSettingsManager() {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
           >
             {saving ? '저장 중…' : '저장'}
           </button>

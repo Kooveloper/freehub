@@ -6,8 +6,6 @@ import type { AdSlots, ResolvedSiteSettings, SiteSettings } from '@/types/site-s
 const CACHE_KEY = 'site:settings';
 const CACHE_TTL = 60;
 
-const DEFAULT_SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME ?? 'FreeHub';
-
 function resolveAdSlots(row: SiteSettings | null): AdSlots {
   return {
     HOME_TOP: row?.ad_slot_home_top || AD_SLOTS.HOME_TOP,
@@ -23,10 +21,6 @@ export function resolveSiteSettings(row: SiteSettings | null): ResolvedSiteSetti
     row?.adsense_publisher_id?.trim() ||
     process.env.NEXT_PUBLIC_ADSENSE_ID?.trim() ||
     null;
-  const gaMeasurementId =
-    row?.ga_measurement_id?.trim() ||
-    process.env.NEXT_PUBLIC_GA_ID?.trim() ||
-    null;
 
   const adsEnabled = Boolean(row?.ads_enabled && adsensePublisherId);
 
@@ -34,22 +28,8 @@ export function resolveSiteSettings(row: SiteSettings | null): ResolvedSiteSetti
     adsEnabled,
     adsensePublisherId,
     adSlots: resolveAdSlots(row),
-    gaMeasurementId,
-    googleSiteVerification: row?.google_site_verification?.trim() || null,
-    naverSiteVerification: row?.naver_site_verification?.trim() || null,
-    bingSiteVerification: row?.bing_site_verification?.trim() || null,
-    siteName: row?.site_name?.trim() || DEFAULT_SITE_NAME,
-    metaTitleKo: row?.meta_title_ko?.trim() || null,
-    metaTitleEn: row?.meta_title_en?.trim() || null,
-    metaDescriptionKo: row?.meta_description_ko?.trim() || null,
-    metaDescriptionEn: row?.meta_description_en?.trim() || null,
-    ogTitleKo: row?.og_title_ko?.trim() || null,
-    ogTitleEn: row?.og_title_en?.trim() || null,
-    ogDescriptionKo: row?.og_description_ko?.trim() || null,
-    ogDescriptionEn: row?.og_description_en?.trim() || null,
-    ogImageUrl: row?.og_image_url?.trim() || null,
-    faviconUrl: row?.favicon_url?.trim() || null,
     extraHeadHtml: row?.extra_head_html?.trim() || null,
+    extraBodyHtml: row?.extra_body_html?.trim() || null,
   };
 }
 
