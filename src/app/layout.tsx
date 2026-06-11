@@ -28,7 +28,6 @@ const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://freehub.kr';
 const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'FreeHub';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
   const t = await getTranslations();
 
   return {
@@ -38,13 +37,6 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: t('metadata.defaultDescription'),
     metadataBase: new URL(appUrl),
-    openGraph: {
-      type: 'website',
-      locale: locale === 'en' ? 'en_US' : 'ko_KR',
-      siteName: appName,
-      title: t('metadata.defaultTitle', { appName }),
-      description: t('metadata.ogDescription'),
-    },
     robots: {
       index: true,
       follow: true,

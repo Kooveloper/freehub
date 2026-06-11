@@ -61,6 +61,5 @@ export const en: Messages = {
     defaultTitle: '{appName} - Free AI & SaaS Tool Directory',
     defaultDescription:
       'Try before you pay. Compare free plans, limits, and features for AI and SaaS tools in one place.',
-    ogDescription: 'Try before you pay.',
   },
 };

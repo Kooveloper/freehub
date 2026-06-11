@@ -59,7 +59,6 @@ export const ko = {
     defaultTitle: '{appName} - 무료 AI·SaaS 도구 큐레이션',
     defaultDescription:
       '돈 내기 전에 무료로 써봐. AI·SaaS 도구의 무료 플랜, 한도, 기능을 한곳에서 비교하고 찾아보세요.',
-    ogDescription: '돈 내기 전에 무료로 써봐.',
   },
 };
 
