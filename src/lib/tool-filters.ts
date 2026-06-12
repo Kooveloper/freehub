@@ -1,4 +1,4 @@
-import type { SortOption } from '@/components/tools/ToolFilter';
+import type { SortOption } from '@/components/tools/tool-filter-options';
 import type { FreeLimitType, Tool } from '@/types/tool';
 
 const LIMIT_KEYS = new Set(['daily', 'monthly', 'unlimited']);

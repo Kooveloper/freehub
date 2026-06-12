@@ -6,7 +6,7 @@ import { useSearchParams } from 'next/navigation';
 
 import { AdInFeed } from '@/components/ads/AdInFeed';
 import { ToolCard } from '@/components/tools/ToolCard';
-import type { SortOption } from '@/components/tools/ToolFilter';
+import type { SortOption } from '@/components/tools/tool-filter-options';
 import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
 import type { FreeLimitType, Tool } from '@/types/tool';
@@ -66,21 +66,34 @@ function orderWithFavorites(tools: Tool[], favoriteIds: string[]): Tool[] {
 interface CategoryToolListProps {
   tools: Tool[];
   categorySlug: string;
+  categoryName?: string;
+  categoryIcon?: string;
+  subCategoryNameMap?: Record<string, string>;
 }
 
-export function CategoryToolList({ tools, categorySlug }: CategoryToolListProps) {
+export function CategoryToolList({
+  tools,
+  categorySlug,
+  categoryName,
+  categoryIcon,
+  subCategoryNameMap = {},
+}: CategoryToolListProps) {
   const searchParams = useSearchParams();
   const { favorites } = useFavorites();
 
   const filters = parseFilters(searchParams.get('filter'));
   const sort = (searchParams.get('sort') as SortOption) || 'popular';
   const page = Math.max(1, Number(searchParams.get('page')) || 1);
+  const activeSub = searchParams.get('sub');
 
   const processedTools = useMemo(() => {
-    const filtered = applyFilters(tools, filters);
+    const subFiltered = activeSub
+      ? tools.filter((tool) => tool.sub_category === activeSub)
+      : tools;
+    const filtered = applyFilters(subFiltered, filters);
     const sorted = sortTools(filtered, sort);
     return orderWithFavorites(sorted, favorites);
-  }, [tools, filters, sort, favorites]);
+  }, [tools, activeSub, filters, sort, favorites]);
 
   const totalPages = Math.max(1, Math.ceil(processedTools.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -116,6 +129,9 @@ export function CategoryToolList({ tools, categorySlug }: CategoryToolListProps)
             tools={favoritesOnPage}
             favoriteIds={favorites}
             adOffset={0}
+            categoryName={categoryName}
+            categoryIcon={categoryIcon}
+            subCategoryNameMap={subCategoryNameMap}
           />
         </div>
       )}
@@ -129,6 +145,9 @@ export function CategoryToolList({ tools, categorySlug }: CategoryToolListProps)
             tools={showFavoriteSection ? othersOnPage : pageTools}
             favoriteIds={favorites}
             adOffset={showFavoriteSection ? favoritesOnPage.length : 0}
+            categoryName={categoryName}
+            categoryIcon={categoryIcon}
+            subCategoryNameMap={subCategoryNameMap}
           />
         </div>
       )}
@@ -149,16 +168,32 @@ function ToolGrid({
   tools,
   favoriteIds,
   adOffset,
+  categoryName,
+  categoryIcon,
+  subCategoryNameMap,
 }: {
   tools: Tool[];
   favoriteIds: string[];
   adOffset: number;
+  categoryName?: string;
+  categoryIcon?: string;
+  subCategoryNameMap?: Record<string, string>;
 }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {tools.map((tool, index) => (
         <Fragment key={tool.id}>
-          <ToolCard tool={tool} favoriteIds={favoriteIds} />
+          <ToolCard
+            tool={tool}
+            favoriteIds={favoriteIds}
+            categoryName={categoryName}
+            categoryIcon={categoryIcon}
+            subCategoryName={
+              tool.sub_category
+                ? subCategoryNameMap?.[tool.sub_category]
+                : undefined
+            }
+          />
           {adOffset + index === 2 && (
             <AdInFeed />
           )}

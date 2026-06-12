@@ -27,6 +27,7 @@ interface SearchBarProps {
   placeholder?: string;
   className?: string;
   defaultValue?: string;
+  variant?: 'light' | 'dark';
 }
 
 /** debounce 자동완성 + Enter 시 /search?q= 이동 */
@@ -35,6 +36,7 @@ export function SearchBar({
   placeholder,
   className,
   defaultValue = '',
+  variant = 'light',
 }: SearchBarProps) {
   const router = useRouter();
   const { t } = useLocale();
@@ -164,10 +166,17 @@ export function SearchBar({
     setActiveIndex(-1);
   };
 
+  const isDark = variant === 'dark';
+
   return (
     <div ref={containerRef} className={cn('relative w-full', className)}>
       <form onSubmit={handleSubmit} role="search">
-        <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search
+          className={cn(
+            'pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2',
+            isDark ? 'text-neutral-500' : 'text-gray-400',
+          )}
+        />
 
         <input
           type="search"
@@ -186,8 +195,10 @@ export function SearchBar({
           }
           aria-autocomplete="list"
           className={cn(
-            'w-full rounded-lg border border-gray-300 bg-white pl-10 pr-10 text-gray-900',
-            'placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20',
+            'w-full rounded-lg border pl-10 pr-10 focus:outline-none focus:ring-2',
+            isDark
+              ? 'border-neutral-700 bg-neutral-900 text-white placeholder:text-neutral-500 focus:border-white focus:ring-white/20'
+              : 'border-neutral-300 bg-white text-neutral-900 placeholder:text-neutral-400 focus:border-black focus:ring-black/10',
             SIZE_STYLES[size],
           )}
         />
@@ -196,7 +207,12 @@ export function SearchBar({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full p-0.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className={cn(
+              'absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full p-0.5 transition-colors',
+              isDark
+                ? 'text-neutral-500 hover:bg-neutral-800 hover:text-neutral-300'
+                : 'text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600',
+            )}
             aria-label={t('search.clear')}
           >
             <X className="h-4 w-4" />
@@ -208,7 +224,7 @@ export function SearchBar({
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute z-50 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-neutral-200 bg-white py-1 shadow-lg"
         >
           {suggestions.map((tool, index) => (
             <li
@@ -223,8 +239,8 @@ export function SearchBar({
                 className={cn(
                   'flex items-center gap-3 px-3 py-2.5 transition-colors',
                   index === activeIndex
-                    ? 'bg-brand-50 text-brand-900'
-                    : 'text-gray-900 hover:bg-gray-50',
+                    ? 'bg-neutral-100 text-black'
+                    : 'text-neutral-900 hover:bg-neutral-50',
                 )}
               >
                 <ToolLogo name={tool.name} logoUrl={tool.logo_url} size={32} />

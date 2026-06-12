@@ -13,12 +13,12 @@ export async function Footer() {
   ] as const;
 
   return (
-    <footer className="mt-auto bg-brand-950 text-brand-200">
+    <footer className="mt-auto border-t border-neutral-800 bg-black text-neutral-400">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div>
-            <BrandLogo className="text-brand-300 hover:text-white" />
-            <p className="mt-2 text-sm text-brand-300/80">{t('footer.tagline')}</p>
+            <BrandLogo className="text-white hover:text-neutral-300" />
+            <p className="mt-2 text-sm text-neutral-500">{t('footer.tagline')}</p>
           </div>
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2">
@@ -26,7 +26,7 @@ export async function Footer() {
               <Link
                 key={href}
                 href={href}
-                className="text-sm font-semibold transition-colors hover:text-white"
+                className="text-sm font-medium text-neutral-400 transition-colors hover:text-white"
               >
                 {label}
               </Link>
@@ -34,7 +34,7 @@ export async function Footer() {
           </nav>
         </div>
 
-        <div className="mt-8 border-t border-brand-800 pt-8 text-center text-xs text-brand-400/70">
+        <div className="mt-8 border-t border-neutral-800 pt-8 text-center text-xs text-neutral-600">
           © {new Date().getFullYear()} FREEHUB. {t('footer.copyright')}
         </div>
       </div>

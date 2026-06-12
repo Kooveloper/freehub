@@ -22,32 +22,29 @@ export async function MostPopularSection({ entries }: MostPopularSectionProps) {
   return (
     <section className="px-4 pb-2 pt-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <h2 className="mb-2 text-2xl font-bold text-brand-900">
+        <h2 className="mb-2 text-2xl font-bold text-black">
           {t('home.mostPopular')}
         </h2>
-        <p className="mb-8 text-sm text-brand-600/80">
+        <p className="mb-8 text-sm text-neutral-500">
           {locale === 'en'
             ? 'Top picks by category'
             : '카테고리별로 가장 많이 찾은 서비스'}
         </p>
 
-        <div className="space-y-10">
+        <div className="space-y-8">
           {localized.map(({ category, tools }) => {
             if (tools.length === 0) return null;
 
             return (
               <div
                 key={category.slug}
-                className="rounded-2xl border border-brand-200/50 bg-white/70 p-5 shadow-sm backdrop-blur-sm sm:p-6"
+                className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6"
               >
                 <div className="mb-5 flex items-center gap-2.5">
-                  <span
-                    className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50"
-                    style={{ color: category.color }}
-                  >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-800">
                     <CategoryIcon name={category.icon} size={20} />
                   </span>
-                  <h3 className="text-sm font-bold text-brand-800">
+                  <h3 className="text-sm font-bold text-neutral-900">
                     {category.name}
                   </h3>
                 </div>
@@ -63,13 +60,13 @@ export async function MostPopularSection({ entries }: MostPopularSectionProps) {
                           name={tool.name}
                           logoUrl={tool.logo_url}
                           size={56}
-                          className="rounded-2xl shadow-sm ring-1 ring-brand-200/80 transition-all group-hover:ring-brand-400/60 group-hover:shadow-md"
+                          className="rounded-2xl ring-1 ring-neutral-200 transition-all group-hover:ring-neutral-400"
                         />
-                        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-600 text-[10px] font-bold text-white shadow-sm">
+                        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
                           {index + 1}
                         </span>
                       </div>
-                      <span className="line-clamp-2 text-center text-xs font-semibold text-brand-900/90 transition-colors group-hover:text-brand-600">
+                      <span className="line-clamp-2 text-center text-xs font-medium text-neutral-800 transition-colors group-hover:text-black">
                         {tool.name}
                       </span>
                     </Link>

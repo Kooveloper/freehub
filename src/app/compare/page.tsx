@@ -7,15 +7,19 @@ import {
   Suspense,
   useCallback,
   useEffect,
-  useRef,
+  useMemo,
   useState,
 } from 'react';
 
 import { ExternalToolLink } from '@/components/tool/ExternalToolLink';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import { useLocale } from '@/contexts/LocaleContext';
+import {
+  buildSubCategoryNameMap,
+  groupSubCategoriesByCategory,
+} from '@/lib/sub-categories';
 import { cn, formatFreeLimit } from '@/lib/utils';
-import type { Category, Tool } from '@/types/tool';
+import type { Category, SubCategory, Tool } from '@/types/tool';
 
 const MAX_COMPARE = 3;
 
@@ -54,6 +58,29 @@ function FeatureList({ items }: { items: string[] }) {
   );
 }
 
+function PillRow({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'scrollbar-hide -mx-5 overflow-x-auto overscroll-x-contain px-5',
+        '[-webkit-overflow-scrolling:touch]',
+        'sm:mx-0 sm:overflow-visible sm:px-0',
+        className,
+      )}
+    >
+      <div className="flex w-max flex-nowrap gap-2 sm:w-auto sm:flex-wrap">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function ComparePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -63,13 +90,26 @@ function ComparePageContent() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(
+    null,
+  );
   const [categoryTools, setCategoryTools] = useState<Tool[]>([]);
   const [loadingCategoryTools, setLoadingCategoryTools] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Tool[]>([]);
-  const [showSearch, setShowSearch] = useState(false);
-  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const subByCategory = useMemo(
+    () => groupSubCategoriesByCategory(subCategories),
+    [subCategories],
+  );
+  const subNameMap = useMemo(
+    () => buildSubCategoryNameMap(subCategories),
+    [subCategories],
+  );
 
   const updateSlugs = useCallback(
     (nextSlugs: string[]) => {
@@ -99,10 +139,18 @@ function ComparePageContent() {
   );
 
   useEffect(() => {
-    fetch('/api/categories')
-      .then((res) => res.json())
-      .then((data) => setCategories(data.categories ?? []))
-      .catch(() => setCategories([]));
+    Promise.all([
+      fetch('/api/categories').then((res) => res.json()),
+      fetch('/api/sub-categories').then((res) => res.json()),
+    ])
+      .then(([catData, subData]) => {
+        setCategories(catData.categories ?? []);
+        setSubCategories(subData.subCategories ?? []);
+      })
+      .catch(() => {
+        setCategories([]);
+        setSubCategories([]);
+      });
   }, []);
 
   useEffect(() => {
@@ -143,18 +191,25 @@ function ComparePageContent() {
     return () => controller.abort();
   }, [slugsKey]);
 
-  useEffect(() => {
-    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    if (!showSearch || !searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-    searchDebounceRef.current = setTimeout(async () => {
+  const runSearch = useCallback(
+    async (query: string) => {
+      const trimmed = query.trim();
+      if (!trimmed) {
+        setSearchQuery('');
+        setSearchResults([]);
+        return;
+      }
+
+      setSearchQuery(trimmed);
+      setSearchLoading(true);
       try {
         const response = await fetch(
-          `/api/search?q=${encodeURIComponent(searchQuery.trim())}&limit=8`,
+          `/api/search?q=${encodeURIComponent(trimmed)}&limit=20`,
         );
-        if (!response.ok) return;
+        if (!response.ok) {
+          setSearchResults([]);
+          return;
+        }
         const data = (await response.json()) as { tools: Tool[] };
         const selected = new Set(slugs);
         setSearchResults(
@@ -162,15 +217,27 @@ function ComparePageContent() {
         );
       } catch {
         setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
       }
-    }, 300);
-    return () => {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-    };
-  }, [searchQuery, showSearch, slugs.join(',')]);
+    },
+    [slugs],
+  );
 
-  const getCategoryName = (slug: string) =>
-    categories.find((c) => c.slug === slug)?.name ?? slug;
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    runSearch(searchInput);
+  };
+
+  const getCategoryLabel = (tool: Tool) => {
+    const categoryName =
+      categories.find((c) => c.slug === tool.category_slug)?.name ??
+      tool.category_slug;
+    const subName = tool.sub_category
+      ? subNameMap[tool.sub_category]
+      : undefined;
+    return subName ? `${categoryName} · ${subName}` : categoryName;
+  };
 
   const getCompareCellValue = (
     tool: Tool,
@@ -178,7 +245,7 @@ function ComparePageContent() {
   ) => {
     switch (rowKey) {
       case 'category':
-        return getCategoryName(tool.category_slug);
+        return getCategoryLabel(tool);
       case 'free_plan':
         return tool.free_plan_exists
           ? locale === 'en'
@@ -207,9 +274,22 @@ function ComparePageContent() {
 
   const canAddMore = slugs.length < MAX_COMPARE;
   const selectedSet = new Set(slugs);
-  const availableCategoryTools = categoryTools.filter(
-    (tool) => !selectedSet.has(tool.slug),
-  );
+  const activeSubCategories = selectedCategory
+    ? (subByCategory[selectedCategory] ?? [])
+    : [];
+
+  const availableCategoryTools = useMemo(() => {
+    let list = categoryTools.filter((tool) => !selectedSet.has(tool.slug));
+    if (selectedSubCategory) {
+      list = list.filter((tool) => tool.sub_category === selectedSubCategory);
+    }
+    return list;
+  }, [categoryTools, selectedSubCategory, selectedSet]);
+
+  const selectCategory = (slug: string) => {
+    setSelectedCategory(slug);
+    setSelectedSubCategory(null);
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -226,53 +306,57 @@ function ComparePageContent() {
 
       {canAddMore && (
         <div className="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <h2 className="text-base font-bold text-gray-900">
-            {locale === 'en' ? '1. Choose a category' : '1. 카테고리 선택'}
-          </h2>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category.slug}
-                type="button"
-                onClick={() => {
-                  setSelectedCategory(category.slug);
-                  setShowSearch(false);
-                }}
-                className={cn(
-                  'rounded-lg px-4 py-2 text-sm font-bold transition-colors',
-                  selectedCategory === category.slug
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200',
-                )}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
+          <form onSubmit={handleSearchSubmit} className="mb-6">
+            <label
+              htmlFor="compare-search"
+              className="mb-2 block text-sm font-bold text-gray-900"
+            >
+              {locale === 'en' ? 'Search tools' : '툴 검색'}
+            </label>
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                id="compare-search"
+                type="search"
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder={
+                  locale === 'en'
+                    ? 'Enter a keyword and press Enter'
+                    : '키워드를 입력하고 Enter'
+                }
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm focus:border-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10"
+              />
+            </div>
+            <p className="mt-1.5 text-xs text-gray-400">
+              {locale === 'en'
+                ? 'Name, description, or tags containing your keyword'
+                : '이름·설명·태그에 키워드가 포함된 툴을 검색합니다'}
+            </p>
+          </form>
 
-          {selectedCategory && (
-            <div className="mt-6">
-              <h3 className="text-sm font-bold text-gray-900">
-                {locale === 'en' ? '2. Select a tool' : '2. 툴 선택'}
-              </h3>
-              {loadingCategoryTools ? (
-                <p className="mt-4 text-sm text-gray-400">
-                  {locale === 'en' ? 'Loading…' : '불러오는 중…'}
-                </p>
-              ) : availableCategoryTools.length === 0 ? (
-                <p className="mt-4 text-sm text-gray-400">
+          {searchLoading && (
+            <p className="mb-4 text-sm text-gray-400">
+              {locale === 'en' ? 'Searching…' : '검색 중…'}
+            </p>
+          )}
+
+          {!searchLoading && searchQuery && (
+            <div className="mb-6">
+              {searchResults.length === 0 ? (
+                <p className="text-sm text-gray-500">
                   {locale === 'en'
-                    ? 'No more tools in this category.'
-                    : '선택 가능한 툴이 없습니다.'}
+                    ? `No results for "${searchQuery}".`
+                    : `"${searchQuery}"에 대한 검색 결과가 없습니다.`}
                 </p>
               ) : (
-                <ul className="mt-3 max-h-72 overflow-auto rounded-lg border border-gray-100">
-                  {availableCategoryTools.map((tool) => (
+                <ul className="max-h-48 overflow-auto rounded-lg border border-gray-100">
+                  {searchResults.map((tool) => (
                     <li key={tool.id}>
                       <button
                         type="button"
                         onClick={() => addTool(tool)}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-blue-50"
+                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
                       >
                         <ToolLogo
                           name={tool.name}
@@ -284,10 +368,10 @@ function ComparePageContent() {
                             {tool.name}
                           </p>
                           <p className="truncate text-xs text-gray-500">
-                            {tool.description}
+                            {getCategoryLabel(tool)}
                           </p>
                         </div>
-                        <Plus className="h-4 w-4 shrink-0 text-blue-600" />
+                        <Plus className="h-4 w-4 shrink-0 text-neutral-700" />
                       </button>
                     </li>
                   ))}
@@ -296,51 +380,109 @@ function ComparePageContent() {
             </div>
           )}
 
-          <div className="mt-6 border-t border-gray-100 pt-4">
-            <button
-              type="button"
-              onClick={() => setShowSearch((prev) => !prev)}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700"
-            >
-              {locale === 'en'
-                ? showSearch
-                  ? 'Hide search'
-                  : 'Search by name instead'
-                : showSearch
-                  ? '검색 닫기'
-                  : '이름으로 검색하기 (부가)'}
-            </button>
-            {showSearch && (
-              <div className="mt-3">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={
-                      locale === 'en' ? 'Search tools…' : '툴 이름 검색…'
-                    }
-                    className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-                {searchResults.length > 0 && (
-                  <ul className="mt-2 max-h-48 overflow-auto rounded-lg border border-gray-100">
-                    {searchResults.map((tool) => (
+          <div className="border-t border-gray-100 pt-6">
+            <h2 className="text-base font-bold text-gray-900">
+              {locale === 'en' ? 'Browse by category' : '카테고리에서 선택'}
+            </h2>
+
+            <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+              {locale === 'en' ? 'Category' : '대카테고리'}
+            </p>
+            <PillRow className="mt-2">
+              {categories.map((category) => (
+                <button
+                  key={category.slug}
+                  type="button"
+                  onClick={() => selectCategory(category.slug)}
+                  className={cn(
+                    'shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                    selectedCategory === category.slug
+                      ? 'border-neutral-900 bg-neutral-900 text-white'
+                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300',
+                  )}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </PillRow>
+
+            {selectedCategory && activeSubCategories.length > 0 && (
+              <>
+                <p className="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  {locale === 'en' ? 'Subcategory' : '하위 카테고리'}
+                </p>
+                <PillRow className="mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSubCategory(null)}
+                    className={cn(
+                      'shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
+                      selectedSubCategory === null
+                        ? 'border-neutral-900 bg-neutral-900 text-white'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300',
+                    )}
+                  >
+                    {locale === 'en' ? 'All' : '전체'}
+                  </button>
+                  {activeSubCategories.map((sub) => (
+                    <button
+                      key={sub.slug}
+                      type="button"
+                      onClick={() => setSelectedSubCategory(sub.slug)}
+                      className={cn(
+                        'shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap',
+                        selectedSubCategory === sub.slug
+                          ? 'border-neutral-900 bg-neutral-900 text-white'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300',
+                      )}
+                    >
+                      {sub.name}
+                    </button>
+                  ))}
+                </PillRow>
+              </>
+            )}
+
+            {selectedCategory && (
+              <div className="mt-5">
+                <h3 className="text-sm font-bold text-gray-900">
+                  {locale === 'en' ? 'Select a tool' : '툴 선택'}
+                </h3>
+                {loadingCategoryTools ? (
+                  <p className="mt-4 text-sm text-gray-400">
+                    {locale === 'en' ? 'Loading…' : '불러오는 중…'}
+                  </p>
+                ) : availableCategoryTools.length === 0 ? (
+                  <p className="mt-4 text-sm text-gray-400">
+                    {locale === 'en'
+                      ? 'No tools available for this selection.'
+                      : '선택한 조건에 해당하는 툴이 없습니다.'}
+                  </p>
+                ) : (
+                  <ul className="mt-3 max-h-72 overflow-auto rounded-lg border border-gray-100">
+                    {availableCategoryTools.map((tool) => (
                       <li key={tool.id}>
                         <button
                           type="button"
                           onClick={() => addTool(tool)}
-                          className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-gray-50"
+                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
                         >
                           <ToolLogo
                             name={tool.name}
                             logoUrl={tool.logo_url}
-                            size={28}
+                            size={32}
                           />
-                          <span className="truncate text-sm font-medium">
-                            {tool.name}
-                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-semibold text-gray-900">
+                              {tool.name}
+                            </p>
+                            <p className="truncate text-xs text-gray-500">
+                              {tool.sub_category
+                                ? subNameMap[tool.sub_category]
+                                : tool.description}
+                            </p>
+                          </div>
+                          <Plus className="h-4 w-4 shrink-0 text-neutral-700" />
                         </button>
                       </li>
                     ))}
@@ -366,8 +508,8 @@ function ComparePageContent() {
             </p>
             <p className="mt-2 text-sm text-gray-500">
               {locale === 'en'
-                ? 'Pick a category above, then select tools.'
-                : '위에서 카테고리를 선택한 뒤 툴을 추가하세요.'}
+                ? 'Search above or pick a category.'
+                : '위에서 검색하거나 카테고리를 선택하세요.'}
             </p>
           </div>
         ) : (
@@ -393,7 +535,7 @@ function ComparePageContent() {
                             />
                             <Link
                               href={`/tool/${tool.slug}`}
-                              className="block truncate font-bold text-gray-900 hover:text-blue-600"
+                              className="block truncate font-bold text-gray-900 hover:text-neutral-700"
                             >
                               {tool.name}
                             </Link>

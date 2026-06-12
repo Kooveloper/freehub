@@ -1,11 +1,12 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 import { redis } from '@/lib/redis';
-import type { Category, Tool } from '@/types/tool';
+import type { Category, SubCategory, Tool } from '@/types/tool';
 
 import { createClient, createStaticClient } from './server';
 
 const CATEGORIES_CACHE_KEY = 'categories:all';
+const SUB_CATEGORIES_CACHE_KEY = 'sub_categories:all';
 const CATEGORIES_CACHE_TTL = 3600;
 const CATEGORY_TOOLS_CACHE_TTL = 600;
 
@@ -382,4 +383,58 @@ export async function incrementViewCount(toolId: string): Promise<void> {
   if (updateError) {
     console.error('조회수 업데이트 실패:', updateError.message);
   }
+}
+
+/** 활성 서브카테고리 전체 목록 (sort_order 오름차순, Redis 1시간 캐시) */
+export async function getAllSubCategories(): Promise<SubCategory[]> {
+  const cached = await getCached<SubCategory[]>(SUB_CATEGORIES_CACHE_KEY);
+  if (cached) {
+    return cached;
+  }
+
+  const supabase = createStaticClient();
+
+  const { data, error } = await supabase
+    .from('sub_categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('category_slug', { ascending: true })
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    throw new Error(`서브카테고리 조회 실패: ${error.message}`);
+  }
+
+  const subCategories = (data ?? []) as SubCategory[];
+  await setCached(
+    SUB_CATEGORIES_CACHE_KEY,
+    subCategories,
+    CATEGORIES_CACHE_TTL,
+  );
+  return subCategories;
+}
+
+/** 대카테고리별 활성 서브카테고리 목록 */
+export async function getSubCategoriesByCategory(
+  categorySlug: string,
+): Promise<SubCategory[]> {
+  const all = await getAllSubCategories();
+  return all.filter((sub) => sub.category_slug === categorySlug);
+}
+
+/** 서브카테고리 slug로 툴 목록 조회 */
+export async function getToolsBySubCategory(subSlug: string): Promise<Tool[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('tools')
+    .select('*')
+    .eq('sub_category', subSlug)
+    .order('view_count', { ascending: false });
+
+  if (error) {
+    throw new Error(`서브카테고리 도구 조회 실패: ${error.message}`);
+  }
+
+  return (data ?? []) as Tool[];
 }

@@ -1,14 +1,32 @@
 import { SearchAnalytics } from '@/components/search/SearchAnalytics';
 import { SearchEmptyStateWrapper } from '@/components/search/SearchEmptyStateWrapper';
 import { SearchResultsGrid } from '@/components/search/SearchResultsGrid';
-import { searchTools } from '@/lib/supabase/queries';
+import { localizeCategories } from '@/lib/i18n/content';
+import { getLocale } from '@/lib/locale';
+import { buildSubCategoryNameMap } from '@/lib/sub-categories';
+import {
+  getAllCategories,
+  getAllSubCategories,
+  searchTools,
+} from '@/lib/supabase/queries';
 
 interface SearchResultsSectionProps {
   query: string;
 }
 
 export async function SearchResultsSection({ query }: SearchResultsSectionProps) {
-  const { tools, total } = await searchTools(query);
+  const locale = await getLocale();
+  const [{ tools, total }, categories, subCategories] = await Promise.all([
+    searchTools(query),
+    getAllCategories(),
+    getAllSubCategories(),
+  ]);
+
+  const localizedCategories = localizeCategories(categories, locale);
+  const categoryMap = Object.fromEntries(
+    localizedCategories.map((category) => [category.slug, category]),
+  );
+  const subCategoryNameMap = buildSubCategoryNameMap(subCategories);
 
   return (
     <>
@@ -18,7 +36,11 @@ export async function SearchResultsSection({ query }: SearchResultsSectionProps)
         {total === 0 ? (
           <SearchEmptyStateWrapper query={query} />
         ) : (
-          <SearchResultsGrid tools={tools} />
+          <SearchResultsGrid
+            tools={tools}
+            categoryMap={categoryMap}
+            subCategoryNameMap={subCategoryNameMap}
+          />
         )}
       </div>
     </>

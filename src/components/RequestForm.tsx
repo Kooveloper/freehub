@@ -85,7 +85,7 @@ export function RequestForm() {
   };
 
   return (
-    <div className="rounded-2xl border border-brand-200/60 bg-white p-6 shadow-sm shadow-brand-900/5 sm:p-8">
+    <div className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8">
       <div className="mb-6 text-center">
         <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
           등록되지 않은 서비스가 있나요?
@@ -108,7 +108,7 @@ export function RequestForm() {
             placeholder="서비스명을 입력해주세요"
             maxLength={TITLE_MAX}
             required
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
           />
         </div>
 
@@ -124,7 +124,7 @@ export function RequestForm() {
             maxLength={CONTENT_MAX}
             required
             rows={4}
-            className="w-full resize-none rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className="w-full resize-none rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
           />
           <p className="mt-1 text-right text-xs text-gray-400">
             {content.length}/{CONTENT_MAX}
@@ -142,7 +142,7 @@ export function RequestForm() {
             onChange={(e) => handleEmailChange(e.target.value)}
             placeholder="답변 받을 이메일 (선택사항)"
             maxLength={EMAIL_MAX}
-            className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+            className="w-full rounded-lg border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:border-black focus:outline-none focus:ring-2 focus:ring-black/10"
           />
         </div>
 
@@ -152,8 +152,8 @@ export function RequestForm() {
           className={cn(
             'w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors',
             isDisabled
-              ? 'cursor-not-allowed bg-brand-300'
-              : 'bg-brand-600 hover:bg-brand-700',
+              ? 'cursor-not-allowed bg-neutral-300'
+              : 'bg-black hover:bg-neutral-800',
           )}
         >
           {status === 'submitting' ? '요청 중...' : '요청하기'}

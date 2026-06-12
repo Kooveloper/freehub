@@ -2,7 +2,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 import type { AdminItemStatus } from '@/constants/admin-status';
 import type { SubmissionType } from '@/types/submission';
-import type { Category, Tool } from '@/types/tool';
+import type { Category, SubCategory, Tool } from '@/types/tool';
 
 function createServiceClient() {
   return createSupabaseClient(
@@ -60,6 +60,25 @@ export async function getAdminCategories(): Promise<AdminCategory[]> {
     ...category,
     tool_count: toolCounts[category.slug] ?? 0,
   }));
+}
+
+export type AdminSubCategory = SubCategory;
+
+/** 관리자 서브카테고리 전체 목록 */
+export async function getAdminSubCategories(): Promise<AdminSubCategory[]> {
+  const supabase = createServiceClient();
+
+  const { data, error } = await supabase
+    .from('sub_categories')
+    .select('*')
+    .order('category_slug', { ascending: true })
+    .order('sort_order', { ascending: true });
+
+  if (error) {
+    throw new Error(`서브카테고리 조회 실패: ${error.message}`);
+  }
+
+  return (data ?? []) as AdminSubCategory[];
 }
 
 export interface AdminDashboardData {

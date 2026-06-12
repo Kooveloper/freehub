@@ -2,7 +2,7 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0a0a0a;
 }
 
 @theme inline {
@@ -11,21 +11,21 @@
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 
-  /* 채도를 낮춘 브랜드 블루 */
-  --color-brand-50: #f3f6fa;
-  --color-brand-100: #e4ebf3;
-  --color-brand-200: #cdd9e8;
-  --color-brand-300: #a8bdd4;
-  --color-brand-400: #7d9ab8;
-  --color-brand-500: #5d7fa3;
-  --color-brand-600: #4a6d94;
-  --color-brand-700: #3d5a7c;
-  --color-brand-800: #344a66;
-  --color-brand-900: #2d3f56;
-  --color-brand-950: #1c2838;
+  /* 블랙 & 화이트 모노톤 팔레트 (OG 이미지 톤) */
+  --color-brand-50: #fafafa;
+  --color-brand-100: #f5f5f5;
+  --color-brand-200: #e5e5e5;
+  --color-brand-300: #d4d4d4;
+  --color-brand-400: #a3a3a3;
+  --color-brand-500: #737373;
+  --color-brand-600: #525252;
+  --color-brand-700: #404040;
+  --color-brand-800: #262626;
+  --color-brand-900: #171717;
+  --color-brand-950: #000000;
 
-  --color-surface-muted: #f0f4f8;
-  --color-surface-tint: #e8eef5;
+  --color-surface-muted: #fafafa;
+  --color-surface-tint: #f5f5f5;
 }
 
 body {

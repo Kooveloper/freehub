@@ -23,6 +23,7 @@ export const en: Messages = {
     copyright: 'All rights reserved.',
   },
   home: {
+    heroTagline: 'The best free tools, all in one place!',
     heroTitleLine1: 'The best free tools',
     heroTitleLine2: 'All in one place!',
     heroSubtitle: 'Transparent free-tier limits for every service',
@@ -56,6 +57,9 @@ export const en: Messages = {
     register: 'Register',
     saving: 'Saving…',
     noTools: 'No tools in this category.',
+  },
+  category: {
+    all: 'All',
   },
   metadata: {
     defaultTitle: '{appName} - Free AI & SaaS Tool Directory',

@@ -8,6 +8,7 @@ export interface Tool {
   name: string;
   name_en?: string | null;
   category_slug: string;
+  sub_category?: string | null;
   logo_url: string | null;
   homepage_url: string;
   description: string;
@@ -48,6 +49,16 @@ export interface Category {
   description_en?: string | null;
   icon: string;
   color: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+/** 서브카테고리 (대카테고리 하위) */
+export interface SubCategory {
+  id: string;
+  slug: string;
+  name: string;
+  category_slug: string;
   sort_order: number;
   is_active: boolean;
 }

@@ -5,14 +5,16 @@ import { useMemo } from 'react';
 import { ToolCard } from '@/components/tools/ToolCard';
 import { CategoryCard } from '@/components/ui/CategoryCard';
 import { useFavorites } from '@/hooks/useFavorites';
+import { previewSubCategories } from '@/lib/sub-categories';
 import { sortWithFavorites } from '@/lib/utils';
-import type { Category, Tool } from '@/types/tool';
+import type { Category, SubCategory, Tool } from '@/types/tool';
 
 interface SearchEmptyStateProps {
   query: string;
   categories: Category[];
   popularTools: Tool[];
   categoryToolCounts: Record<string, number>;
+  subByCategory?: Record<string, SubCategory[]>;
 }
 
 /** 검색 결과 없음 — 추천 카테고리 + 인기 툴 */
@@ -21,6 +23,7 @@ export function SearchEmptyState({
   categories,
   popularTools,
   categoryToolCounts,
+  subByCategory = {},
 }: SearchEmptyStateProps) {
   const { favorites } = useFavorites();
 
@@ -46,6 +49,9 @@ export function SearchEmptyState({
               key={category.slug}
               category={category}
               toolCount={categoryToolCounts[category.slug] ?? 0}
+              subCategories={previewSubCategories(
+                subByCategory[category.slug] ?? [],
+              )}
             />
           ))}
         </div>

@@ -15,7 +15,7 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
   return (
     <div
       className={cn(
-        'inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5',
+        'inline-flex rounded-lg border border-neutral-200 bg-neutral-50 p-0.5',
         className,
       )}
       role="group"
@@ -29,8 +29,8 @@ export function LanguageToggle({ className }: LanguageToggleProps) {
           className={cn(
             'rounded-md px-2.5 py-1 text-xs font-semibold transition-colors',
             locale === value
-              ? 'bg-white text-brand-600 shadow-sm'
-              : 'text-gray-500 hover:text-gray-700',
+              ? 'bg-white text-black shadow-sm'
+              : 'text-neutral-500 hover:text-neutral-800',
           )}
           aria-pressed={locale === value}
         >

@@ -21,6 +21,7 @@ export const ko = {
     copyright: 'All rights reserved.',
   },
   home: {
+    heroTagline: '무료로 쓸 수 있는 툴, 한곳에서!',
     heroTitleLine1: '무료로 쓸 수 있는 최고의 툴',
     heroTitleLine2: '한곳에서 모아보자!',
     heroSubtitle: '각 서비스의 무료 한도를 투명하게 공개합니다',
@@ -54,6 +55,9 @@ export const ko = {
     register: '등록',
     saving: '저장 중…',
     noTools: '등록된 툴이 없습니다.',
+  },
+  category: {
+    all: '전체',
   },
   metadata: {
     defaultTitle: '{appName} - 무료 AI·SaaS 도구 큐레이션',

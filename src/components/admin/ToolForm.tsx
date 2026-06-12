@@ -3,7 +3,7 @@
 import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Toast, useToast } from '@/components/admin/Toast';
 import {
@@ -14,7 +14,7 @@ import {
   toolToFormInput,
 } from '@/lib/admin/tools';
 import { cn } from '@/lib/utils';
-import type { Category, FreeLimitType, Tool } from '@/types/tool';
+import type { Category, FreeLimitType, SubCategory, Tool } from '@/types/tool';
 
 interface ToolFormProps {
   categories: Category[];
@@ -152,6 +152,7 @@ function emptyForm(defaultCategorySlug: string): ToolFormInput {
     name: '',
     name_en: '',
     category_slug: defaultCategorySlug,
+    sub_category: null,
     logo_url: '',
     homepage_url: '',
     description: '',
@@ -346,6 +347,55 @@ export function ToolForm({ categories, initialTool }: ToolFormProps) {
   const [slugEdited, setSlugEdited] = useState(isEdit);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
+  const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSubCategories() {
+      if (!values.category_slug) {
+        setSubCategories([]);
+        return;
+      }
+
+      setSubCategoriesLoading(true);
+      try {
+        const response = await fetch(
+          `/api/admin/sub-categories?category_slug=${encodeURIComponent(values.category_slug)}`,
+        );
+        if (!response.ok) {
+          throw new Error('서브카테고리를 불러오지 못했습니다.');
+        }
+        const data = (await response.json()) as { subCategories?: SubCategory[] };
+        if (!cancelled) {
+          setSubCategories(data.subCategories ?? []);
+        }
+      } catch {
+        if (!cancelled) {
+          setSubCategories([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setSubCategoriesLoading(false);
+        }
+      }
+    }
+
+    loadSubCategories();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [values.category_slug]);
+
+  const handleCategoryChange = (categorySlug: string) => {
+    setValues((prev) => ({
+      ...prev,
+      category_slug: categorySlug,
+      sub_category: null,
+    }));
+  };
 
   const updateField = <K extends keyof ToolFormInput>(
     key: K,
@@ -492,19 +542,48 @@ export function ToolForm({ categories, initialTool }: ToolFormProps) {
 
           <div>
             <label htmlFor="category_slug" className={LABEL_CLASS}>
-              카테고리
+              대카테고리
             </label>
             <select
               id="category_slug"
               value={values.category_slug}
-              onChange={(event) =>
-                updateField('category_slug', event.target.value)
-              }
+              onChange={(event) => handleCategoryChange(event.target.value)}
               className={INPUT_CLASS}
             >
               {categories.map((category) => (
                 <option key={category.id} value={category.slug}>
                   {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor="sub_category" className={LABEL_CLASS}>
+              서브카테고리
+            </label>
+            <select
+              id="sub_category"
+              value={values.sub_category ?? ''}
+              onChange={(event) =>
+                updateField(
+                  'sub_category',
+                  event.target.value ? event.target.value : null,
+                )
+              }
+              disabled={subCategoriesLoading || subCategories.length === 0}
+              className={INPUT_CLASS}
+            >
+              <option value="">
+                {subCategoriesLoading
+                  ? '불러오는 중…'
+                  : subCategories.length === 0
+                    ? '서브카테고리 없음'
+                    : '선택 안 함'}
+              </option>
+              {subCategories.map((sub) => (
+                <option key={sub.id} value={sub.slug}>
+                  {sub.name}
                 </option>
               ))}
             </select>

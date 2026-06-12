@@ -14,6 +14,7 @@ export interface ToolFormInput {
   name: string;
   name_en: string;
   category_slug: string;
+  sub_category: string | null;
   logo_url: string | null;
   homepage_url: string;
   description: string;
@@ -75,6 +76,7 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
   const slug = String(input.slug ?? '').trim();
   const name = String(input.name ?? '').trim();
   const categorySlug = String(input.category_slug ?? '').trim();
+  const subCategoryRaw = String(input.sub_category ?? '').trim();
   const homepageUrl = String(input.homepage_url ?? '').trim();
   const description = String(input.description ?? '').trim();
   const descriptionEn = String(input.description_en ?? '').trim();
@@ -147,6 +149,7 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
     name,
     name_en: nameEn,
     category_slug: categorySlug,
+    sub_category: subCategoryRaw || null,
     logo_url: logoUrlRaw || null,
     homepage_url: homepageUrl,
     description,
@@ -178,6 +181,7 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
 export function sanitizeToolForDb(input: ToolFormInput) {
   return {
     ...input,
+    sub_category: input.sub_category?.trim() || null,
     name_en: input.name_en.trim() || null,
     description_en: input.description_en.trim() || null,
     free_limit_unit_en: input.free_limit_unit_en?.trim() || null,
@@ -191,6 +195,7 @@ export function toolToFormInput(tool: {
   name: string;
   name_en?: string | null;
   category_slug: string;
+  sub_category?: string | null;
   logo_url: string | null;
   homepage_url: string;
   description: string;
@@ -221,6 +226,7 @@ export function toolToFormInput(tool: {
     name: tool.name,
     name_en: tool.name_en ?? '',
     category_slug: tool.category_slug,
+    sub_category: tool.sub_category ?? null,
     logo_url: tool.logo_url,
     homepage_url: tool.homepage_url,
     description: tool.description,
