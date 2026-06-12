@@ -15,6 +15,7 @@ import {
   CategoryModal,
   type CategoryFormValues,
 } from '@/components/admin/CategoryModal';
+import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import {
   SubCategoryModal,
   type SubCategoryFormValues,
@@ -28,6 +29,8 @@ import { cn } from '@/lib/utils';
 interface CategoriesManagerProps {
   categories: AdminCategory[];
   subCategories: AdminSubCategory[];
+  periodViewsByCategory?: Record<string, number>;
+  periodViewsBySubCategory?: Record<string, number>;
 }
 
 async function parseApiError(response: Response) {
@@ -40,6 +43,8 @@ async function parseApiError(response: Response) {
 export function CategoriesManager({
   categories,
   subCategories,
+  periodViewsByCategory = {},
+  periodViewsBySubCategory = {},
 }: CategoriesManagerProps) {
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
@@ -283,6 +288,7 @@ export function CategoriesManager({
                 <th className="px-4 py-3 font-medium">이름</th>
                 <th className="px-4 py-3 font-medium">슬러그</th>
                 <th className="px-4 py-3 font-medium">툴 수</th>
+                <th className="px-4 py-3 font-medium">조회수 (누적 / 30일)</th>
                 <th className="px-4 py-3 font-medium">활성화</th>
                 <th className="px-4 py-3 font-medium">순서</th>
                 <th className="px-4 py-3 font-medium">액션</th>
@@ -292,7 +298,7 @@ export function CategoriesManager({
               {categories.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-4 py-10 text-center text-gray-400"
                   >
                     등록된 카테고리가 없습니다.
@@ -359,14 +365,20 @@ export function CategoriesManager({
                         <td className="px-4 py-3 font-mono text-xs text-gray-600">
                           {category.slug}
                         </td>
-                        <td className="px-4 py-3 text-gray-700">
-                          {category.tool_count.toLocaleString('ko-KR')}
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            type="button"
-                            disabled={isPending}
-                            onClick={() => handleToggleActive(category)}
+                      <td className="px-4 py-3 text-gray-700">
+                        {category.tool_count.toLocaleString('ko-KR')}
+                      </td>
+                      <td className="px-4 py-3">
+                        <ViewStatsCell
+                          lifetime={category.view_count_sum}
+                          period={periodViewsByCategory[category.slug] ?? 0}
+                        />
+                      </td>
+                      <td className="px-4 py-3">
+                        <button
+                          type="button"
+                          disabled={isPending}
+                          onClick={() => handleToggleActive(category)}
                             className="disabled:opacity-50"
                           >
                             <Badge
@@ -436,7 +448,7 @@ export function CategoriesManager({
                       </tr>
                       {isExpanded && (
                         <tr className="border-b border-gray-100 bg-gray-50/50">
-                          <td colSpan={8} className="px-4 py-4">
+                          <td colSpan={9} className="px-4 py-4">
                             <div className="ml-8 rounded-lg border border-gray-200 bg-white">
                               <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
                                 <h3 className="text-sm font-semibold text-gray-900">
@@ -463,6 +475,10 @@ export function CategoriesManager({
                                     <tr className="border-b border-gray-100 text-left text-xs text-gray-500">
                                       <th className="px-4 py-2 font-medium">이름</th>
                                       <th className="px-4 py-2 font-medium">슬러그</th>
+                                      <th className="px-4 py-2 font-medium">툴 수</th>
+                                      <th className="px-4 py-2 font-medium">
+                                        조회수 (누적 / 30일)
+                                      </th>
                                       <th className="px-4 py-2 font-medium">순서</th>
                                       <th className="px-4 py-2 font-medium">상태</th>
                                       <th className="px-4 py-2 font-medium">액션</th>
@@ -481,6 +497,18 @@ export function CategoriesManager({
                                           </td>
                                           <td className="px-4 py-2 font-mono text-xs text-gray-600">
                                             {sub.slug}
+                                          </td>
+                                          <td className="px-4 py-2 text-gray-700">
+                                            {sub.tool_count.toLocaleString('ko-KR')}
+                                          </td>
+                                          <td className="px-4 py-2">
+                                            <ViewStatsCell
+                                              lifetime={sub.view_count_sum}
+                                              period={
+                                                periodViewsBySubCategory[sub.slug] ??
+                                                0
+                                              }
+                                            />
                                           </td>
                                           <td className="px-4 py-2 text-gray-700">
                                             {sub.sort_order}

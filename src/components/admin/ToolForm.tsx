@@ -19,6 +19,7 @@ import type { Category, FreeLimitType, SubCategory, Tool } from '@/types/tool';
 interface ToolFormProps {
   categories: Category[];
   initialTool?: Tool;
+  viewCount30d?: number;
 }
 
 const INPUT_CLASS =
@@ -333,7 +334,11 @@ function Toggle({
   );
 }
 
-export function ToolForm({ categories, initialTool }: ToolFormProps) {
+export function ToolForm({
+  categories,
+  initialTool,
+  viewCount30d,
+}: ToolFormProps) {
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
   const isEdit = Boolean(initialTool);
@@ -795,6 +800,29 @@ export function ToolForm({ categories, initialTool }: ToolFormProps) {
         </Section>
 
         <Section title="관리">
+          {isEdit && initialTool && (
+            <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
+              툴 상세 페이지 조회수:{' '}
+              <span className="font-semibold tabular-nums text-gray-900">
+                누적 {initialTool.view_count.toLocaleString('ko-KR')}
+              </span>
+              {viewCount30d !== undefined && (
+                <>
+                  {' '}
+                  · 30일{' '}
+                  <span className="font-semibold tabular-nums text-gray-900">
+                    {viewCount30d.toLocaleString('ko-KR')}
+                  </span>
+                </>
+              )}
+              <span className="mt-1 block text-xs text-gray-400">
+                /tool/{initialTool.slug} 방문 시 집계 (IP당 24시간 1회) ·{' '}
+                <Link href="/admin/analytics" className="text-blue-600 hover:underline">
+                  기간별 통계
+                </Link>
+              </span>
+            </div>
+          )}
           <div className="flex flex-col gap-4 sm:flex-row sm:gap-8">
             <Toggle
               checked={values.is_verified}

@@ -32,15 +32,19 @@ export interface AdminToolRequest {
   created_at: string;
 }
 
-export type AdminCategory = Category & { tool_count: number };
+export type AdminCategory = Category & {
+  tool_count: number;
+  /** 소속 툴 상세 페이지 조회수 합계 */
+  view_count_sum: number;
+};
 
-/** 관리자 카테고리 목록 (툴 수 포함) */
+/** 관리자 카테고리 목록 (툴 수·누적 조회수 포함) */
 export async function getAdminCategories(): Promise<AdminCategory[]> {
   const supabase = createServiceClient();
 
   const [categoriesRes, toolsRes] = await Promise.all([
     supabase.from('categories').select('*').order('sort_order', { ascending: true }),
-    supabase.from('tools').select('category_slug'),
+    supabase.from('tools').select('category_slug, view_count'),
   ]);
 
   if (categoriesRes.error) {
@@ -51,34 +55,63 @@ export async function getAdminCategories(): Promise<AdminCategory[]> {
   }
 
   const toolCounts: Record<string, number> = {};
+  const viewCountSums: Record<string, number> = {};
   for (const row of toolsRes.data ?? []) {
     const slug = row.category_slug as string;
     toolCounts[slug] = (toolCounts[slug] ?? 0) + 1;
+    viewCountSums[slug] =
+      (viewCountSums[slug] ?? 0) + Number(row.view_count ?? 0);
   }
 
   return ((categoriesRes.data ?? []) as Category[]).map((category) => ({
     ...category,
     tool_count: toolCounts[category.slug] ?? 0,
+    view_count_sum: viewCountSums[category.slug] ?? 0,
   }));
 }
 
-export type AdminSubCategory = SubCategory;
+export type AdminSubCategory = SubCategory & {
+  tool_count: number;
+  view_count_sum: number;
+};
 
-/** 관리자 서브카테고리 전체 목록 */
+/** 관리자 서브카테고리 전체 목록 (툴 수·누적 조회수 포함) */
 export async function getAdminSubCategories(): Promise<AdminSubCategory[]> {
   const supabase = createServiceClient();
 
-  const { data, error } = await supabase
-    .from('sub_categories')
-    .select('*')
-    .order('category_slug', { ascending: true })
-    .order('sort_order', { ascending: true });
+  const [subCategoriesRes, toolsRes] = await Promise.all([
+    supabase
+      .from('sub_categories')
+      .select('*')
+      .order('category_slug', { ascending: true })
+      .order('sort_order', { ascending: true }),
+    supabase
+      .from('tools')
+      .select('sub_category, view_count')
+      .not('sub_category', 'is', null),
+  ]);
 
-  if (error) {
-    throw new Error(`서브카테고리 조회 실패: ${error.message}`);
+  if (subCategoriesRes.error) {
+    throw new Error(`서브카테고리 조회 실패: ${subCategoriesRes.error.message}`);
+  }
+  if (toolsRes.error) {
+    throw new Error(`툴 수 조회 실패: ${toolsRes.error.message}`);
   }
 
-  return (data ?? []) as AdminSubCategory[];
+  const toolCounts: Record<string, number> = {};
+  const viewCountSums: Record<string, number> = {};
+  for (const row of toolsRes.data ?? []) {
+    const slug = row.sub_category as string;
+    toolCounts[slug] = (toolCounts[slug] ?? 0) + 1;
+    viewCountSums[slug] =
+      (viewCountSums[slug] ?? 0) + Number(row.view_count ?? 0);
+  }
+
+  return ((subCategoriesRes.data ?? []) as SubCategory[]).map((subCategory) => ({
+    ...subCategory,
+    tool_count: toolCounts[subCategory.slug] ?? 0,
+    view_count_sum: viewCountSums[subCategory.slug] ?? 0,
+  }));
 }
 
 export interface AdminDashboardData {

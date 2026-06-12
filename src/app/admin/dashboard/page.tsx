@@ -1,11 +1,21 @@
-import { FolderPlus, Layers, MessageSquare, Plus, Wrench } from 'lucide-react';
+import {
+  BarChart3,
+  FolderPlus,
+  Layers,
+  MessageSquare,
+  Plus,
+  Wrench,
+} from 'lucide-react';
 import Link from 'next/link';
 import type { ComponentType } from 'react';
 
+import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import { Badge } from '@/components/ui/Badge';
 import { ADMIN_STATUS_LABELS, isAdminItemStatus } from '@/constants/admin-status';
 import { CATEGORIES } from '@/constants/categories';
+import { getAdminPeriodViews30d } from '@/lib/admin/period-views';
 import {
+  getAdminCategories,
   getAdminDashboardData,
   type AdminSubmission,
   type AdminToolRequest,
@@ -81,8 +91,19 @@ function EmptyRow({ colSpan, message }: { colSpan: number; message: string }) {
 }
 
 export default async function AdminDashboardPage() {
-  const { stats, recentTools, pendingSubmissions, pendingRequests } =
-    await getAdminDashboardData();
+  const [
+    { stats, recentTools, pendingSubmissions, pendingRequests },
+    categories,
+    periodViews,
+  ] = await Promise.all([
+    getAdminDashboardData(),
+    getAdminCategories(),
+    getAdminPeriodViews30d(),
+  ]);
+
+  const categoryViewRanking = [...categories].sort(
+    (a, b) => b.view_count_sum - a.view_count_sum,
+  );
 
   return (
     <div className="space-y-8">
@@ -114,6 +135,64 @@ export default async function AdminDashboardPage() {
         />
       </section>
 
+      {/* 카테고리별 툴 상세 조회 (누적) */}
+      <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">
+              카테고리별 툴 상세 조회
+            </h2>
+            <p className="mt-1 text-xs text-gray-500">
+              공개 툴 상세 페이지(/tool/슬러그) 방문 시 집계 · IP당 24시간 1회 ·
+              홈·카테고리 탭 선택은 포함되지 않음
+            </p>
+          </div>
+          <Link
+            href="/admin/analytics"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <BarChart3 className="h-4 w-4" />
+            기간별 통계
+          </Link>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 text-left text-gray-500">
+                <th className="px-5 py-3 font-medium">카테고리</th>
+                <th className="px-5 py-3 font-medium">툴 수</th>
+                <th className="px-5 py-3 font-medium">조회수 (누적 / 30일)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {categoryViewRanking.length === 0 ? (
+                <EmptyRow colSpan={3} message="카테고리가 없습니다." />
+              ) : (
+                categoryViewRanking.map((category) => (
+                  <tr
+                    key={category.id}
+                    className="border-b border-gray-50 last:border-0"
+                  >
+                    <td className="px-5 py-3 font-medium text-gray-900">
+                      {category.name}
+                    </td>
+                    <td className="px-5 py-3 text-gray-600">
+                      {category.tool_count.toLocaleString('ko-KR')}
+                    </td>
+                    <td className="px-5 py-3">
+                      <ViewStatsCell
+                        lifetime={category.view_count_sum}
+                        period={periodViews.byCategory[category.slug] ?? 0}
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {/* 빠른 액션 */}
       <section className="flex flex-wrap gap-3">
         <Link
@@ -143,13 +222,14 @@ export default async function AdminDashboardPage() {
               <tr className="border-b border-gray-100 text-left text-gray-500">
                 <th className="px-5 py-3 font-medium">서비스명</th>
                 <th className="px-5 py-3 font-medium">카테고리</th>
+                <th className="px-5 py-3 font-medium">조회수 (누적 / 30일)</th>
                 <th className="px-5 py-3 font-medium">추가일</th>
                 <th className="px-5 py-3 font-medium">검증</th>
               </tr>
             </thead>
             <tbody>
               {recentTools.length === 0 ? (
-                <EmptyRow colSpan={4} message="등록된 툴이 없습니다." />
+                <EmptyRow colSpan={5} message="등록된 툴이 없습니다." />
               ) : (
                 recentTools.map((tool: Tool) => (
                   <tr
@@ -161,6 +241,12 @@ export default async function AdminDashboardPage() {
                     </td>
                     <td className="px-5 py-3 text-gray-600">
                       {getCategoryName(tool.category_slug)}
+                    </td>
+                    <td className="px-5 py-3">
+                      <ViewStatsCell
+                        lifetime={tool.view_count}
+                        period={periodViews.byTool[tool.id] ?? 0}
+                      />
                     </td>
                     <td className="px-5 py-3 text-gray-600">
                       {formatDate(tool.created_at)}

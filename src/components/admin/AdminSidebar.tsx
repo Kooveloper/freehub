@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BarChart3,
   ExternalLink,
   FileText,
   Folder,
@@ -21,6 +22,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://freehub.kr';
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: '대시보드', icon: Home },
+  { href: '/admin/analytics', label: '조회 통계', icon: BarChart3 },
   { href: '/admin/tools', label: '툴 관리', icon: Wrench },
   { href: '/admin/categories', label: '카테고리', icon: Folder },
   { href: '/admin/featured', label: '인기 서비스', icon: TrendingUp },

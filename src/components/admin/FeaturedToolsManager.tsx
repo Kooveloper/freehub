@@ -13,7 +13,22 @@ interface FeaturedRow {
   tool?: Pick<Tool, 'id' | 'name' | 'slug' | 'logo_url' | 'view_count'>;
 }
 
-export function FeaturedToolsManager() {
+interface FeaturedToolsManagerProps {
+  periodViewsByTool?: Record<string, number>;
+}
+
+function formatViewLabel(
+  toolId: string,
+  lifetime: number,
+  periodViewsByTool: Record<string, number>,
+) {
+  const period = periodViewsByTool[toolId] ?? 0;
+  return `누적 ${lifetime.toLocaleString()} · 30일 ${period.toLocaleString()}`;
+}
+
+export function FeaturedToolsManager({
+  periodViewsByTool = {},
+}: FeaturedToolsManagerProps) {
   const { toast, showToast, hideToast } = useToast();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedSlug, setSelectedSlug] = useState('');
@@ -168,7 +183,11 @@ export function FeaturedToolsManager() {
                         {tool.name}
                       </p>
                       <p className="text-xs text-gray-400">
-                        조회수 {tool.view_count?.toLocaleString() ?? 0}
+                        {formatViewLabel(
+                          tool.id,
+                          tool.view_count ?? 0,
+                          periodViewsByTool,
+                        )}
                       </p>
                     </div>
                     <div className="flex shrink-0 gap-1">
@@ -221,7 +240,11 @@ export function FeaturedToolsManager() {
                     {tool.name}
                   </span>
                   <span className="ml-auto text-xs text-gray-400">
-                    {tool.view_count.toLocaleString()} views
+                    {formatViewLabel(
+                      tool.id,
+                      tool.view_count,
+                      periodViewsByTool,
+                    )}
                   </span>
                 </button>
               </li>

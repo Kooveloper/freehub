@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
+import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import type { AdminCategory } from '@/lib/supabase/admin-queries';
@@ -14,6 +15,7 @@ import type { Tool } from '@/types/tool';
 interface ToolsManagerProps {
   tools: Tool[];
   categories: AdminCategory[];
+  periodViewsByTool?: Record<string, number>;
 }
 
 async function parseApiError(response: Response) {
@@ -31,7 +33,11 @@ function formatUpdatedAt(date: string) {
   });
 }
 
-export function ToolsManager({ tools, categories }: ToolsManagerProps) {
+export function ToolsManager({
+  tools,
+  categories,
+  periodViewsByTool = {},
+}: ToolsManagerProps) {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -126,6 +132,7 @@ export function ToolsManager({ tools, categories }: ToolsManagerProps) {
                 <th className="px-4 py-3 font-medium">서비스명</th>
                 <th className="px-4 py-3 font-medium">카테고리</th>
                 <th className="px-4 py-3 font-medium">무료 한도</th>
+                <th className="px-4 py-3 font-medium">조회수 (누적 / 30일)</th>
                 <th className="px-4 py-3 font-medium">검증</th>
                 <th className="px-4 py-3 font-medium">수정일</th>
                 <th className="px-4 py-3 font-medium">액션</th>
@@ -135,7 +142,7 @@ export function ToolsManager({ tools, categories }: ToolsManagerProps) {
               {filteredTools.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-gray-400"
                   >
                     {tools.length === 0
@@ -176,6 +183,12 @@ export function ToolsManager({ tools, categories }: ToolsManagerProps) {
                       </td>
                       <td className="px-4 py-3 text-gray-700">
                         {freeLimitLabel}
+                      </td>
+                      <td className="px-4 py-3">
+                        <ViewStatsCell
+                          lifetime={tool.view_count}
+                          period={periodViewsByTool[tool.id] ?? 0}
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={tool.is_verified ? 'green' : 'gray'}>

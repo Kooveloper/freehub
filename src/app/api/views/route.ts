@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { logToolViewEvent } from '@/lib/admin/analytics';
 import { redis } from '@/lib/redis';
 import { incrementViewCount } from '@/lib/supabase/queries';
 
@@ -50,6 +51,12 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('조회수 증가 실패:', error);
     return NextResponse.json({ error: '조회수 증가 실패' }, { status: 500 });
+  }
+
+  try {
+    await logToolViewEvent(toolId);
+  } catch (error) {
+    console.error('조회 이벤트 기록 실패:', error);
   }
 
   return NextResponse.json({ success: true, counted: true });

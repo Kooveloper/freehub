@@ -6,6 +6,7 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': '대시보드',
+  '/admin/analytics': '조회 통계',
   '/admin/tools': '툴 관리',
   '/admin/tools/new': '툴 등록',
   '/admin/categories': '카테고리',
