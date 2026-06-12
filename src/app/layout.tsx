@@ -37,6 +37,9 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description: t('metadata.defaultDescription'),
     metadataBase: new URL(appUrl),
+    icons: {
+      icon: '/Freehub_Fabicon.ico',
+    },
     robots: {
       index: true,
       follow: true,
