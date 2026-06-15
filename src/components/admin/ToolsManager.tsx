@@ -9,13 +9,14 @@ import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import type { ToolExcelImportResult } from '@/lib/admin/tool-excel';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
-import type { AdminCategory } from '@/lib/supabase/admin-queries';
+import type { AdminCategory, AdminSubCategory } from '@/lib/supabase/admin-queries';
 import { cn, formatFreeLimit } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
 
 interface ToolsManagerProps {
   tools: Tool[];
   categories: AdminCategory[];
+  subCategories: AdminSubCategory[];
   periodViewsByTool?: Record<string, number>;
 }
 
@@ -37,12 +38,14 @@ function formatUpdatedAt(date: string) {
 export function ToolsManager({
   tools,
   categories,
+  subCategories,
   periodViewsByTool = {},
 }: ToolsManagerProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [subCategoryFilter, setSubCategoryFilter] = useState('');
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ToolExcelImportResult | null>(
@@ -55,6 +58,18 @@ export function ToolsManager({
     [categories],
   );
 
+  const subCategoryMap = useMemo(
+    () => new Map(subCategories.map((sub) => [sub.slug, sub.name])),
+    [subCategories],
+  );
+
+  const subCategoryOptions = useMemo(() => {
+    if (!categoryFilter) return [];
+    return subCategories.filter(
+      (sub) => sub.category_slug === categoryFilter,
+    );
+  }, [subCategories, categoryFilter]);
+
   const filteredTools = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -65,10 +80,12 @@ export function ToolsManager({
         tool.slug.toLowerCase().includes(query);
       const matchesCategory =
         !categoryFilter || tool.category_slug === categoryFilter;
+      const matchesSubCategory =
+        !subCategoryFilter || tool.sub_category === subCategoryFilter;
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesSubCategory;
     });
-  }, [tools, search, categoryFilter]);
+  }, [tools, search, categoryFilter, subCategoryFilter]);
 
   const handleImport = async (file: File) => {
     setImporting(true);
@@ -144,13 +161,32 @@ export function ToolsManager({
 
           <select
             value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
+            onChange={(event) => {
+              setCategoryFilter(event.target.value);
+              setSubCategoryFilter('');
+            }}
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="">전체 카테고리</option>
             {categories.map((category) => (
               <option key={category.id} value={category.slug}>
                 {category.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={subCategoryFilter}
+            onChange={(event) => setSubCategoryFilter(event.target.value)}
+            disabled={!categoryFilter}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-400"
+          >
+            <option value="">
+              {categoryFilter ? '전체 서브카테고리' : '카테고리 선택'}
+            </option>
+            {subCategoryOptions.map((sub) => (
+              <option key={sub.id} value={sub.slug}>
+                {sub.name}
               </option>
             ))}
           </select>
@@ -236,7 +272,7 @@ export function ToolsManager({
               <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
                 <th className="px-4 py-3 font-medium">로고</th>
                 <th className="px-4 py-3 font-medium">서비스명</th>
-                <th className="px-4 py-3 font-medium">카테고리</th>
+                <th className="px-4 py-3 font-medium">카테고리 / 서브</th>
                 <th className="px-4 py-3 font-medium">무료 한도</th>
                 <th className="px-4 py-3 font-medium">조회수 (누적 / 30일)</th>
                 <th className="px-4 py-3 font-medium">검증</th>
@@ -284,8 +320,18 @@ export function ToolsManager({
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-700">
-                        {categoryMap.get(tool.category_slug) ??
-                          tool.category_slug}
+                        <div>
+                          {categoryMap.get(tool.category_slug) ??
+                            tool.category_slug}
+                        </div>
+                        {tool.sub_category ? (
+                          <div className="mt-0.5 text-xs text-gray-500">
+                            {subCategoryMap.get(tool.sub_category) ??
+                              tool.sub_category}
+                          </div>
+                        ) : (
+                          <div className="mt-0.5 text-xs text-gray-400">—</div>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-700">
                         {freeLimitLabel}

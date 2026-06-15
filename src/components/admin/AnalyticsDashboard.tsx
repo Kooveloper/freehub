@@ -35,7 +35,7 @@ function formatRangeLabel(from: string, to: string) {
 }
 
 export function AnalyticsDashboard() {
-  const [period, setPeriod] = useState<AnalyticsPeriod>('30d');
+  const [period, setPeriod] = useState<AnalyticsPeriod>('1d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('categories');

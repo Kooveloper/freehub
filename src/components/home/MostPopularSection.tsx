@@ -1,7 +1,4 @@
-import Link from 'next/link';
-
-import { CategoryIcon } from '@/components/category/CategoryIcon';
-import { ToolLogo } from '@/components/ui/ToolLogo';
+import { MostPopularCarousel } from '@/components/home/MostPopularCarousel';
 import { localizeCategories, localizeTools } from '@/lib/i18n/content';
 import type { CategoryFeaturedEntry } from '@/lib/featured-tools';
 import { getLocale, getTranslations } from '@/lib/locale';
@@ -20,63 +17,14 @@ export async function MostPopularSection({ entries }: MostPopularSectionProps) {
   }));
 
   return (
-    <section className="px-4 pb-2 pt-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <h2 className="mb-2 text-2xl font-bold text-black">
-          {t('home.mostPopular')}
-        </h2>
-        <p className="mb-8 text-sm text-neutral-500">
-          {locale === 'en'
-            ? 'Top picks by category'
-            : '카테고리별로 가장 많이 찾은 서비스'}
-        </p>
-
-        <div className="space-y-8">
-          {localized.map(({ category, tools }) => {
-            if (tools.length === 0) return null;
-
-            return (
-              <div
-                key={category.slug}
-                className="rounded-xl border border-neutral-200 bg-white p-5 sm:p-6"
-              >
-                <div className="mb-5 flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-800">
-                    <CategoryIcon name={category.icon} size={20} />
-                  </span>
-                  <h3 className="text-sm font-bold text-neutral-900">
-                    {category.name}
-                  </h3>
-                </div>
-                <div className="flex flex-wrap gap-5 sm:gap-6">
-                  {tools.map((tool, index) => (
-                    <Link
-                      key={tool.id}
-                      href={`/tool/${tool.slug}`}
-                      className="group flex w-[72px] flex-col items-center gap-2 sm:w-20"
-                    >
-                      <div className="relative">
-                        <ToolLogo
-                          name={tool.name}
-                          logoUrl={tool.logo_url}
-                          size={56}
-                          className="rounded-2xl ring-1 ring-neutral-200 transition-all group-hover:ring-neutral-400"
-                        />
-                        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black text-[10px] font-bold text-white">
-                          {index + 1}
-                        </span>
-                      </div>
-                      <span className="line-clamp-2 text-center text-xs font-medium text-neutral-800 transition-colors group-hover:text-black">
-                        {tool.name}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
+    <MostPopularCarousel
+      title={t('home.mostPopular')}
+      subtitle={
+        locale === 'en'
+          ? 'Top picks by category'
+          : '카테고리별로 가장 많이 찾은 서비스'
+      }
+      entries={localized}
+    />
   );
 }
