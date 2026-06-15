@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { AuthCard } from '@/components/auth/AuthCard';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import { useLocale } from '@/contexts/LocaleContext';
 import { buildAuthCallbackUrl } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -17,12 +18,17 @@ function getErrorMessage(message: string): string {
     'User already registered': '이미 가입된 이메일입니다.',
     'Password should be at least 6 characters':
       '비밀번호는 6자 이상이어야 합니다.',
+    'Error sending confirmation email':
+      '인증 메일 발송에 실패했습니다. 잠시 후 다시 시도하거나 Google 로그인을 이용해주세요.',
+    'Email rate limit exceeded':
+      '이메일 발송 한도를 초과했습니다. 잠시 후 다시 시도해주세요.',
   };
   return map[message] ?? message;
 }
 
 /** 이메일·비밀번호 회원가입 폼 */
 export function SignupForm() {
+  const { locale } = useLocale();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -39,6 +45,7 @@ export function SignupForm() {
       email: email.trim(),
       password,
       options: {
+        data: { locale },
         emailRedirectTo: buildAuthCallbackUrl('/'),
       },
     });

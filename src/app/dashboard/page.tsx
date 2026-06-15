@@ -28,7 +28,12 @@ export default async function DashboardPage() {
     redirect('/login?next=/dashboard');
   }
 
-  const favoriteTools = await getFavoriteToolsForUser(user.id);
+  let favoriteTools: Awaited<ReturnType<typeof getFavoriteToolsForUser>> = [];
+  try {
+    favoriteTools = await getFavoriteToolsForUser(user.id);
+  } catch (error) {
+    console.error('즐겨찾기 조회 실패:', error);
+  }
 
   return (
     <DashboardContent

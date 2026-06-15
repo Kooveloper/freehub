@@ -14,7 +14,8 @@ export default function Error({
         오류가 발생했어요
       </h1>
       <p className="mt-3 max-w-md text-sm text-gray-500">
-        잠시 후 다시 시도해 주세요. 문제가 계속되면 새로고침해 보세요.
+        잠시 후 다시 시도해 주세요. 문제가 계속되면{' '}
+        <span className="whitespace-nowrap">새로고침해 보세요.</span>
       </p>
       <button
         type="button"

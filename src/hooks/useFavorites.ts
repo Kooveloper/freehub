@@ -30,7 +30,6 @@ export function useFavorites() {
 
       const data = await res.json();
       setFavorites(data.favorites ?? []);
-      setIsLoggedIn(true);
     } catch {
       setFavorites([]);
     } finally {
@@ -38,32 +37,35 @@ export function useFavorites() {
     }
   }, []);
 
+  const syncAuthAndFavorites = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase.auth.getUser();
+    const loggedIn = Boolean(data.user);
+
+    setIsLoggedIn(loggedIn);
+
+    if (loggedIn) {
+      await fetchFavorites();
+      return;
+    }
+
+    setFavorites([]);
+    setIsLoading(false);
+  }, [fetchFavorites]);
+
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        fetchFavorites();
-      } else {
-        setIsLoading(false);
-        setIsLoggedIn(false);
-      }
-    });
+    void syncAuthAndFavorites();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        fetchFavorites();
-      } else {
-        setFavorites([]);
-        setIsLoggedIn(false);
-        setIsLoading(false);
-      }
+    } = supabase.auth.onAuthStateChange(() => {
+      void syncAuthAndFavorites();
     });
 
     return () => subscription.unsubscribe();
-  }, [fetchFavorites]);
+  }, [syncAuthAndFavorites]);
 
   const isFavorite = useCallback(
     (toolId: string) => favorites.includes(toolId),
@@ -79,7 +81,6 @@ export function useFavorites() {
 
       const wasFavorite = favorites.includes(toolId);
 
-      // 낙관적 업데이트
       setFavorites((prev) =>
         wasFavorite
           ? prev.filter((id) => id !== toolId)
@@ -97,6 +98,7 @@ export function useFavorites() {
           setFavorites((prev) =>
             wasFavorite ? [...prev, toolId] : prev.filter((id) => id !== toolId),
           );
+          setIsLoggedIn(false);
           showLoginPrompt();
           return;
         }
@@ -105,7 +107,6 @@ export function useFavorites() {
           throw new Error('즐겨찾기 변경 실패');
         }
       } catch {
-        // 실패 시 롤백
         setFavorites((prev) =>
           wasFavorite ? [...prev, toolId] : prev.filter((id) => id !== toolId),
         );
@@ -117,6 +118,7 @@ export function useFavorites() {
   return {
     favorites,
     isLoading,
+    isLoggedIn,
     isFavorite,
     toggleFavorite,
   };
