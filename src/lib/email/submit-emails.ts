@@ -86,22 +86,7 @@ function buildAdminHtml(
     </html>`;
 }
 
-function buildSubmitterHtml(toolLabel: string): string {
-  return `
-    <!DOCTYPE html>
-    <html lang="ko">
-      <body style="font-family:sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:24px">
-        <h2 style="color:#2563eb;margin-bottom:16px">제보가 접수되었습니다 🙏</h2>
-        <p>안녕하세요,</p>
-        <p><strong>${escapeHtml(toolLabel)}</strong> 관련 제보가 정상적으로 접수되었습니다.</p>
-        <p>검토 후 반영 여부를 알려드리겠습니다. FreeHub를 이용해 주셔서 감사합니다!</p>
-        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
-        <p style="font-size:12px;color:#9ca3af">FreeHub · noreply@freehub.kr</p>
-      </body>
-    </html>`;
-}
-
-/** 관리자·제보자 이메일 발송 */
+/** 관리자 제보 알림 이메일 발송 */
 export async function sendSubmissionEmails(
   type: SubmissionType,
   payload: NewToolPayload | LimitChangePayload | BugPayload,
@@ -124,13 +109,4 @@ export async function sendSubmissionEmails(
     subject: `[FreeHub] 새 제보: ${toolLabel}`,
     html: buildAdminHtml(type, payload, submitterEmail),
   });
-
-  if (submitterEmail) {
-    await resend.emails.send({
-      from: FROM,
-      to: submitterEmail,
-      subject: '[FreeHub] 제보가 접수되었습니다 🙏',
-      html: buildSubmitterHtml(toolLabel),
-    });
-  }
 }

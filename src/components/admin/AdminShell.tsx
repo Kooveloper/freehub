@@ -13,6 +13,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/featured': '인기 서비스',
   '/admin/submissions': '제보 관리',
   '/admin/requests': '요청 관리',
+  '/admin/users': '회원 관리',
   '/admin/settings': '사이트 설정',
   '/admin/legal': '약관/정책',
 };
@@ -26,6 +27,13 @@ function getPageTitle(pathname: string): string {
     pathname !== '/admin/tools/new'
   ) {
     return '툴 수정';
+  }
+
+  if (
+    pathname.startsWith('/admin/users/') &&
+    pathname !== '/admin/users'
+  ) {
+    return '회원 상세';
   }
 
   for (const [path, title] of Object.entries(PAGE_TITLES)) {

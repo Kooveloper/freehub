@@ -6,6 +6,7 @@ import { useState } from 'react';
 
 import { AuthCard } from '@/components/auth/AuthCard';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import { getOAuthCallbackErrorMessage } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
@@ -27,10 +28,10 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get('next') ?? '/';
 
-  const callbackError =
-    searchParams.get('error') === 'auth_callback_error'
-      ? '로그인에 실패했습니다. 다시 시도해주세요.'
-      : '';
+  const callbackError = getOAuthCallbackErrorMessage(
+    searchParams.get('error'),
+    searchParams.get('error_code'),
+  );
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

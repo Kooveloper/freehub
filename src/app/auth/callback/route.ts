@@ -1,12 +1,32 @@
 import { NextResponse } from 'next/server';
 
+import { resolveAppOrigin } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/server';
 
 /** Google OAuth 및 이메일 확인 콜백 */
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
-  const code = searchParams.get('code');
+  const requestUrl = new URL(request.url);
+  const { searchParams } = requestUrl;
+  const appOrigin = resolveAppOrigin(requestUrl.origin);
   const next = searchParams.get('next') ?? '/';
+
+  const oauthError = searchParams.get('error');
+  const oauthErrorCode = searchParams.get('error_code');
+
+  if (oauthError) {
+    const loginUrl = new URL('/login', appOrigin);
+    loginUrl.searchParams.set('error', 'auth_callback_error');
+    if (oauthErrorCode) {
+      loginUrl.searchParams.set('error_code', oauthErrorCode);
+    }
+    const description = searchParams.get('error_description');
+    if (description) {
+      loginUrl.searchParams.set('error_description', description);
+    }
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const code = searchParams.get('code');
 
   if (code) {
     const supabase = await createClient();
@@ -14,9 +34,18 @@ export async function GET(request: Request) {
 
     if (!error) {
       const redirectPath = next.startsWith('/') ? next : '/';
-      return NextResponse.redirect(`${origin}${redirectPath}`);
+      return NextResponse.redirect(`${appOrigin}${redirectPath}`);
     }
+
+    const loginUrl = new URL('/login', appOrigin);
+    loginUrl.searchParams.set('error', 'auth_callback_error');
+    if (error.message) {
+      loginUrl.searchParams.set('error_description', error.message);
+    }
+    return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
+  const loginUrl = new URL('/login', appOrigin);
+  loginUrl.searchParams.set('error', 'auth_callback_error');
+  return NextResponse.redirect(loginUrl);
 }

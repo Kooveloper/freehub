@@ -2,11 +2,15 @@
 
 import { X } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import { CategoryAssignmentsEditor } from '@/components/admin/CategoryAssignmentsEditor';
 import { Toast, useToast } from '@/components/admin/Toast';
+import {
+  queueAdminToolToast,
+  safeAdminToolsReturnPath,
+} from '@/lib/admin/tool-toast';
 import {
   FREE_LIMIT_TYPE_LABELS,
   generateSlugFromName,
@@ -346,9 +350,11 @@ export function ToolForm({
   viewCount30d,
 }: ToolFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast, showToast, hideToast } = useToast();
   const isEdit = Boolean(initialTool);
   const defaultCategorySlug = categories[0]?.slug ?? '';
+  const cancelHref = safeAdminToolsReturnPath(searchParams.get('return'));
 
   const [values, setValues] = useState<ToolFormInput>(() =>
     initialTool
@@ -443,17 +449,18 @@ export function ToolForm({
 
       if (!response.ok) await parseApiError(response);
 
-      showToast(
-        isEdit ? '툴 정보가 저장되었습니다.' : '새 툴이 등록되었습니다.',
-        'success',
-      );
+      const successMessage = isEdit
+        ? '툴 정보가 저장되었습니다.'
+        : '새 툴이 등록되었습니다.';
+
+      queueAdminToolToast(successMessage, 'success');
 
       if (isEdit) {
-        router.refresh();
+        router.push(cancelHref);
       } else {
         router.push('/admin/tools');
-        router.refresh();
       }
+      router.refresh();
     } catch (submitError) {
       const message =
         submitError instanceof Error
@@ -778,7 +785,7 @@ export function ToolForm({
 
         <div className="flex items-center justify-end gap-3 pb-8">
           <Link
-            href="/admin/tools"
+            href={cancelHref}
             className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             취소

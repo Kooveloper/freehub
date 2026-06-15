@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Settings,
   TrendingUp,
+  Users,
   Wrench,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: '/admin/featured', label: '인기 서비스', icon: TrendingUp },
   { href: '/admin/submissions', label: '제보 관리', icon: Inbox },
   { href: '/admin/requests', label: '요청 관리', icon: MessageSquare },
+  { href: '/admin/users', label: '회원 관리', icon: Users },
   { href: '/admin/settings', label: '사이트 설정', icon: Settings },
   { href: '/admin/legal', label: '약관/정책', icon: FileText },
 ] as const;

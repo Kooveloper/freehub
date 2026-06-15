@@ -5,6 +5,7 @@ import { useState } from 'react';
 
 import { AuthCard } from '@/components/auth/AuthCard';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import { buildAuthCallbackUrl } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
@@ -38,7 +39,7 @@ export function SignupForm() {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: buildAuthCallbackUrl('/'),
       },
     });
 

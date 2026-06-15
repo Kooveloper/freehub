@@ -1,6 +1,7 @@
 'use client';
 
 import { createClient } from '@/lib/supabase/client';
+import { buildAuthCallbackUrl } from '@/lib/auth-redirect';
 import { cn } from '@/lib/utils';
 
 function GoogleIcon() {
@@ -42,11 +43,10 @@ export function GoogleAuthButton({
 }: GoogleAuthButtonProps) {
   const handleGoogleAuth = async () => {
     const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo },
+      options: { redirectTo: buildAuthCallbackUrl(next) },
     });
 
     if (error) {

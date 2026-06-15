@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import type { SubmissionType, ToolOption } from '@/types/submission';
@@ -28,6 +28,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   const [activeTab, setActiveTab] = useState<SubmissionType>('new_tool');
   const [status, setStatus] = useState<FormStatus>('idle');
   const [cooldown, setCooldown] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   // 탭1: 새 툴 제보
   const [toolName, setToolName] = useState('');
@@ -118,7 +119,14 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   const handleTabChange = (tab: SubmissionType) => {
     setActiveTab(tab);
     resetStatus();
+    setShowSuccessToast(false);
   };
+
+  useEffect(() => {
+    if (!showSuccessToast) return;
+    const timer = window.setTimeout(() => setShowSuccessToast(false), 4000);
+    return () => window.clearTimeout(timer);
+  }, [showSuccessToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,6 +148,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
       if (!res.ok) throw new Error('제보 실패');
 
       setStatus('success');
+      setShowSuccessToast(true);
       clearForm();
       startCooldown();
     } catch {
@@ -149,7 +158,8 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   };
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+    <>
+      <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
       {/* 탭 */}
       <div className="flex border-b border-gray-200">
         {TABS.map((tab) => (
@@ -338,19 +348,28 @@ export function SubmitForm({ tools }: SubmitFormProps) {
           {status === 'submitting' ? '제출 중...' : '제보하기'}
         </button>
 
-        {status === 'success' && (
-          <p className="text-center text-sm font-medium text-green-600">
-            제보가 접수되었습니다! 검토 후 반영할게요 😊
-          </p>
-        )}
-
         {status === 'error' && (
           <p className="text-center text-sm font-medium text-red-600">
             잠시 후 다시 시도해주세요
           </p>
         )}
       </form>
-    </div>
+      </div>
+
+      {showSuccessToast && (
+        <div
+          role="status"
+          className="fixed bottom-6 left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border border-green-200 bg-white px-4 py-3 shadow-lg"
+        >
+          <p className="text-sm font-semibold text-gray-900">
+            제보가 접수되었습니다
+          </p>
+          <p className="mt-1 text-xs text-gray-500">
+            검토 후 반영할게요. 감사합니다!
+          </p>
+        </div>
+      )}
+    </>
   );
 }
 

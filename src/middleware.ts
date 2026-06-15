@@ -3,6 +3,13 @@ import { type NextRequest, NextResponse } from 'next/server';
 
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 
+const OAUTH_ERROR_CODES = new Set([
+  'flow_state_already_used',
+  'flow_state_not_found',
+  'flow_state_expired',
+  'oauth_invalid_state',
+]);
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -30,6 +37,18 @@ export async function middleware(request: NextRequest) {
   await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
+  const oauthErrorCode = request.nextUrl.searchParams.get('error_code');
+
+  if (
+    oauthErrorCode &&
+    OAUTH_ERROR_CODES.has(oauthErrorCode) &&
+    pathname !== '/login'
+  ) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/login';
+    loginUrl.searchParams.set('error', 'auth_callback_error');
+    return NextResponse.redirect(loginUrl);
+  }
 
   if (pathname.startsWith('/admin')) {
     if (pathname === '/admin/login') {

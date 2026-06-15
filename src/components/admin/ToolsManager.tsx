@@ -2,11 +2,16 @@
 
 import { Download, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
+import { Toast, useToast } from '@/components/admin/Toast';
 import type { ToolExcelImportResult } from '@/lib/admin/tool-excel';
+import {
+  buildAdminToolsListUrl,
+  consumeAdminToolToast,
+} from '@/lib/admin/tool-toast';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import { toolInSubCategory, toolMatchesAdminFilters } from '@/lib/tool-categories';
@@ -43,7 +48,9 @@ export function ToolsManager({
   periodViewsByTool = {},
 }: ToolsManagerProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast, showToast, hideToast } = useToast();
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
@@ -53,6 +60,29 @@ export function ToolsManager({
     null,
   );
   const [importError, setImportError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSearch(searchParams.get('q') ?? '');
+    setCategoryFilter(searchParams.get('category') ?? '');
+    setSubCategoryFilter(searchParams.get('sub') ?? '');
+  }, [searchParams]);
+
+  useEffect(() => {
+    const queued = consumeAdminToolToast();
+    if (queued) {
+      showToast(queued.message, queued.type);
+    }
+  }, [showToast]);
+
+  const listReturnUrl = useMemo(
+    () =>
+      buildAdminToolsListUrl({
+        q: search,
+        category: categoryFilter,
+        sub: subCategoryFilter,
+      }),
+    [search, categoryFilter, subCategoryFilter],
+  );
 
   const categoryMap = useMemo(
     () => new Map(categories.map((category) => [category.slug, category.name])),
@@ -376,7 +406,7 @@ export function ToolsManager({
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           <Link
-                            href={`/admin/tools/${tool.id}`}
+                            href={`/admin/tools/${tool.id}?return=${encodeURIComponent(listReturnUrl)}`}
                             className={cn(
                               'rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600',
                               isPending && 'pointer-events-none opacity-50',
@@ -404,6 +434,8 @@ export function ToolsManager({
           </table>
         </div>
       </div>
+
+      <Toast toast={toast} onClose={hideToast} />
     </div>
   );
 }
