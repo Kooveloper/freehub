@@ -1,5 +1,9 @@
 /** 제보 유형 */
-export type SubmissionType = 'new_tool' | 'limit_change' | 'bug';
+export type SubmissionType =
+  | 'new_tool'
+  | 'limit_change'
+  | 'bug'
+  | 'inquiry';
 
 /** 새 툴 제보 */
 export interface NewToolPayload {
@@ -23,13 +27,21 @@ export interface BugPayload {
   pageUrl?: string;
 }
 
+/** 기타 문의 */
+export interface InquiryPayload {
+  title: string;
+  content: string;
+}
+
 export type SubmissionPayload =
   | NewToolPayload
   | LimitChangePayload
-  | BugPayload;
+  | BugPayload
+  | InquiryPayload;
 
 export interface SubmissionRequest {
   type: SubmissionType;
+  /** 기타 문의 시 필수 */
   email?: string;
   payload: SubmissionPayload;
 }

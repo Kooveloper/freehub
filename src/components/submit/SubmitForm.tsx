@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 import type { SubmissionType, ToolOption } from '@/types/submission';
@@ -15,9 +16,19 @@ type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 const TABS: { id: SubmissionType; label: string }[] = [
   { id: 'new_tool', label: '새 툴 제보' },
-  { id: 'limit_change', label: '한도 변경 신고' },
-  { id: 'bug', label: '버그/오류 신고' },
+  { id: 'limit_change', label: '한도 변경' },
+  { id: 'bug', label: '버그/오류' },
+  { id: 'inquiry', label: '기타 문의' },
 ];
+
+const TAB_SET = new Set<SubmissionType>(TABS.map((tab) => tab.id));
+
+function resolveInitialTab(value: string | null): SubmissionType {
+  if (value && TAB_SET.has(value as SubmissionType)) {
+    return value as SubmissionType;
+  }
+  return 'new_tool';
+}
 
 interface SubmitFormProps {
   tools: ToolOption[];
@@ -25,7 +36,10 @@ interface SubmitFormProps {
 
 /** 제보 탭 폼 */
 export function SubmitForm({ tools }: SubmitFormProps) {
-  const [activeTab, setActiveTab] = useState<SubmissionType>('new_tool');
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<SubmissionType>(() =>
+    resolveInitialTab(searchParams.get('tab')),
+  );
   const [status, setStatus] = useState<FormStatus>('idle');
   const [cooldown, setCooldown] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -45,8 +59,15 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   const [bugDescription, setBugDescription] = useState('');
   const [pageUrl, setPageUrl] = useState('');
 
-  // 공통
-  const [email, setEmail] = useState('');
+  // 탭4: 기타 문의
+  const [inquiryTitle, setInquiryTitle] = useState('');
+  const [inquiryContent, setInquiryContent] = useState('');
+  const [inquiryEmail, setInquiryEmail] = useState('');
+
+  useEffect(() => {
+    const tab = resolveInitialTab(searchParams.get('tab'));
+    setActiveTab(tab);
+  }, [searchParams]);
 
   const resetStatus = () => {
     if (status === 'success' || status === 'error') setStatus('idle');
@@ -72,10 +93,16 @@ export function SubmitForm({ tools }: SubmitFormProps) {
 
   const isBugValid = bugDescription.trim().length > 0;
 
+  const isInquiryValid =
+    inquiryTitle.trim().length > 0 &&
+    inquiryContent.trim().length > 0 &&
+    inquiryEmail.trim().length > 0;
+
   const isValid =
     (activeTab === 'new_tool' && isNewToolValid) ||
     (activeTab === 'limit_change' && isLimitChangeValid) ||
-    (activeTab === 'bug' && isBugValid);
+    (activeTab === 'bug' && isBugValid) ||
+    (activeTab === 'inquiry' && isInquiryValid);
 
   const isDisabled = status === 'submitting' || cooldown || !isValid;
 
@@ -100,6 +127,11 @@ export function SubmitForm({ tools }: SubmitFormProps) {
           description: bugDescription.trim(),
           ...(pageUrl.trim() ? { pageUrl: pageUrl.trim() } : {}),
         };
+      case 'inquiry':
+        return {
+          title: inquiryTitle.trim(),
+          content: inquiryContent.trim(),
+        };
     }
   };
 
@@ -113,7 +145,9 @@ export function SubmitForm({ tools }: SubmitFormProps) {
     setEvidenceUrl('');
     setBugDescription('');
     setPageUrl('');
-    setEmail('');
+    setInquiryTitle('');
+    setInquiryContent('');
+    setInquiryEmail('');
   };
 
   const handleTabChange = (tab: SubmissionType) => {
@@ -140,7 +174,9 @@ export function SubmitForm({ tools }: SubmitFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: activeTab,
-          email: email.trim() || undefined,
+          ...(activeTab === 'inquiry'
+            ? { email: inquiryEmail.trim() }
+            : {}),
           payload: buildPayload(),
         }),
       });
@@ -157,203 +193,242 @@ export function SubmitForm({ tools }: SubmitFormProps) {
     }
   };
 
+  const successMessage =
+    activeTab === 'inquiry' ? '문의가 접수되었습니다' : '제보가 접수되었습니다';
+
   return (
     <>
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-      {/* 탭 */}
-      <div className="flex border-b border-gray-200">
-        {TABS.map((tab) => (
+        <div className="flex overflow-x-auto border-b border-gray-200">
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id)}
+              className={cn(
+                'min-w-[5.5rem] flex-1 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors',
+                activeTab === tab.id
+                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  : 'text-gray-500 hover:text-gray-700',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 p-6 sm:p-8">
+          {activeTab === 'new_tool' && (
+            <>
+              <Field label="툴 이름" required>
+                <input
+                  type="text"
+                  value={toolName}
+                  onChange={(e) => {
+                    resetStatus();
+                    setToolName(e.target.value);
+                  }}
+                  placeholder="예: ChatGPT"
+                  maxLength={100}
+                  required
+                  className={INPUT_CLASS}
+                />
+              </Field>
+              <Field label="URL" required>
+                <input
+                  type="url"
+                  value={toolUrl}
+                  onChange={(e) => {
+                    resetStatus();
+                    setToolUrl(e.target.value);
+                  }}
+                  placeholder="https://..."
+                  required
+                  className={INPUT_CLASS}
+                />
+              </Field>
+              <Field label="무료 한도" required>
+                <input
+                  type="text"
+                  value={freeLimit}
+                  onChange={(e) => {
+                    resetStatus();
+                    setFreeLimit(e.target.value);
+                  }}
+                  placeholder="예: 매일 20회, 월 10,000토큰"
+                  maxLength={200}
+                  required
+                  className={INPUT_CLASS}
+                />
+              </Field>
+              <Field label="설명" required>
+                <textarea
+                  value={description}
+                  onChange={(e) => {
+                    resetStatus();
+                    setDescription(e.target.value);
+                  }}
+                  placeholder="무료 플랜의 주요 기능과 특징을 알려주세요"
+                  maxLength={1000}
+                  required
+                  rows={4}
+                  className={cn(INPUT_CLASS, 'resize-none')}
+                />
+              </Field>
+            </>
+          )}
+
+          {activeTab === 'limit_change' && (
+            <>
+              <Field label="툴 선택" required>
+                <select
+                  value={selectedToolId}
+                  onChange={(e) => {
+                    resetStatus();
+                    setSelectedToolId(e.target.value);
+                  }}
+                  required
+                  className={INPUT_CLASS}
+                >
+                  <option value="">툴을 선택해주세요</option>
+                  {tools.map((tool) => (
+                    <option key={tool.id} value={tool.id}>
+                      {tool.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="변경 내용" required>
+                <textarea
+                  value={changeContent}
+                  onChange={(e) => {
+                    resetStatus();
+                    setChangeContent(e.target.value);
+                  }}
+                  placeholder="어떤 한도가 어떻게 변경되었는지 알려주세요"
+                  maxLength={1000}
+                  required
+                  rows={4}
+                  className={cn(INPUT_CLASS, 'resize-none')}
+                />
+              </Field>
+              <Field label="증거 URL" required>
+                <input
+                  type="url"
+                  value={evidenceUrl}
+                  onChange={(e) => {
+                    resetStatus();
+                    setEvidenceUrl(e.target.value);
+                  }}
+                  placeholder="공식 페이지, 스크린샷 링크 등"
+                  required
+                  className={INPUT_CLASS}
+                />
+              </Field>
+            </>
+          )}
+
+          {activeTab === 'bug' && (
+            <>
+              <Field label="오류 내용" required>
+                <textarea
+                  value={bugDescription}
+                  onChange={(e) => {
+                    resetStatus();
+                    setBugDescription(e.target.value);
+                  }}
+                  placeholder="어떤 오류가 발생했는지 자세히 알려주세요"
+                  maxLength={1000}
+                  required
+                  rows={4}
+                  className={cn(INPUT_CLASS, 'resize-none')}
+                />
+              </Field>
+              <Field label="발생 페이지 URL">
+                <input
+                  type="url"
+                  value={pageUrl}
+                  onChange={(e) => {
+                    resetStatus();
+                    setPageUrl(e.target.value);
+                  }}
+                  placeholder="https://freehub.kr/tool/... (선택)"
+                  className={INPUT_CLASS}
+                />
+              </Field>
+            </>
+          )}
+
+          {activeTab === 'inquiry' && (
+            <>
+              <Field label="제목" required>
+                <input
+                  type="text"
+                  value={inquiryTitle}
+                  onChange={(e) => {
+                    resetStatus();
+                    setInquiryTitle(e.target.value);
+                  }}
+                  placeholder="문의 제목을 입력해주세요"
+                  maxLength={120}
+                  required
+                  className={INPUT_CLASS}
+                />
+              </Field>
+              <Field label="내용" required>
+                <textarea
+                  value={inquiryContent}
+                  onChange={(e) => {
+                    resetStatus();
+                    setInquiryContent(e.target.value);
+                  }}
+                  placeholder="문의 내용을 자세히 입력해주세요"
+                  maxLength={2000}
+                  required
+                  rows={5}
+                  className={cn(INPUT_CLASS, 'resize-none')}
+                />
+              </Field>
+              <Field label="답변 받을 이메일" required>
+                <input
+                  type="email"
+                  value={inquiryEmail}
+                  onChange={(e) => {
+                    resetStatus();
+                    setInquiryEmail(e.target.value.slice(0, EMAIL_MAX));
+                  }}
+                  placeholder="you@example.com"
+                  maxLength={EMAIL_MAX}
+                  required
+                  className={INPUT_CLASS}
+                />
+              </Field>
+            </>
+          )}
+
           <button
-            key={tab.id}
-            type="button"
-            onClick={() => handleTabChange(tab.id)}
+            type="submit"
+            disabled={isDisabled}
             className={cn(
-              'flex-1 px-4 py-3 text-sm font-medium transition-colors',
-              activeTab === tab.id
-                ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'text-gray-500 hover:text-gray-700',
+              'w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors',
+              isDisabled
+                ? 'cursor-not-allowed bg-blue-300'
+                : 'bg-blue-600 hover:bg-blue-700',
             )}
           >
-            {tab.label}
+            {status === 'submitting'
+              ? '제출 중...'
+              : activeTab === 'inquiry'
+                ? '문의하기'
+                : '제보하기'}
           </button>
-        ))}
-      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 p-6 sm:p-8">
-        {activeTab === 'new_tool' && (
-          <>
-            <Field label="툴 이름" required>
-              <input
-                type="text"
-                value={toolName}
-                onChange={(e) => {
-                  resetStatus();
-                  setToolName(e.target.value);
-                }}
-                placeholder="예: ChatGPT"
-                maxLength={100}
-                required
-                className={INPUT_CLASS}
-              />
-            </Field>
-            <Field label="URL" required>
-              <input
-                type="url"
-                value={toolUrl}
-                onChange={(e) => {
-                  resetStatus();
-                  setToolUrl(e.target.value);
-                }}
-                placeholder="https://..."
-                required
-                className={INPUT_CLASS}
-              />
-            </Field>
-            <Field label="무료 한도" required>
-              <input
-                type="text"
-                value={freeLimit}
-                onChange={(e) => {
-                  resetStatus();
-                  setFreeLimit(e.target.value);
-                }}
-                placeholder="예: 매일 20회, 월 10,000토큰"
-                maxLength={200}
-                required
-                className={INPUT_CLASS}
-              />
-            </Field>
-            <Field label="설명" required>
-              <textarea
-                value={description}
-                onChange={(e) => {
-                  resetStatus();
-                  setDescription(e.target.value);
-                }}
-                placeholder="무료 플랜의 주요 기능과 특징을 알려주세요"
-                maxLength={1000}
-                required
-                rows={4}
-                className={cn(INPUT_CLASS, 'resize-none')}
-              />
-            </Field>
-          </>
-        )}
-
-        {activeTab === 'limit_change' && (
-          <>
-            <Field label="툴 선택" required>
-              <select
-                value={selectedToolId}
-                onChange={(e) => {
-                  resetStatus();
-                  setSelectedToolId(e.target.value);
-                }}
-                required
-                className={INPUT_CLASS}
-              >
-                <option value="">툴을 선택해주세요</option>
-                {tools.map((tool) => (
-                  <option key={tool.id} value={tool.id}>
-                    {tool.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="변경 내용" required>
-              <textarea
-                value={changeContent}
-                onChange={(e) => {
-                  resetStatus();
-                  setChangeContent(e.target.value);
-                }}
-                placeholder="어떤 한도가 어떻게 변경되었는지 알려주세요"
-                maxLength={1000}
-                required
-                rows={4}
-                className={cn(INPUT_CLASS, 'resize-none')}
-              />
-            </Field>
-            <Field label="증거 URL" required>
-              <input
-                type="url"
-                value={evidenceUrl}
-                onChange={(e) => {
-                  resetStatus();
-                  setEvidenceUrl(e.target.value);
-                }}
-                placeholder="공식 페이지, 스크린샷 링크 등"
-                required
-                className={INPUT_CLASS}
-              />
-            </Field>
-          </>
-        )}
-
-        {activeTab === 'bug' && (
-          <>
-            <Field label="오류 내용" required>
-              <textarea
-                value={bugDescription}
-                onChange={(e) => {
-                  resetStatus();
-                  setBugDescription(e.target.value);
-                }}
-                placeholder="어떤 오류가 발생했는지 자세히 알려주세요"
-                maxLength={1000}
-                required
-                rows={4}
-                className={cn(INPUT_CLASS, 'resize-none')}
-              />
-            </Field>
-            <Field label="발생 페이지 URL">
-              <input
-                type="url"
-                value={pageUrl}
-                onChange={(e) => {
-                  resetStatus();
-                  setPageUrl(e.target.value);
-                }}
-                placeholder="https://freehub.kr/tool/... (선택)"
-                className={INPUT_CLASS}
-              />
-            </Field>
-          </>
-        )}
-
-        <Field label="이메일">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => {
-              resetStatus();
-              setEmail(e.target.value.slice(0, EMAIL_MAX));
-            }}
-            placeholder="답변 받을 이메일 (선택사항)"
-            maxLength={EMAIL_MAX}
-            className={INPUT_CLASS}
-          />
-        </Field>
-
-        <button
-          type="submit"
-          disabled={isDisabled}
-          className={cn(
-            'w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors',
-            isDisabled
-              ? 'cursor-not-allowed bg-blue-300'
-              : 'bg-blue-600 hover:bg-blue-700',
+          {status === 'error' && (
+            <p className="text-center text-sm font-medium text-red-600">
+              잠시 후 다시 시도해주세요
+            </p>
           )}
-        >
-          {status === 'submitting' ? '제출 중...' : '제보하기'}
-        </button>
-
-        {status === 'error' && (
-          <p className="text-center text-sm font-medium text-red-600">
-            잠시 후 다시 시도해주세요
-          </p>
-        )}
-      </form>
+        </form>
       </div>
 
       {showSuccessToast && (
@@ -361,11 +436,9 @@ export function SubmitForm({ tools }: SubmitFormProps) {
           role="status"
           className="fixed bottom-6 left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border border-green-200 bg-white px-4 py-3 shadow-lg"
         >
-          <p className="text-sm font-semibold text-gray-900">
-            제보가 접수되었습니다
-          </p>
+          <p className="text-sm font-semibold text-gray-900">{successMessage}</p>
           <p className="mt-1 text-xs text-gray-500">
-            검토 후 반영할게요. 감사합니다!
+            검토 후 답변드릴게요. 감사합니다!
           </p>
         </div>
       )}

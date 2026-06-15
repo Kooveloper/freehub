@@ -6,6 +6,7 @@ import { sendSubmissionEmails } from '@/lib/email/submit-emails';
 import { redis } from '@/lib/redis';
 import type {
   BugPayload,
+  InquiryPayload,
   LimitChangePayload,
   NewToolPayload,
   SubmissionType,
@@ -93,15 +94,32 @@ function validateBug(payload: unknown): BugPayload | null {
   };
 }
 
+function validateInquiry(payload: unknown): InquiryPayload | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const p = payload as Record<string, unknown>;
+  const title = String(p.title ?? '').trim();
+  const content = String(p.content ?? '').trim();
+
+  if (!title || title.length > 120) return null;
+  if (!content || content.length > 2000) return null;
+
+  return { title, content };
+}
+
 const VALID_TYPES = new Set<SubmissionType>([
   'new_tool',
   'limit_change',
   'bug',
+  'inquiry',
 ]);
 
 function submissionToRow(
   type: SubmissionType,
-  payload: NewToolPayload | LimitChangePayload | BugPayload,
+  payload:
+    | NewToolPayload
+    | LimitChangePayload
+    | BugPayload
+    | InquiryPayload,
   email: string | null,
 ): Record<string, unknown> {
   switch (type) {
@@ -112,7 +130,7 @@ function submissionToRow(
         tool_name: p.toolName,
         tool_url: p.url,
         description: `[무료 한도] ${p.freeLimit}\n\n${p.description}`,
-        submitter_email: email,
+        submitter_email: null,
         status: 'pending' as const,
       };
     }
@@ -123,7 +141,7 @@ function submissionToRow(
         tool_name: p.toolName,
         tool_url: p.evidenceUrl,
         description: p.changeContent,
-        submitter_email: email,
+        submitter_email: null,
         status: 'pending' as const,
       };
     }
@@ -134,6 +152,17 @@ function submissionToRow(
         tool_name: null,
         tool_url: p.pageUrl ?? null,
         description: p.description,
+        submitter_email: null,
+        status: 'pending' as const,
+      };
+    }
+    case 'inquiry': {
+      const p = payload as InquiryPayload;
+      return {
+        type,
+        tool_name: p.title,
+        tool_url: null,
+        description: p.content,
         submitter_email: email,
         status: 'pending' as const,
       };
@@ -165,21 +194,33 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '유효하지 않은 제보 유형입니다.' }, { status: 400 });
   }
 
-  if (emailRaw.length > EMAIL_MAX) {
-    return NextResponse.json(
-      { error: '이메일은 100자 이내로 입력해주세요.' },
-      { status: 400 },
-    );
+  if (type === 'inquiry') {
+    if (!emailRaw) {
+      return NextResponse.json(
+        { error: '답변 받을 이메일을 입력해주세요.' },
+        { status: 400 },
+      );
+    }
+    if (emailRaw.length > EMAIL_MAX) {
+      return NextResponse.json(
+        { error: '이메일은 100자 이내로 입력해주세요.' },
+        { status: 400 },
+      );
+    }
+    if (!isValidEmail(emailRaw)) {
+      return NextResponse.json(
+        { error: '올바른 이메일 형식이 아닙니다.' },
+        { status: 400 },
+      );
+    }
   }
 
-  if (emailRaw && !isValidEmail(emailRaw)) {
-    return NextResponse.json(
-      { error: '올바른 이메일 형식이 아닙니다.' },
-      { status: 400 },
-    );
-  }
-
-  let payload: NewToolPayload | LimitChangePayload | BugPayload | null = null;
+  let payload:
+    | NewToolPayload
+    | LimitChangePayload
+    | BugPayload
+    | InquiryPayload
+    | null = null;
 
   switch (type) {
     case 'new_tool':
@@ -190,6 +231,9 @@ export async function POST(request: Request) {
       break;
     case 'bug':
       payload = validateBug(body?.payload);
+      break;
+    case 'inquiry':
+      payload = validateInquiry(body?.payload);
       break;
   }
 
@@ -202,7 +246,11 @@ export async function POST(request: Request) {
 
   const supabase = createServiceClient();
 
-  const row = submissionToRow(type, payload, emailRaw || null);
+  const row = submissionToRow(
+    type,
+    payload,
+    type === 'inquiry' ? emailRaw : null,
+  );
 
   const { error } = await supabase.from('submissions').insert(row);
 
@@ -215,7 +263,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    await sendSubmissionEmails(type, payload, emailRaw || undefined);
+    await sendSubmissionEmails(
+      type,
+      payload,
+      type === 'inquiry' ? emailRaw : undefined,
+    );
   } catch (emailError) {
     console.error('제보 이메일 발송 실패:', emailError);
   }

@@ -29,6 +29,7 @@ const SUBMISSION_TYPE_LABELS: Record<AdminSubmission['type'], string> = {
   new_tool: '새 툴',
   limit_change: '한도 변경',
   bug: '버그 신고',
+  inquiry: '기타 문의',
 };
 
 const STATUS_LABELS = ADMIN_STATUS_LABELS;

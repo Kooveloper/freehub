@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import { SubmitForm } from '@/components/submit/SubmitForm';
 import { getToolOptions } from '@/lib/supabase/queries';
@@ -6,8 +7,16 @@ import { getToolOptions } from '@/lib/supabase/queries';
 export const metadata: Metadata = {
   title: '제보하기 | FreeHub',
   description:
-    '새 툴 제보, 무료 한도 변경 신고, 버그/오류 제보를 보내주세요.',
+    '새 툴 제보, 무료 한도 변경 신고, 버그/오류 제보, 기타 문의를 보내주세요.',
 };
+
+function SubmitFormFallback() {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white px-6 py-16 text-center text-sm text-gray-400">
+      제보 양식을 불러오는 중…
+    </div>
+  );
+}
 
 export default async function SubmitPage() {
   const tools = await getToolOptions();
@@ -23,7 +32,9 @@ export default async function SubmitPage() {
         </p>
       </div>
 
-      <SubmitForm tools={tools} />
+      <Suspense fallback={<SubmitFormFallback />}>
+        <SubmitForm tools={tools} />
+      </Suspense>
     </div>
   );
 }

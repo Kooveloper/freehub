@@ -2,6 +2,7 @@ import { Resend } from 'resend';
 
 import type {
   BugPayload,
+  InquiryPayload,
   LimitChangePayload,
   NewToolPayload,
   SubmissionType,
@@ -19,7 +20,11 @@ function escapeHtml(str: string): string {
 
 function getToolLabel(
   type: SubmissionType,
-  payload: NewToolPayload | LimitChangePayload | BugPayload,
+  payload:
+    | NewToolPayload
+    | LimitChangePayload
+    | BugPayload
+    | InquiryPayload,
 ): string {
   switch (type) {
     case 'new_tool':
@@ -28,12 +33,18 @@ function getToolLabel(
       return (payload as LimitChangePayload).toolName;
     case 'bug':
       return '버그/오류';
+    case 'inquiry':
+      return (payload as InquiryPayload).title;
   }
 }
 
 function buildAdminHtml(
   type: SubmissionType,
-  payload: NewToolPayload | LimitChangePayload | BugPayload,
+  payload:
+    | NewToolPayload
+    | LimitChangePayload
+    | BugPayload
+    | InquiryPayload,
   email?: string,
 ): string {
   const typeLabel =
@@ -41,7 +52,9 @@ function buildAdminHtml(
       ? '새 툴 제보'
       : type === 'limit_change'
         ? '한도 변경 신고'
-        : '버그/오류 신고';
+        : type === 'bug'
+          ? '버그/오류 신고'
+          : '기타 문의';
 
   let details = `<p><strong>유형:</strong> ${escapeHtml(typeLabel)}</p>`;
 
@@ -60,6 +73,12 @@ function buildAdminHtml(
       <p><strong>변경 내용:</strong></p>
       <p>${escapeHtml(p.changeContent).replace(/\n/g, '<br>')}</p>
       <p><strong>증거 URL:</strong> <a href="${escapeHtml(p.evidenceUrl)}">${escapeHtml(p.evidenceUrl)}</a></p>`;
+  } else if (type === 'inquiry') {
+    const p = payload as InquiryPayload;
+    details += `
+      <p><strong>제목:</strong> ${escapeHtml(p.title)}</p>
+      <p><strong>내용:</strong></p>
+      <p>${escapeHtml(p.content).replace(/\n/g, '<br>')}</p>`;
   } else {
     const p = payload as BugPayload;
     details += `
@@ -71,7 +90,7 @@ function buildAdminHtml(
   }
 
   if (email) {
-    details += `<p><strong>제보자 이메일:</strong> ${escapeHtml(email)}</p>`;
+    details += `<p><strong>답변 이메일:</strong> ${escapeHtml(email)}</p>`;
   }
 
   return `
@@ -89,7 +108,11 @@ function buildAdminHtml(
 /** 관리자 제보 알림 이메일 발송 */
 export async function sendSubmissionEmails(
   type: SubmissionType,
-  payload: NewToolPayload | LimitChangePayload | BugPayload,
+  payload:
+    | NewToolPayload
+    | LimitChangePayload
+    | BugPayload
+    | InquiryPayload,
   submitterEmail?: string,
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
