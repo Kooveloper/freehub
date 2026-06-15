@@ -47,6 +47,7 @@ async function main() {
     categoriesRes.data ?? [],
     subCategoriesRes.data ?? [],
     supabase,
+    { includeI18n: true },
   );
 
   console.log(
