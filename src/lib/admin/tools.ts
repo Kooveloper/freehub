@@ -98,6 +98,8 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
   const paidOnlyFeaturesEn = parseStringArray(input.paid_only_features_en) ?? [];
   const tags = parseStringArray(input.tags);
   const tagsEn = parseStringArray(input.tags_en) ?? [];
+  const signupMethods = parseStringArray(input.signup_methods) ?? [];
+  const requiresCreditCard = Boolean(input.requires_credit_card);
 
   if (!slug || !SLUG_PATTERN.test(slug)) return null;
   if (!name || name.length > 100) return null;
@@ -162,12 +164,12 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
     free_description: freeDescriptionRaw || null,
     free_description_en: freeDescriptionEnRaw || null,
     free_plan_url: freePlanUrlRaw || null,
-    requires_credit_card: false,
+    requires_credit_card: requiresCreditCard,
     free_features: freeFeatures,
     free_features_en: freeFeaturesEn,
     paid_only_features: paidOnlyFeatures,
     paid_only_features_en: paidOnlyFeaturesEn,
-    signup_methods: [],
+    signup_methods: signupMethods,
     tags,
     tags_en: tagsEn,
     tip: tipRaw || null,
@@ -178,14 +180,48 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
 }
 
 /** API 저장 시 빈 영문 필드는 null로 변환 */
-export function sanitizeToolForDb(input: ToolFormInput) {
-  return {
-    ...input,
+export function sanitizeToolForDb(
+  input: ToolFormInput,
+  options?: { includeI18n?: boolean },
+) {
+  const includeI18n = options?.includeI18n ?? true;
+  const base = {
+    slug: input.slug,
+    name: input.name,
+    category_slug: input.category_slug,
     sub_category: input.sub_category?.trim() || null,
+    logo_url: input.logo_url,
+    homepage_url: input.homepage_url,
+    description: input.description,
+    free_plan_exists: input.free_plan_exists,
+    free_limit_type: input.free_limit_type,
+    free_limit_amount: input.free_limit_amount,
+    free_limit_unit: input.free_limit_unit,
+    free_description: input.free_description,
+    free_plan_url: input.free_plan_url,
+    requires_credit_card: input.requires_credit_card,
+    free_features: input.free_features,
+    paid_only_features: input.paid_only_features,
+    signup_methods: input.signup_methods,
+    tags: input.tags,
+    tip: input.tip,
+    is_sponsored: input.is_sponsored,
+    is_verified: input.is_verified,
+  };
+
+  if (!includeI18n) {
+    return base;
+  }
+
+  return {
+    ...base,
     name_en: input.name_en.trim() || null,
     description_en: input.description_en.trim() || null,
     free_limit_unit_en: input.free_limit_unit_en?.trim() || null,
     free_description_en: input.free_description_en?.trim() || null,
+    free_features_en: input.free_features_en,
+    paid_only_features_en: input.paid_only_features_en,
+    tags_en: input.tags_en,
     tip_en: input.tip_en?.trim() || null,
   };
 }

@@ -1,11 +1,12 @@
 'use client';
 
-import { Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { Download, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
+import type { ToolExcelImportResult } from '@/lib/admin/tool-excel';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import type { AdminCategory } from '@/lib/supabase/admin-queries';
@@ -39,9 +40,15 @@ export function ToolsManager({
   periodViewsByTool = {},
 }: ToolsManagerProps) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<ToolExcelImportResult | null>(
+    null,
+  );
+  const [importError, setImportError] = useState<string | null>(null);
 
   const categoryMap = useMemo(
     () => new Map(categories.map((category) => [category.slug, category.name])),
@@ -62,6 +69,41 @@ export function ToolsManager({
       return matchesSearch && matchesCategory;
     });
   }, [tools, search, categoryFilter]);
+
+  const handleImport = async (file: File) => {
+    setImporting(true);
+    setImportError(null);
+    setImportResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/admin/tools/import', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          typeof data.error === 'string' ? data.error : '업로드에 실패했습니다.',
+        );
+      }
+
+      setImportResult(data as ToolExcelImportResult);
+      router.refresh();
+    } catch (error) {
+      setImportError(
+        error instanceof Error ? error.message : '업로드에 실패했습니다.',
+      );
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleDelete = async (tool: Tool) => {
     if (!window.confirm(`"${tool.name}" 툴을 삭제하시겠습니까?`)) {
@@ -114,14 +156,78 @@ export function ToolsManager({
           </select>
         </div>
 
-        <Link
-          href="/admin/tools/new"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4" />
-          툴 추가
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <a
+            href="/api/admin/tools/export"
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            <Download className="h-4 w-4" />
+            양식 다운로드
+          </a>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            className="hidden"
+            onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) void handleImport(file);
+            }}
+          />
+          <button
+            type="button"
+            disabled={importing}
+            onClick={() => fileInputRef.current?.click()}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            <Upload className="h-4 w-4" />
+            {importing ? '업로드 중…' : '엑셀 업로드'}
+          </button>
+
+          <Link
+            href="/admin/tools/new"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4" />
+            툴 추가
+          </Link>
+        </div>
       </div>
+
+      {(importResult || importError) && (
+        <div
+          className={cn(
+            'rounded-xl border px-4 py-3 text-sm',
+            importError
+              ? 'border-red-200 bg-red-50 text-red-800'
+              : 'border-green-200 bg-green-50 text-green-900',
+          )}
+        >
+          {importError ? (
+            <p>{importError}</p>
+          ) : importResult ? (
+            <div className="space-y-2">
+              <p>
+                업로드 완료 — 신규 {importResult.created}건, 수정{' '}
+                {importResult.updated}건
+                {importResult.failed.length > 0
+                  ? `, 실패 ${importResult.failed.length}건`
+                  : ''}
+              </p>
+              {importResult.failed.length > 0 && (
+                <ul className="list-disc space-y-1 pl-5 text-xs">
+                  {importResult.failed.map((failure) => (
+                    <li key={`${failure.row}-${failure.slug}`}>
+                      {failure.row}행 ({failure.slug}): {failure.error}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : null}
+        </div>
+      )}
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
