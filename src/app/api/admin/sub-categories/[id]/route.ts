@@ -96,8 +96,8 @@ export async function DELETE(
   }
 
   const { count } = await supabase
-    .from('tools')
-    .select('id', { count: 'exact', head: true })
+    .from('tool_category_assignments')
+    .select('tool_id', { count: 'exact', head: true })
     .eq('sub_category', existing.slug);
 
   if ((count ?? 0) > 0) {

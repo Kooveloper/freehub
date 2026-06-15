@@ -234,26 +234,52 @@ export async function getAdminAnalytics(
   };
 }
 
-/** 툴 상세 조회 이벤트 기록 */
+/** 툴 상세 조회 이벤트 기록 (모든 분류에 각각 기록) */
 export async function logToolViewEvent(toolId: string): Promise<void> {
   const supabase = createServiceClient();
 
-  const { data: tool, error: toolError } = await supabase
-    .from('tools')
+  const { data: assignments, error: assignmentError } = await supabase
+    .from('tool_category_assignments')
     .select('category_slug, sub_category')
-    .eq('id', toolId)
-    .maybeSingle();
+    .eq('tool_id', toolId)
+    .order('sort_order', { ascending: true });
 
-  if (toolError || !tool) {
-    console.error('조회 이벤트용 툴 조회 실패:', toolError?.message ?? '없음');
+  let rows: Array<{ category_slug: string; sub_category: string | null }> = [];
+
+  if (!assignmentError && assignments && assignments.length > 0) {
+    rows = assignments.map((row) => ({
+      category_slug: row.category_slug as string,
+      sub_category: (row.sub_category as string | null) ?? null,
+    }));
+  } else {
+    const { data: tool } = await supabase
+      .from('tools')
+      .select('category_slug, sub_category')
+      .eq('id', toolId)
+      .maybeSingle();
+
+    if (tool) {
+      rows = [
+        {
+          category_slug: tool.category_slug as string,
+          sub_category: (tool.sub_category as string | null) ?? null,
+        },
+      ];
+    }
+  }
+
+  if (rows.length === 0) {
+    console.error('조회 이벤트용 툴 조회 실패: 없음');
     return;
   }
 
-  const { error } = await supabase.from('tool_view_events').insert({
-    tool_id: toolId,
-    category_slug: tool.category_slug,
-    sub_category: tool.sub_category,
-  });
+  const { error } = await supabase.from('tool_view_events').insert(
+    rows.map((row) => ({
+      tool_id: toolId,
+      category_slug: row.category_slug,
+      sub_category: row.sub_category,
+    })),
+  );
 
   if (error) {
     console.error('조회 이벤트 저장 실패:', error.message);

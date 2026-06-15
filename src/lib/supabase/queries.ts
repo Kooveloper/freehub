@@ -1,6 +1,12 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 import { redis } from '@/lib/redis';
+import {
+  attachAssignmentsToTools,
+  fetchAssignmentsByToolIds,
+  getToolIdsByCategorySlug,
+  getToolIdsBySubCategorySlug,
+} from '@/lib/tool-categories';
 import type { Category, SubCategory, Tool } from '@/types/tool';
 
 import { createClient, createStaticClient } from './server';
@@ -72,7 +78,9 @@ export async function getToolBySlug(slug: string): Promise<Tool> {
     throw new Error(`도구를 찾을 수 없습니다: ${slug}`);
   }
 
-  return data as Tool;
+  const tool = data as Tool;
+  const assignmentMap = await fetchAssignmentsByToolIds(supabase, [tool.id]);
+  return attachAssignmentsToTools([tool], assignmentMap)[0];
 }
 
 /** SSG용 전체 툴 slug 목록 */
@@ -88,19 +96,36 @@ export async function getAllToolSlugs(): Promise<string[]> {
   return (data ?? []).map((row) => row.slug as string);
 }
 
-/** 같은 카테고리 관련 툴 (현재 툴 제외) */
+/** 같은 카테고리 관련 툴 (현재 툴 제외, 분류 기준) */
 export async function getRelatedTools(
-  categorySlug: string,
+  categorySlugs: string[],
   excludeId: string,
   limit = 3,
 ): Promise<Tool[]> {
   const supabase = await createClient();
+  const uniqueSlugs = [...new Set(categorySlugs.filter(Boolean))];
+  if (uniqueSlugs.length === 0) return [];
+
+  const { data: assignmentRows, error: assignmentError } = await supabase
+    .from('tool_category_assignments')
+    .select('tool_id')
+    .in('category_slug', uniqueSlugs)
+    .neq('tool_id', excludeId);
+
+  if (assignmentError) {
+    throw new Error(`관련 툴 조회 실패: ${assignmentError.message}`);
+  }
+
+  const toolIds = [
+    ...new Set((assignmentRows ?? []).map((row) => row.tool_id as string)),
+  ].slice(0, limit * 3);
+
+  if (toolIds.length === 0) return [];
 
   const { data, error } = await supabase
     .from('tools')
     .select('*')
-    .eq('category_slug', categorySlug)
-    .neq('id', excludeId)
+    .in('id', toolIds)
     .order('view_count', { ascending: false })
     .limit(limit);
 
@@ -108,7 +133,9 @@ export async function getRelatedTools(
     throw new Error(`관련 툴 조회 실패: ${error.message}`);
   }
 
-  return (data ?? []) as Tool[];
+  const tools = (data ?? []) as Tool[];
+  const assignmentMap = await fetchAssignmentsByToolIds(supabase, toolIds);
+  return attachAssignmentsToTools(tools, assignmentMap);
 }
 
 /** 제보 폼 툴 선택용 (이름순) */
@@ -197,10 +224,16 @@ export async function getToolsByCategory(categorySlug: string): Promise<Tool[]> 
 
   const supabase = await createClient();
 
+  const toolIds = await getToolIdsByCategorySlug(supabase, categorySlug);
+  if (toolIds.length === 0) {
+    await setCached(cacheKey, [], CATEGORY_TOOLS_CACHE_TTL);
+    return [];
+  }
+
   const { data, error } = await supabase
     .from('tools')
     .select('*')
-    .eq('category_slug', categorySlug)
+    .in('id', toolIds)
     .order('view_count', { ascending: false });
 
   if (error) {
@@ -208,8 +241,10 @@ export async function getToolsByCategory(categorySlug: string): Promise<Tool[]> 
   }
 
   const tools = (data ?? []) as Tool[];
-  await setCached(cacheKey, tools, CATEGORY_TOOLS_CACHE_TTL);
-  return tools;
+  const assignmentMap = await fetchAssignmentsByToolIds(supabase, toolIds);
+  const enriched = attachAssignmentsToTools(tools, assignmentMap);
+  await setCached(cacheKey, enriched, CATEGORY_TOOLS_CACHE_TTL);
+  return enriched;
 }
 
 /** 이름·설명·태그 기준 도구 검색 */
@@ -235,7 +270,11 @@ export async function searchTools(
     .order('view_count', { ascending: false });
 
   if (options?.category) {
-    builder = builder.eq('category_slug', options.category);
+    const toolIds = await getToolIdsByCategorySlug(supabase, options.category);
+    if (toolIds.length === 0) {
+      return { tools: [], total: 0 };
+    }
+    builder = builder.in('id', toolIds);
   }
 
   if (options?.limit != null) {
@@ -329,19 +368,27 @@ export async function getToolCount(): Promise<number> {
   return count ?? 0;
 }
 
-/** 카테고리별 툴 개수 (category_slug → count) */
+/** 카테고리별 툴 개수 (category_slug → count, 분류 기준) */
 export async function getCategoryToolCounts(): Promise<Record<string, number>> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase.from('tools').select('category_slug');
+  const { data, error } = await supabase
+    .from('tool_category_assignments')
+    .select('category_slug, tool_id');
 
   if (error) {
     throw new Error(`카테고리별 툴 수 조회 실패: ${error.message}`);
   }
 
   const counts: Record<string, number> = {};
+  const seen: Record<string, Set<string>> = {};
+
   for (const row of data ?? []) {
     const slug = row.category_slug as string;
+    const toolId = row.tool_id as string;
+    if (!seen[slug]) seen[slug] = new Set();
+    if (seen[slug].has(toolId)) continue;
+    seen[slug].add(toolId);
     counts[slug] = (counts[slug] ?? 0) + 1;
   }
 
@@ -426,15 +473,20 @@ export async function getSubCategoriesByCategory(
 export async function getToolsBySubCategory(subSlug: string): Promise<Tool[]> {
   const supabase = await createClient();
 
+  const toolIds = await getToolIdsBySubCategorySlug(supabase, subSlug);
+  if (toolIds.length === 0) return [];
+
   const { data, error } = await supabase
     .from('tools')
     .select('*')
-    .eq('sub_category', subSlug)
+    .in('id', toolIds)
     .order('view_count', { ascending: false });
 
   if (error) {
     throw new Error(`서브카테고리 도구 조회 실패: ${error.message}`);
   }
 
-  return (data ?? []) as Tool[];
+  const tools = (data ?? []) as Tool[];
+  const assignmentMap = await fetchAssignmentsByToolIds(supabase, toolIds);
+  return attachAssignmentsToTools(tools, assignmentMap);
 }

@@ -6,6 +6,10 @@ import {
   validateToolInput,
   type ToolFormInput,
 } from '@/lib/admin/tools';
+import {
+  normalizeCategoryAssignments,
+  replaceToolCategoryAssignments,
+} from '@/lib/tool-categories';
 import type { Category, FreeLimitType, SubCategory, Tool } from '@/types/tool';
 
 export const TOOL_EXCEL_SHEET_NAME = 'Admin 입력 데이터';
@@ -454,34 +458,12 @@ export function excelRowToToolInput(
   return { input };
 }
 
-interface SupabaseToolClient {
-  from(table: 'tools'): {
-    select(columns: string): Promise<{
-      data: Array<{
-        id: string;
-        slug: string;
-        is_verified?: boolean;
-        verified_date?: string | null;
-      }> | null;
-      error: { message: string } | null;
-    }>;
-    insert(
-      values: Record<string, unknown>,
-    ): Promise<{ error: { message: string } | null }>;
-    update(values: Record<string, unknown>): {
-      eq(
-        column: string,
-        value: string,
-      ): Promise<{ error: { message: string } | null }>;
-    };
-  };
-}
 
 export async function importToolsFromExcelRows(
   rows: unknown[][],
   categories: Category[],
   subCategories: SubCategory[],
-  supabase: SupabaseClient | SupabaseToolClient,
+  supabase: SupabaseClient,
   options?: { includeI18n?: boolean },
 ): Promise<ToolExcelImportResult> {
   const includeI18n = options?.includeI18n ?? false;
@@ -554,27 +536,68 @@ export async function importToolsFromExcelRows(
         continue;
       }
 
+      try {
+        await replaceToolCategoryAssignments(
+          supabase,
+          existing.id,
+          input.category_assignments,
+        );
+      } catch (assignmentError) {
+        result.failed.push({
+          row: rowNumber,
+          slug: input.slug,
+          error:
+            assignmentError instanceof Error
+              ? assignmentError.message
+              : '분류 저장 실패',
+        });
+        continue;
+      }
+
       result.updated += 1;
       continue;
     }
 
-    const { error } = await supabase.from('tools').insert({
-      ...payload,
-      verified_date: input.is_verified ? now : null,
-    });
+    const { data: createdTool, error } = await supabase
+      .from('tools')
+      .insert({
+        ...payload,
+        verified_date: input.is_verified ? now : null,
+      })
+      .select('id')
+      .single();
 
-    if (error) {
+    if (error || !createdTool) {
       result.failed.push({
         row: rowNumber,
         slug: input.slug,
-        error: error.message,
+        error: error?.message ?? '툴 생성 실패',
+      });
+      continue;
+    }
+
+    try {
+      await replaceToolCategoryAssignments(
+        supabase,
+        createdTool.id as string,
+        input.category_assignments,
+      );
+    } catch (assignmentError) {
+      await supabase.from('tools').delete().eq('id', createdTool.id);
+      result.failed.push({
+        row: rowNumber,
+        slug: input.slug,
+        error:
+          assignmentError instanceof Error
+            ? assignmentError.message
+            : '분류 저장 실패',
       });
       continue;
     }
 
     result.created += 1;
     slugToExisting.set(input.slug, {
-      id: 'new',
+      id: createdTool.id as string,
       slug: input.slug,
       is_verified: input.is_verified,
       verified_date: input.is_verified ? now : null,

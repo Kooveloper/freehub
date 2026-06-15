@@ -1,3 +1,8 @@
+import {
+  attachAssignmentsToTools,
+  fetchAssignmentsByToolIds,
+  toolInCategory,
+} from '@/lib/tool-categories';
 import { createStaticClient } from '@/lib/supabase/server';
 import type { Category, Tool } from '@/types/tool';
 
@@ -38,13 +43,22 @@ export async function getPopularToolsByCategory(): Promise<
 
   const categories = (categoriesRes.data ?? []) as Category[];
   const allTools = (toolsRes.data ?? []) as Tool[];
-  const toolById = new Map(allTools.map((tool) => [tool.id, tool]));
+  const assignmentMap = await fetchAssignmentsByToolIds(
+    supabase,
+    allTools.map((tool) => tool.id),
+  );
+  const enrichedTools = attachAssignmentsToTools(allTools, assignmentMap);
+  const toolById = new Map(enrichedTools.map((tool) => [tool.id, tool]));
   const toolsByCategory = new Map<string, Tool[]>();
 
-  for (const tool of allTools) {
-    const list = toolsByCategory.get(tool.category_slug) ?? [];
-    list.push(tool);
-    toolsByCategory.set(tool.category_slug, list);
+  for (const tool of enrichedTools) {
+    for (const assignment of tool.category_assignments ?? []) {
+      const list = toolsByCategory.get(assignment.category_slug) ?? [];
+      if (!list.some((row) => row.id === tool.id)) {
+        list.push(tool);
+      }
+      toolsByCategory.set(assignment.category_slug, list);
+    }
   }
 
   const featuredByCategory = new Map<string, string[]>();
@@ -61,7 +75,10 @@ export async function getPopularToolsByCategory(): Promise<
 
     const featuredTools = featuredIds
       .map((id) => toolById.get(id))
-      .filter((tool): tool is Tool => tool != null && tool.category_slug === category.slug)
+      .filter(
+        (tool): tool is Tool =>
+          tool != null && toolInCategory(tool, category.slug),
+      )
       .slice(0, TOP_COUNT);
 
     if (featuredTools.length >= TOP_COUNT) {

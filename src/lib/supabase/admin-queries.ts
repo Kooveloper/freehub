@@ -2,6 +2,10 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 import type { AdminItemStatus } from '@/constants/admin-status';
 import type { SubmissionType } from '@/types/submission';
+import {
+  attachAssignmentsToTools,
+  fetchAssignmentsByToolIds,
+} from '@/lib/tool-categories';
 import type { Category, SubCategory, Tool } from '@/types/tool';
 
 function createServiceClient() {
@@ -42,25 +46,48 @@ export type AdminCategory = Category & {
 export async function getAdminCategories(): Promise<AdminCategory[]> {
   const supabase = createServiceClient();
 
-  const [categoriesRes, toolsRes] = await Promise.all([
+  const [categoriesRes, assignmentsRes, toolsRes] = await Promise.all([
     supabase.from('categories').select('*').order('sort_order', { ascending: true }),
-    supabase.from('tools').select('category_slug, view_count'),
+    supabase
+      .from('tool_category_assignments')
+      .select('category_slug, tool_id'),
+    supabase.from('tools').select('id, view_count'),
   ]);
 
   if (categoriesRes.error) {
     throw new Error(`카테고리 조회 실패: ${categoriesRes.error.message}`);
   }
+  if (assignmentsRes.error) {
+    throw new Error(`툴 분류 조회 실패: ${assignmentsRes.error.message}`);
+  }
   if (toolsRes.error) {
     throw new Error(`툴 수 조회 실패: ${toolsRes.error.message}`);
   }
 
+  const viewCountByTool = new Map(
+    (toolsRes.data ?? []).map((row) => [
+      row.id as string,
+      Number(row.view_count ?? 0),
+    ]),
+  );
+
   const toolCounts: Record<string, number> = {};
   const viewCountSums: Record<string, number> = {};
-  for (const row of toolsRes.data ?? []) {
-    const slug = row.category_slug as string;
-    toolCounts[slug] = (toolCounts[slug] ?? 0) + 1;
-    viewCountSums[slug] =
-      (viewCountSums[slug] ?? 0) + Number(row.view_count ?? 0);
+  const seenByCategory: Record<string, Set<string>> = {};
+
+  for (const row of assignmentsRes.data ?? []) {
+    const categorySlug = row.category_slug as string;
+    const toolId = row.tool_id as string;
+
+    if (!seenByCategory[categorySlug]) {
+      seenByCategory[categorySlug] = new Set();
+    }
+    if (seenByCategory[categorySlug].has(toolId)) continue;
+
+    seenByCategory[categorySlug].add(toolId);
+    toolCounts[categorySlug] = (toolCounts[categorySlug] ?? 0) + 1;
+    viewCountSums[categorySlug] =
+      (viewCountSums[categorySlug] ?? 0) + (viewCountByTool.get(toolId) ?? 0);
   }
 
   return ((categoriesRes.data ?? []) as Category[]).map((category) => ({
@@ -79,32 +106,53 @@ export type AdminSubCategory = SubCategory & {
 export async function getAdminSubCategories(): Promise<AdminSubCategory[]> {
   const supabase = createServiceClient();
 
-  const [subCategoriesRes, toolsRes] = await Promise.all([
+  const [subCategoriesRes, assignmentsRes, toolsRes] = await Promise.all([
     supabase
       .from('sub_categories')
       .select('*')
       .order('category_slug', { ascending: true })
       .order('sort_order', { ascending: true }),
     supabase
-      .from('tools')
-      .select('sub_category, view_count')
+      .from('tool_category_assignments')
+      .select('sub_category, tool_id')
       .not('sub_category', 'is', null),
+    supabase.from('tools').select('id, view_count'),
   ]);
 
   if (subCategoriesRes.error) {
     throw new Error(`서브카테고리 조회 실패: ${subCategoriesRes.error.message}`);
   }
+  if (assignmentsRes.error) {
+    throw new Error(`툴 분류 조회 실패: ${assignmentsRes.error.message}`);
+  }
   if (toolsRes.error) {
     throw new Error(`툴 수 조회 실패: ${toolsRes.error.message}`);
   }
 
+  const viewCountByTool = new Map(
+    (toolsRes.data ?? []).map((row) => [
+      row.id as string,
+      Number(row.view_count ?? 0),
+    ]),
+  );
+
   const toolCounts: Record<string, number> = {};
   const viewCountSums: Record<string, number> = {};
-  for (const row of toolsRes.data ?? []) {
-    const slug = row.sub_category as string;
-    toolCounts[slug] = (toolCounts[slug] ?? 0) + 1;
-    viewCountSums[slug] =
-      (viewCountSums[slug] ?? 0) + Number(row.view_count ?? 0);
+  const seenBySub: Record<string, Set<string>> = {};
+
+  for (const row of assignmentsRes.data ?? []) {
+    const subSlug = row.sub_category as string;
+    const toolId = row.tool_id as string;
+
+    if (!seenBySub[subSlug]) {
+      seenBySub[subSlug] = new Set();
+    }
+    if (seenBySub[subSlug].has(toolId)) continue;
+
+    seenBySub[subSlug].add(toolId);
+    toolCounts[subSlug] = (toolCounts[subSlug] ?? 0) + 1;
+    viewCountSums[subSlug] =
+      (viewCountSums[subSlug] ?? 0) + (viewCountByTool.get(toolId) ?? 0);
   }
 
   return ((subCategoriesRes.data ?? []) as SubCategory[]).map((subCategory) => ({
@@ -222,7 +270,13 @@ export async function getAdminTools(): Promise<Tool[]> {
     throw new Error(`툴 목록 조회 실패: ${error.message}`);
   }
 
-  return (data ?? []) as Tool[];
+  const tools = (data ?? []) as Tool[];
+  const assignmentMap = await fetchAssignmentsByToolIds(
+    supabase,
+    tools.map((tool) => tool.id),
+  );
+
+  return attachAssignmentsToTools(tools, assignmentMap);
 }
 
 /** 관리자 툴 단건 조회 */
@@ -239,7 +293,10 @@ export async function getAdminToolById(id: string): Promise<Tool | null> {
     throw new Error(`툴 조회 실패: ${error.message}`);
   }
 
-  return (data as Tool | null) ?? null;
+  if (!data) return null;
+
+  const assignmentMap = await fetchAssignmentsByToolIds(supabase, [id]);
+  return attachAssignmentsToTools([data as Tool], assignmentMap)[0] ?? null;
 }
 
 /** 관리자 제보 목록 */

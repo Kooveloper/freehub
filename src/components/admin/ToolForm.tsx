@@ -3,8 +3,9 @@
 import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
+import { CategoryAssignmentsEditor } from '@/components/admin/CategoryAssignmentsEditor';
 import { Toast, useToast } from '@/components/admin/Toast';
 import {
   FREE_LIMIT_TYPE_LABELS,
@@ -18,6 +19,7 @@ import type { Category, FreeLimitType, SubCategory, Tool } from '@/types/tool';
 
 interface ToolFormProps {
   categories: Category[];
+  subCategories: SubCategory[];
   initialTool?: Tool;
   viewCount30d?: number;
 }
@@ -154,6 +156,9 @@ function emptyForm(defaultCategorySlug: string): ToolFormInput {
     name_en: '',
     category_slug: defaultCategorySlug,
     sub_category: null,
+    category_assignments: [
+      { category_slug: defaultCategorySlug, sub_category: null },
+    ],
     logo_url: '',
     homepage_url: '',
     description: '',
@@ -336,6 +341,7 @@ function Toggle({
 
 export function ToolForm({
   categories,
+  subCategories,
   initialTool,
   viewCount30d,
 }: ToolFormProps) {
@@ -352,55 +358,6 @@ export function ToolForm({
   const [slugEdited, setSlugEdited] = useState(isEdit);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
-  const [subCategoriesLoading, setSubCategoriesLoading] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadSubCategories() {
-      if (!values.category_slug) {
-        setSubCategories([]);
-        return;
-      }
-
-      setSubCategoriesLoading(true);
-      try {
-        const response = await fetch(
-          `/api/admin/sub-categories?category_slug=${encodeURIComponent(values.category_slug)}`,
-        );
-        if (!response.ok) {
-          throw new Error('서브카테고리를 불러오지 못했습니다.');
-        }
-        const data = (await response.json()) as { subCategories?: SubCategory[] };
-        if (!cancelled) {
-          setSubCategories(data.subCategories ?? []);
-        }
-      } catch {
-        if (!cancelled) {
-          setSubCategories([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setSubCategoriesLoading(false);
-        }
-      }
-    }
-
-    loadSubCategories();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [values.category_slug]);
-
-  const handleCategoryChange = (categorySlug: string) => {
-    setValues((prev) => ({
-      ...prev,
-      category_slug: categorySlug,
-      sub_category: null,
-    }));
-  };
 
   const updateField = <K extends keyof ToolFormInput>(
     key: K,
@@ -433,6 +390,10 @@ export function ToolForm({
     }
     if (!values.homepage_url.trim()) {
       setError('홈페이지 URL을 입력해주세요.');
+      return;
+    }
+    if (values.category_assignments.length === 0) {
+      setError('최소 1개의 카테고리 분류가 필요합니다.');
       return;
     }
     if (
@@ -546,52 +507,24 @@ export function ToolForm({
           </div>
 
           <div>
-            <label htmlFor="category_slug" className={LABEL_CLASS}>
-              대카테고리
-            </label>
-            <select
-              id="category_slug"
-              value={values.category_slug}
-              onChange={(event) => handleCategoryChange(event.target.value)}
-              className={INPUT_CLASS}
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.slug}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="sub_category" className={LABEL_CLASS}>
-              서브카테고리
-            </label>
-            <select
-              id="sub_category"
-              value={values.sub_category ?? ''}
-              onChange={(event) =>
-                updateField(
-                  'sub_category',
-                  event.target.value ? event.target.value : null,
-                )
+            <span className={LABEL_CLASS}>카테고리 / 서브카테고리</span>
+            <p className="mb-3 text-xs text-gray-500">
+              한 툴을 여러 카테고리·서브카테고리에 동시에 노출할 수 있습니다. 첫
+              번째 항목이 주 분류입니다.
+            </p>
+            <CategoryAssignmentsEditor
+              assignments={values.category_assignments}
+              categories={categories}
+              subCategories={subCategories}
+              onChange={(nextAssignments) =>
+                setValues((prev) => ({
+                  ...prev,
+                  category_assignments: nextAssignments,
+                  category_slug: nextAssignments[0]?.category_slug ?? '',
+                  sub_category: nextAssignments[0]?.sub_category ?? null,
+                }))
               }
-              disabled={subCategoriesLoading || subCategories.length === 0}
-              className={INPUT_CLASS}
-            >
-              <option value="">
-                {subCategoriesLoading
-                  ? '불러오는 중…'
-                  : subCategories.length === 0
-                    ? '서브카테고리 없음'
-                    : '선택 안 함'}
-              </option>
-              {subCategories.map((sub) => (
-                <option key={sub.id} value={sub.slug}>
-                  {sub.name}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div>

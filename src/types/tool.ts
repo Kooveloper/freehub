@@ -7,8 +7,12 @@ export interface Tool {
   slug: string;
   name: string;
   name_en?: string | null;
+  /** 주 분류 (category_assignments[0]과 동기화) */
   category_slug: string;
+  /** 주 서브카테고리 (category_assignments[0]과 동기화) */
   sub_category?: string | null;
+  /** 다중 카테고리/서브카테고리 분류 */
+  category_assignments?: ToolCategoryAssignment[];
   logo_url: string | null;
   homepage_url: string;
   description: string;
@@ -61,4 +65,13 @@ export interface SubCategory {
   category_slug: string;
   sort_order: number;
   is_active: boolean;
+}
+
+/** 툴 ↔ 카테고리/서브카테고리 연결 */
+export interface ToolCategoryAssignment {
+  id: string;
+  tool_id: string;
+  category_slug: string;
+  sub_category: string | null;
+  sort_order: number;
 }

@@ -9,6 +9,7 @@ import { ToolCard } from '@/components/tools/ToolCard';
 import type { SortOption } from '@/components/tools/tool-filter-options';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useFavorites } from '@/hooks/useFavorites';
+import { toolInSubCategory } from '@/lib/tool-categories';
 import { buildSubCategoryNameMap } from '@/lib/sub-categories';
 import {
   applyToolFilters,
@@ -92,13 +93,16 @@ export function HomeCategoryExplorer({
   const rawTools = activeSlug ? (toolsBySlug[activeSlug] ?? []) : [];
 
   const displayedTools = useMemo(() => {
-    const subFiltered = activeSubSlug
-      ? rawTools.filter((tool) => tool.sub_category === activeSubSlug)
-      : rawTools;
+    const subFiltered =
+      activeSlug && activeSubSlug
+        ? rawTools.filter((tool) =>
+            toolInSubCategory(tool, activeSlug, activeSubSlug),
+          )
+        : rawTools;
     const filtered = applyToolFilters(subFiltered, activeFilters);
     const sorted = sortTools(filtered, sort, locale);
     return orderWithFavorites(sorted, favorites);
-  }, [rawTools, activeSubSlug, activeFilters, sort, locale, favorites]);
+  }, [rawTools, activeSlug, activeSubSlug, activeFilters, sort, locale, favorites]);
 
   if (categories.length === 0) return null;
 

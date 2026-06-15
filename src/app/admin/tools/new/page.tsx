@@ -1,10 +1,16 @@
 import { ToolForm } from '@/components/admin/ToolForm';
-import { getAdminCategories } from '@/lib/supabase/admin-queries';
+import {
+  getAdminCategories,
+  getAdminSubCategories,
+} from '@/lib/supabase/admin-queries';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminNewToolPage() {
-  const categories = await getAdminCategories();
+  const [categories, subCategories] = await Promise.all([
+    getAdminCategories(),
+    getAdminSubCategories(),
+  ]);
 
-  return <ToolForm categories={categories} />;
+  return <ToolForm categories={categories} subCategories={subCategories} />;
 }

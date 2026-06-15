@@ -9,6 +9,7 @@ import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import type { ToolExcelImportResult } from '@/lib/admin/tool-excel';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
+import { toolInSubCategory, toolMatchesAdminFilters } from '@/lib/tool-categories';
 import type { AdminCategory, AdminSubCategory } from '@/lib/supabase/admin-queries';
 import { cn, formatFreeLimit } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
@@ -78,12 +79,13 @@ export function ToolsManager({
         !query ||
         tool.name.toLowerCase().includes(query) ||
         tool.slug.toLowerCase().includes(query);
-      const matchesCategory =
-        !categoryFilter || tool.category_slug === categoryFilter;
-      const matchesSubCategory =
-        !subCategoryFilter || tool.sub_category === subCategoryFilter;
+      const matchesCategory = toolMatchesAdminFilters(
+        tool,
+        categoryFilter || undefined,
+        subCategoryFilter || undefined,
+      );
 
-      return matchesSearch && matchesCategory && matchesSubCategory;
+      return matchesSearch && matchesCategory;
     });
   }, [tools, search, categoryFilter, subCategoryFilter]);
 
@@ -320,18 +322,39 @@ export function ToolsManager({
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-700">
-                        <div>
-                          {categoryMap.get(tool.category_slug) ??
-                            tool.category_slug}
+                        <div className="space-y-1">
+                          {(tool.category_assignments ?? []).length > 0 ? (
+                            tool.category_assignments!.map((assignment) => (
+                              <div
+                                key={`${assignment.category_slug}-${assignment.sub_category ?? 'none'}`}
+                              >
+                                <div>
+                                  {categoryMap.get(assignment.category_slug) ??
+                                    assignment.category_slug}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {assignment.sub_category
+                                    ? subCategoryMap.get(assignment.sub_category) ??
+                                      assignment.sub_category
+                                    : '—'}
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <>
+                              <div>
+                                {categoryMap.get(tool.category_slug) ??
+                                  tool.category_slug}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {tool.sub_category
+                                  ? subCategoryMap.get(tool.sub_category) ??
+                                    tool.sub_category
+                                  : '—'}
+                              </div>
+                            </>
+                          )}
                         </div>
-                        {tool.sub_category ? (
-                          <div className="mt-0.5 text-xs text-gray-500">
-                            {subCategoryMap.get(tool.sub_category) ??
-                              tool.sub_category}
-                          </div>
-                        ) : (
-                          <div className="mt-0.5 text-xs text-gray-400">—</div>
-                        )}
                       </td>
                       <td className="px-4 py-3 text-gray-700">
                         {freeLimitLabel}

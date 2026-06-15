@@ -14,6 +14,7 @@ import {
 import { ExternalToolLink } from '@/components/tool/ExternalToolLink';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import { useLocale } from '@/contexts/LocaleContext';
+import { toolInSubCategory } from '@/lib/tool-categories';
 import {
   buildSubCategoryNameMap,
   groupSubCategoriesByCategory,
@@ -280,8 +281,10 @@ function ComparePageContent() {
 
   const availableCategoryTools = useMemo(() => {
     let list = categoryTools.filter((tool) => !selectedSet.has(tool.slug));
-    if (selectedSubCategory) {
-      list = list.filter((tool) => tool.sub_category === selectedSubCategory);
+    if (selectedSubCategory && selectedCategory) {
+      list = list.filter((tool) =>
+        toolInSubCategory(tool, selectedCategory, selectedSubCategory),
+      );
     }
     return list;
   }, [categoryTools, selectedSubCategory, selectedSet]);

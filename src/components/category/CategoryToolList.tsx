@@ -8,7 +8,8 @@ import { AdInFeed } from '@/components/ads/AdInFeed';
 import { ToolCard } from '@/components/tools/ToolCard';
 import type { SortOption } from '@/components/tools/tool-filter-options';
 import { useFavorites } from '@/hooks/useFavorites';
-import { cn } from '@/lib/utils';
+import { toolInSubCategory } from '@/lib/tool-categories';
+import { cn, formatFreeLimit } from '@/lib/utils';
 import type { FreeLimitType, Tool } from '@/types/tool';
 
 const PAGE_SIZE = 20;
@@ -88,7 +89,9 @@ export function CategoryToolList({
 
   const processedTools = useMemo(() => {
     const subFiltered = activeSub
-      ? tools.filter((tool) => tool.sub_category === activeSub)
+      ? tools.filter((tool) =>
+          toolInSubCategory(tool, categorySlug, activeSub),
+        )
       : tools;
     const filtered = applyFilters(subFiltered, filters);
     const sorted = sortTools(filtered, sort);

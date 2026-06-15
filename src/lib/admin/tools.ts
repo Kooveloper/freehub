@@ -1,4 +1,9 @@
-import type { FreeLimitType } from '@/types/tool';
+import {
+  getPrimaryAssignment,
+  normalizeCategoryAssignments,
+  type ToolCategoryAssignmentInput,
+} from '@/lib/tool-categories';
+import type { FreeLimitType, ToolCategoryAssignment } from '@/types/tool';
 
 export const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
@@ -15,6 +20,7 @@ export interface ToolFormInput {
   name_en: string;
   category_slug: string;
   sub_category: string | null;
+  category_assignments: ToolCategoryAssignmentInput[];
   logo_url: string | null;
   homepage_url: string;
   description: string;
@@ -69,6 +75,38 @@ export function generateSlugFromName(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
+function parseCategoryAssignments(
+  input: Record<string, unknown>,
+  fallbackCategory: string,
+  fallbackSub: string | null,
+): ToolCategoryAssignmentInput[] | null {
+  const raw = input.category_assignments;
+  if (Array.isArray(raw) && raw.length > 0) {
+    const parsed = raw
+      .map((row) => {
+        if (!row || typeof row !== 'object') return null;
+        const record = row as Record<string, unknown>;
+        const categorySlug = String(record.category_slug ?? '').trim();
+        const subCategoryRaw = String(record.sub_category ?? '').trim();
+        if (!categorySlug) return null;
+        return {
+          category_slug: categorySlug,
+          sub_category: subCategoryRaw || null,
+        };
+      })
+      .filter((row): row is ToolCategoryAssignmentInput => row != null);
+
+    const normalized = normalizeCategoryAssignments(parsed);
+    if (normalized.length === 0) return null;
+    return normalized;
+  }
+
+  if (!fallbackCategory) return null;
+  return normalizeCategoryAssignments([
+    { category_slug: fallbackCategory, sub_category: fallbackSub },
+  ]);
+}
+
 export function validateToolInput(body: unknown): ToolFormInput | null {
   if (!body || typeof body !== 'object') return null;
 
@@ -104,7 +142,16 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
   if (!slug || !SLUG_PATTERN.test(slug)) return null;
   if (!name || name.length > 100) return null;
   if (nameEn.length > 100) return null;
-  if (!categorySlug) return null;
+
+  const categoryAssignments = parseCategoryAssignments(
+    input,
+    categorySlug,
+    subCategoryRaw || null,
+  );
+  if (!categoryAssignments) return null;
+
+  const primary = getPrimaryAssignment(categoryAssignments);
+
   if (!homepageUrl || !isValidUrl(homepageUrl)) return null;
   if (!description || description.length > 2000) return null;
   if (descriptionEn.length > 2000) return null;
@@ -150,8 +197,9 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
     slug,
     name,
     name_en: nameEn,
-    category_slug: categorySlug,
-    sub_category: subCategoryRaw || null,
+    category_slug: primary.category_slug,
+    sub_category: primary.sub_category,
+    category_assignments: categoryAssignments,
     logo_url: logoUrlRaw || null,
     homepage_url: homepageUrl,
     description,
@@ -232,6 +280,7 @@ export function toolToFormInput(tool: {
   name_en?: string | null;
   category_slug: string;
   sub_category?: string | null;
+  category_assignments?: ToolCategoryAssignment[];
   logo_url: string | null;
   homepage_url: string;
   description: string;
@@ -257,12 +306,27 @@ export function toolToFormInput(tool: {
   is_sponsored: boolean;
   is_verified: boolean;
 }): ToolFormInput {
+  const assignments =
+    tool.category_assignments?.map((row) => ({
+      category_slug: row.category_slug,
+      sub_category: row.sub_category,
+    })) ??
+    normalizeCategoryAssignments([
+      {
+        category_slug: tool.category_slug,
+        sub_category: tool.sub_category ?? null,
+      },
+    ]);
+
+  const primary = getPrimaryAssignment(assignments);
+
   return {
     slug: tool.slug,
     name: tool.name,
     name_en: tool.name_en ?? '',
-    category_slug: tool.category_slug,
-    sub_category: tool.sub_category ?? null,
+    category_slug: primary.category_slug,
+    sub_category: primary.sub_category,
+    category_assignments: assignments,
     logo_url: tool.logo_url,
     homepage_url: tool.homepage_url,
     description: tool.description,

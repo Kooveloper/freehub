@@ -14,13 +14,15 @@ import { Badge } from '@/components/ui/Badge';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import { CATEGORIES } from '@/constants/categories';
+import { getToolAssignments } from '@/lib/tool-categories';
 import {
+  getAllCategories,
   getAllToolSlugs,
-  getCategoryBySlug,
+  getAllSubCategories,
   getRelatedTools,
   getToolBySlug,
 } from '@/lib/supabase/queries';
-import { localizeCategory, localizeTool, localizeTools } from '@/lib/i18n/content';
+import { localizeCategories, localizeCategory, localizeTool, localizeTools } from '@/lib/i18n/content';
 import { getLocale, getTranslations } from '@/lib/locale';
 import { formatDate, formatFreeLimit } from '@/lib/utils';
 import type { FreeLimitType, Tool } from '@/types/tool';
@@ -149,19 +151,29 @@ export default async function ToolPage({ params }: ToolPageProps) {
     notFound();
   }
 
-  const [category, relatedToolsRaw] = await Promise.all([
-    getCategoryBySlug(tool.category_slug),
-    getRelatedTools(tool.category_slug, tool.id),
+  const assignments = getToolAssignments(tool);
+  const [categories, subCategories, relatedToolsRaw] = await Promise.all([
+    getAllCategories(),
+    getAllSubCategories(),
+    getRelatedTools(
+      assignments.map((row) => row.category_slug),
+      tool.id,
+    ),
   ]);
 
-  const relatedTools = localizeTools(relatedToolsRaw, locale);
-  const localizedCategory = category
-    ? localizeCategory(category, locale)
-    : null;
-  const categoryName = getCategoryName(
-    tool.category_slug,
-    localizedCategory?.name,
+  const localizedCategories = localizeCategories(categories, locale);
+  const categoryNameMap = Object.fromEntries(
+    localizedCategories.map((item) => [item.slug, item.name]),
   );
+  const subNameMap = Object.fromEntries(
+    subCategories.map((sub) => [sub.slug, sub.name]),
+  );
+  const localizedCategory = localizedCategories.find(
+    (item) => item.slug === tool.category_slug,
+  );
+  const categoryName =
+    categoryNameMap[tool.category_slug] ?? tool.category_slug;
+  const relatedTools = localizeTools(relatedToolsRaw, locale);
   const ctaUrl = tool.free_plan_url ?? tool.homepage_url;
   const freeLimitText = formatFreeLimit(
     tool.free_limit_type,
@@ -221,9 +233,28 @@ export default async function ToolPage({ params }: ToolPageProps) {
                     {tool.name}
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <Link href={`/category/${tool.category_slug}`}>
-                      <Badge variant="blue">{categoryName}</Badge>
-                    </Link>
+                    {assignments.map((assignment) => {
+                      const name =
+                        categoryNameMap[assignment.category_slug] ??
+                        assignment.category_slug;
+                      const subName = assignment.sub_category
+                        ? subNameMap[assignment.sub_category]
+                        : null;
+                      const label = subName ? `${name} · ${subName}` : name;
+
+                      return (
+                        <Link
+                          key={`${assignment.category_slug}-${assignment.sub_category ?? 'none'}`}
+                          href={
+                            assignment.sub_category
+                              ? `/category/${assignment.category_slug}?sub=${assignment.sub_category}`
+                              : `/category/${assignment.category_slug}`
+                          }
+                        >
+                          <Badge variant="blue">{label}</Badge>
+                        </Link>
+                      );
+                    })}
                     <ExternalToolLink
                       toolName={tool.name}
                       href={tool.homepage_url}

@@ -64,8 +64,8 @@ export async function getToolCountByCategorySlug(
   slug: string,
 ): Promise<number> {
   const { count, error } = await supabase
-    .from('tools')
-    .select('*', { count: 'exact', head: true })
+    .from('tool_category_assignments')
+    .select('tool_id', { count: 'exact', head: true })
     .eq('category_slug', slug);
 
   if (error) {

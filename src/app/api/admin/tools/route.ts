@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-api';
 import { sanitizeToolForDb, validateToolInput } from '@/lib/admin/tools';
 import { invalidatePublicCache } from '@/lib/cache-invalidation';
+import { replaceToolCategoryAssignments } from '@/lib/tool-categories';
 import { getAdminTools } from '@/lib/supabase/admin-queries';
 
 function createServiceClient() {
@@ -77,8 +78,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  let categorySlugs: string[] = [input.category_slug];
+  try {
+    categorySlugs = await replaceToolCategoryAssignments(
+      supabase,
+      data.id as string,
+      input.category_assignments,
+    );
+  } catch (assignmentError) {
+    await supabase.from('tools').delete().eq('id', data.id);
+    const message =
+      assignmentError instanceof Error
+        ? assignmentError.message
+        : '분류 저장 실패';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
   await invalidatePublicCache({
-    categorySlugs: [input.category_slug],
+    categorySlugs,
     toolSlug: input.slug,
   });
 

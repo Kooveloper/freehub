@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-api';
 import { sanitizeToolForDb, validateToolInput } from '@/lib/admin/tools';
 import { invalidatePublicCache } from '@/lib/cache-invalidation';
+import { replaceToolCategoryAssignments } from '@/lib/tool-categories';
 import { getAdminToolById } from '@/lib/supabase/admin-queries';
 
 function createServiceClient() {
@@ -110,8 +111,25 @@ export async function PATCH(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  let categorySlugs = [
+    ...new Set([existing.category_slug, input.category_slug]),
+  ];
+  try {
+    categorySlugs = await replaceToolCategoryAssignments(
+      supabase,
+      id,
+      input.category_assignments,
+    );
+  } catch (assignmentError) {
+    const message =
+      assignmentError instanceof Error
+        ? assignmentError.message
+        : '분류 저장 실패';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+
   await invalidatePublicCache({
-    categorySlugs: [existing.category_slug, input.category_slug],
+    categorySlugs,
     toolSlug: input.slug,
   });
 
