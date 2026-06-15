@@ -1,5 +1,5 @@
 import { AdSlot } from '@/components/ads/AdSlot';
-import { RequestForm } from '@/components/RequestForm';
+import { RequestCta } from '@/components/RequestCta';
 import { HomeCategoryExplorer } from '@/components/home/HomeCategoryExplorer';
 import { MostPopularSection } from '@/components/home/MostPopularSection';
 import { WebSiteJsonLd } from '@/components/seo/JsonLd';
@@ -90,11 +90,11 @@ export default async function HomePage() {
           />
         </div>
 
-        <section className="border-t border-neutral-200 bg-white px-4 py-14 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-2xl">
-            <RequestForm />
-          </div>
-        </section>
+        <RequestCta
+          title={t('home.requestCtaTitle')}
+          description={t('home.requestCtaDescription')}
+          buttonLabel={t('home.requestCtaButton')}
+        />
 
         <section className="border-t border-neutral-800 bg-black px-4 py-8 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-neutral-400 sm:text-base">

@@ -30,6 +30,14 @@ export const ko = {
     mostPopular: '가장 많이 찾은 서비스',
     stats: '{toolCount}개 툴 | {categoryCount}개 카테고리 | 매월 업데이트',
     statsPrefix: '현재',
+    requestCtaTitle: '등록되지 않은 서비스가 있나요?',
+    requestCtaDescription: '추가되었으면 하는 서비스가 있다면 요청해주세요!',
+    requestCtaButton: '서비스 추가 요청하기',
+  },
+  request: {
+    title: '등록되지 않은 서비스가 있나요?',
+    description: '추가되었으면 하는 서비스가 있다면 요청해주세요!',
+    pageDescription: '요청하신 서비스는 검토 후 FreeHub에 추가됩니다.',
   },
   search: {
     placeholder: 'AI·SaaS 도구 검색...',

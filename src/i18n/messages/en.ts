@@ -32,6 +32,14 @@ export const en: Messages = {
     mostPopular: 'Most searched services',
     stats: '{toolCount} tools | {categoryCount} categories | Updated monthly',
     statsPrefix: 'Currently',
+    requestCtaTitle: 'Missing a service?',
+    requestCtaDescription: 'Request a tool you would like to see on FreeHub!',
+    requestCtaButton: 'Request a service',
+  },
+  request: {
+    title: 'Missing a service?',
+    description: 'Request a tool you would like to see on FreeHub!',
+    pageDescription: 'We review every request and add approved services to FreeHub.',
   },
   search: {
     placeholder: 'Search AI & SaaS tools...',

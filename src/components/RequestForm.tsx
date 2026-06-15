@@ -86,15 +86,6 @@ export function RequestForm() {
 
   return (
     <div className="rounded-xl border border-neutral-200 bg-white p-6 sm:p-8">
-      <div className="mb-6 text-center">
-        <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
-          등록되지 않은 서비스가 있나요?
-        </h2>
-        <p className="mt-2 text-sm text-gray-500">
-          알려주시면 검토 후 추가해드릴게요 🙏
-        </p>
-      </div>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="request-title" className="sr-only">
