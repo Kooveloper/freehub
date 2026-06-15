@@ -83,16 +83,47 @@ function PillRow({
   );
 }
 
+function SelectedCompareToolChip({
+  tool,
+  onRemove,
+}: {
+  tool: Tool;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="relative shrink-0">
+      <ToolLogo
+        name={tool.name}
+        logoUrl={tool.logo_url}
+        size={48}
+        className="rounded-xl ring-1 ring-gray-200"
+      />
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`${tool.name} remove`}
+        className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:bg-gray-50 hover:text-gray-800"
+      >
+        <X className="h-3 w-3" />
+      </button>
+    </div>
+  );
+}
+
+function SelectedCompareToolChipSkeleton() {
+  return (
+    <div className="h-12 w-12 shrink-0 animate-pulse rounded-xl bg-gray-100" />
+  );
+}
+
 function CompareToolCard({
   tool,
   subLabel,
-  selected = false,
   onClick,
   disabled = false,
 }: {
   tool: Tool;
   subLabel?: string;
-  selected?: boolean;
   onClick: () => void;
   disabled?: boolean;
 }) {
@@ -102,45 +133,25 @@ function CompareToolCard({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex aspect-square w-[7.25rem] shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-2.5 text-center transition-all sm:w-[8rem]',
-        selected
-          ? 'border-neutral-900 bg-neutral-900 text-white shadow-md'
-          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm',
-        disabled && !selected && 'cursor-not-allowed opacity-40',
+        'flex aspect-square w-[7.25rem] shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl border border-gray-200 bg-white p-2.5 text-center transition-all hover:border-gray-300 hover:shadow-sm sm:w-[8rem]',
+        disabled && 'cursor-not-allowed opacity-40',
       )}
     >
       <ToolLogo
         name={tool.name}
         logoUrl={tool.logo_url}
         size={40}
-        className={cn(
-          'rounded-xl',
-          selected ? 'ring-2 ring-white/25' : 'ring-1 ring-gray-100',
-        )}
+        className="rounded-xl ring-1 ring-gray-100"
       />
-      <span className="line-clamp-2 w-full text-xs font-semibold leading-tight">
+      <span className="line-clamp-2 w-full text-xs font-semibold leading-tight text-gray-900">
         {tool.name}
       </span>
       {subLabel ? (
-        <span
-          className={cn(
-            'line-clamp-1 w-full text-[10px] leading-tight',
-            selected ? 'text-neutral-300' : 'text-gray-400',
-          )}
-        >
+        <span className="line-clamp-1 w-full text-[10px] leading-tight text-gray-400">
           {subLabel}
         </span>
       ) : null}
     </button>
-  );
-}
-
-function CompareToolCardSkeleton({ slug }: { slug: string }) {
-  return (
-    <div
-      key={slug}
-      className="aspect-square w-[7.25rem] shrink-0 animate-pulse rounded-xl bg-gray-100 sm:w-[8rem]"
-    />
   );
 }
 
@@ -390,29 +401,22 @@ function ComparePageContent() {
       <div className="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         {slugs.length > 0 && (
           <div className="mb-6 border-b border-gray-100 pb-6">
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="text-sm font-bold text-gray-900">
-                {locale === 'en' ? 'Selected tools' : '선택된 툴'}{' '}
-                <span className="font-medium text-gray-400">
-                  ({slugs.length}/{MAX_COMPARE})
-                </span>
-              </h2>
-              <p className="text-xs text-gray-400">
-                {locale === 'en' ? 'Tap to deselect' : '탭하여 선택 해제'}
-              </p>
-            </div>
-            <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+            <h2 className="mb-3 text-sm font-bold text-gray-900">
+              {locale === 'en' ? 'Selected tools' : '선택된 툴'}{' '}
+              <span className="font-medium text-gray-400">
+                ({slugs.length}/{MAX_COMPARE})
+              </span>
+            </h2>
+            <div className="flex flex-wrap gap-4">
               {loading && tools.length === 0
                 ? slugs.map((slug) => (
-                    <CompareToolCardSkeleton key={slug} slug={slug} />
+                    <SelectedCompareToolChipSkeleton key={slug} />
                   ))
                 : tools.map((tool) => (
-                    <CompareToolCard
+                    <SelectedCompareToolChip
                       key={tool.id}
                       tool={tool}
-                      subLabel={getCategoryLabel(tool)}
-                      selected
-                      onClick={() => toggleTool(tool)}
+                      onRemove={() => removeTool(tool.slug)}
                     />
                   ))}
             </div>
@@ -582,8 +586,8 @@ function ComparePageContent() {
         ) : (
           <p className="text-sm text-gray-500">
             {locale === 'en'
-              ? `Maximum ${MAX_COMPARE} tools selected. Tap a card above to remove one.`
-              : `최대 ${MAX_COMPARE}개까지 선택되었습니다. 위 카드를 탭하여 해제할 수 있습니다.`}
+              ? `Maximum ${MAX_COMPARE} tools selected. Use the X above to remove one.`
+              : `최대 ${MAX_COMPARE}개까지 선택되었습니다. 위 X 버튼으로 해제할 수 있습니다.`}
           </p>
         )}
       </div>
