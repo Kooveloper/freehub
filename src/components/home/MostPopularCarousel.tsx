@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CategoryIcon } from '@/components/category/CategoryIcon';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import { getCategoryColorHex } from '@/constants/category-colors';
+import { useDragScroll } from '@/hooks/useDragScroll';
 import type { CategoryFeaturedEntry, RankChange } from '@/lib/featured-tools';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +19,7 @@ interface MostPopularCarouselProps {
 
 function rankBadgeClass(rank: number): string {
   if (rank === 1) {
-    return 'bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-sm shadow-amber-200';
+    return 'bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 text-amber-950 shadow-md shadow-amber-300/60 ring-1 ring-amber-300/80';
   }
   if (rank === 2) {
     return 'bg-gradient-to-br from-neutral-300 to-neutral-400 text-white';
@@ -59,10 +60,19 @@ export function MostPopularCarousel({
   entries,
 }: MostPopularCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { ref: dragRef, wasDragging } = useDragScroll<HTMLDivElement>();
   const [activeIndex, setActiveIndex] = useState(0);
   const isProgrammaticScroll = useRef(false);
 
   const visibleEntries = entries.filter((entry) => entry.tools.length > 0);
+
+  const setScrollContainer = useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollRef.current = node;
+      dragRef.current = node;
+    },
+    [dragRef],
+  );
 
   const scrollToIndex = useCallback((index: number) => {
     const container = scrollRef.current;
@@ -193,8 +203,8 @@ export function MostPopularCarousel({
           )}
 
           <div
-            ref={scrollRef}
-            className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-4 pb-2 sm:-mx-6 sm:gap-5 sm:px-6 lg:-mx-8 lg:px-8"
+            ref={setScrollContainer}
+            className="scrollbar-hide -mx-4 flex cursor-grab snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain px-4 pb-2 active:cursor-grabbing sm:-mx-6 sm:gap-5 sm:px-6 lg:-mx-8 lg:px-8"
           >
             {visibleEntries.map(({ category, tools }, slideIndex) => {
               const accentHex = getCategoryColorHex(category.color);
@@ -242,10 +252,13 @@ export function MostPopularCarousel({
                             <li key={tool.id}>
                               <Link
                                 href={`/tool/${tool.slug}`}
+                                onClick={(event) => {
+                                  if (wasDragging()) event.preventDefault();
+                                }}
                                 className={cn(
                                   'group flex items-center gap-3 rounded-xl px-2 py-2.5 transition-colors',
                                   rank === 1
-                                    ? 'bg-amber-50/60 hover:bg-amber-50'
+                                    ? 'border border-amber-200/70 bg-gradient-to-r from-yellow-50 via-amber-50 to-yellow-50 hover:from-amber-50 hover:to-amber-50'
                                     : 'hover:bg-neutral-50',
                                 )}
                               >

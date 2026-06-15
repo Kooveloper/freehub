@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, Plus, Search, X } from 'lucide-react';
+import { ExternalLink, Search, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -83,6 +83,67 @@ function PillRow({
   );
 }
 
+function CompareToolCard({
+  tool,
+  subLabel,
+  selected = false,
+  onClick,
+  disabled = false,
+}: {
+  tool: Tool;
+  subLabel?: string;
+  selected?: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={cn(
+        'flex aspect-square w-[7.25rem] shrink-0 flex-col items-center justify-center gap-1.5 rounded-xl border-2 p-2.5 text-center transition-all sm:w-[8rem]',
+        selected
+          ? 'border-neutral-900 bg-neutral-900 text-white shadow-md'
+          : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm',
+        disabled && !selected && 'cursor-not-allowed opacity-40',
+      )}
+    >
+      <ToolLogo
+        name={tool.name}
+        logoUrl={tool.logo_url}
+        size={40}
+        className={cn(
+          'rounded-xl',
+          selected ? 'ring-2 ring-white/25' : 'ring-1 ring-gray-100',
+        )}
+      />
+      <span className="line-clamp-2 w-full text-xs font-semibold leading-tight">
+        {tool.name}
+      </span>
+      {subLabel ? (
+        <span
+          className={cn(
+            'line-clamp-1 w-full text-[10px] leading-tight',
+            selected ? 'text-neutral-300' : 'text-gray-400',
+          )}
+        >
+          {subLabel}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+function CompareToolCardSkeleton({ slug }: { slug: string }) {
+  return (
+    <div
+      key={slug}
+      className="aspect-square w-[7.25rem] shrink-0 animate-pulse rounded-xl bg-gray-100 sm:w-[8rem]"
+    />
+  );
+}
+
 function ComparePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -145,6 +206,17 @@ function ComparePageContent() {
   const removeTool = useCallback(
     (slug: string) => updateSlugs(slugs.filter((item) => item !== slug)),
     [slugs, updateSlugs],
+  );
+
+  const toggleTool = useCallback(
+    (tool: Tool) => {
+      if (slugs.includes(tool.slug)) {
+        removeTool(tool.slug);
+      } else if (slugs.length < MAX_COMPARE) {
+        addTool(tool);
+      }
+    },
+    [slugs, addTool, removeTool],
   );
 
   useEffect(() => {
@@ -315,8 +387,40 @@ function ComparePageContent() {
         </p>
       </div>
 
-      {canAddMore && (
-        <div className="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+      <div className="mb-8 rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        {slugs.length > 0 && (
+          <div className="mb-6 border-b border-gray-100 pb-6">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h2 className="text-sm font-bold text-gray-900">
+                {locale === 'en' ? 'Selected tools' : '선택된 툴'}{' '}
+                <span className="font-medium text-gray-400">
+                  ({slugs.length}/{MAX_COMPARE})
+                </span>
+              </h2>
+              <p className="text-xs text-gray-400">
+                {locale === 'en' ? 'Tap to deselect' : '탭하여 선택 해제'}
+              </p>
+            </div>
+            <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
+              {loading && tools.length === 0
+                ? slugs.map((slug) => (
+                    <CompareToolCardSkeleton key={slug} slug={slug} />
+                  ))
+                : tools.map((tool) => (
+                    <CompareToolCard
+                      key={tool.id}
+                      tool={tool}
+                      subLabel={getCategoryLabel(tool)}
+                      selected
+                      onClick={() => toggleTool(tool)}
+                    />
+                  ))}
+            </div>
+          </div>
+        )}
+
+        {canAddMore ? (
+          <>
           <form onSubmit={handleSearchSubmit} className="mb-6">
             <label
               htmlFor="compare-search"
@@ -361,32 +465,17 @@ function ComparePageContent() {
                     : `"${searchQuery}"에 대한 검색 결과가 없습니다.`}
                 </p>
               ) : (
-                <ul className="max-h-48 overflow-auto rounded-lg border border-gray-100">
+                <div className="scrollbar-hide -mx-1 flex gap-3 overflow-x-auto px-1 pb-1">
                   {searchResults.map((tool) => (
-                    <li key={tool.id}>
-                      <button
-                        type="button"
-                        onClick={() => addTool(tool)}
-                        className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
-                      >
-                        <ToolLogo
-                          name={tool.name}
-                          logoUrl={tool.logo_url}
-                          size={32}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-gray-900">
-                            {tool.name}
-                          </p>
-                          <p className="truncate text-xs text-gray-500">
-                            {getCategoryLabel(tool)}
-                          </p>
-                        </div>
-                        <Plus className="h-4 w-4 shrink-0 text-neutral-700" />
-                      </button>
-                    </li>
+                    <CompareToolCard
+                      key={tool.id}
+                      tool={tool}
+                      subLabel={getCategoryLabel(tool)}
+                      onClick={() => toggleTool(tool)}
+                      disabled={slugs.length >= MAX_COMPARE}
+                    />
                   ))}
-                </ul>
+                </div>
               )}
             </div>
           )}
@@ -470,40 +559,34 @@ function ComparePageContent() {
                       : '선택한 조건에 해당하는 툴이 없습니다.'}
                   </p>
                 ) : (
-                  <ul className="mt-3 max-h-72 overflow-auto rounded-lg border border-gray-100">
+                  <div className="scrollbar-hide -mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
                     {availableCategoryTools.map((tool) => (
-                      <li key={tool.id}>
-                        <button
-                          type="button"
-                          onClick={() => addTool(tool)}
-                          className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
-                        >
-                          <ToolLogo
-                            name={tool.name}
-                            logoUrl={tool.logo_url}
-                            size={32}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-sm font-semibold text-gray-900">
-                              {tool.name}
-                            </p>
-                            <p className="truncate text-xs text-gray-500">
-                              {tool.sub_category
-                                ? subNameMap[tool.sub_category]
-                                : tool.description}
-                            </p>
-                          </div>
-                          <Plus className="h-4 w-4 shrink-0 text-neutral-700" />
-                        </button>
-                      </li>
+                      <CompareToolCard
+                        key={tool.id}
+                        tool={tool}
+                        subLabel={
+                          tool.sub_category
+                            ? subNameMap[tool.sub_category]
+                            : undefined
+                        }
+                        onClick={() => toggleTool(tool)}
+                        disabled={slugs.length >= MAX_COMPARE}
+                      />
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             )}
           </div>
-        </div>
-      )}
+          </>
+        ) : (
+          <p className="text-sm text-gray-500">
+            {locale === 'en'
+              ? `Maximum ${MAX_COMPARE} tools selected. Tap a card above to remove one.`
+              : `최대 ${MAX_COMPARE}개까지 선택되었습니다. 위 카드를 탭하여 해제할 수 있습니다.`}
+          </p>
+        )}
+      </div>
 
       <div>
         {loading ? (
