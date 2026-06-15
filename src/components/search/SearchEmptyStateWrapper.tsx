@@ -3,6 +3,7 @@ import { localizeCategories } from '@/lib/i18n/content';
 import { getLocale } from '@/lib/locale';
 import {
   groupSubCategoriesByCategory,
+  localizeSubCategories,
   previewSubCategories,
 } from '@/lib/sub-categories';
 import {
@@ -29,7 +30,8 @@ export async function SearchEmptyStateWrapper({
     ]);
 
   const localizedCategories = localizeCategories(categories, locale);
-  const subByCategory = groupSubCategoriesByCategory(subCategories);
+  const localizedSubCategories = localizeSubCategories(subCategories, locale);
+  const subByCategory = groupSubCategoriesByCategory(localizedSubCategories);
 
   return (
     <SearchEmptyState

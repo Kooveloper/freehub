@@ -161,6 +161,7 @@ export function CategoriesManager({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             name: values.name,
+            name_en: values.name_en,
             sort_order: values.sort_order,
             is_active: values.is_active,
           }),
@@ -175,6 +176,7 @@ export function CategoriesManager({
         body: JSON.stringify({
           slug: values.slug,
           name: values.name,
+          name_en: values.name_en,
           category_slug: activeCategorySlug,
           sort_order: values.sort_order,
           is_active: values.is_active,

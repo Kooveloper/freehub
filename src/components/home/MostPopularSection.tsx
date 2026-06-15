@@ -11,9 +11,12 @@ export async function MostPopularSection({ entries }: MostPopularSectionProps) {
   const locale = await getLocale();
   const t = await getTranslations();
 
-  const localized = entries.map((entry) => ({
+  const localized: CategoryFeaturedEntry[] = entries.map((entry) => ({
     category: localizeCategories([entry.category], locale)[0],
-    tools: localizeTools(entry.tools, locale),
+    tools: entry.tools.map(({ tool, rankChange }) => ({
+      tool: localizeTools([tool], locale)[0],
+      rankChange,
+    })),
   }));
 
   return (

@@ -62,6 +62,7 @@ export interface SubCategory {
   id: string;
   slug: string;
   name: string;
+  name_en?: string | null;
   category_slug: string;
   sort_order: number;
   is_active: boolean;

@@ -10,7 +10,7 @@ import type { SortOption } from '@/components/tools/tool-filter-options';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useFavorites } from '@/hooks/useFavorites';
 import { toolInSubCategory } from '@/lib/tool-categories';
-import { buildSubCategoryNameMap } from '@/lib/sub-categories';
+import { buildSubCategoryNameMap, localizeSubCategories } from '@/lib/sub-categories';
 import {
   applyToolFilters,
   orderWithFavorites,
@@ -86,9 +86,13 @@ export function HomeCategoryExplorer({
   const activeSubCategories = activeSlug
     ? (subByCategory[activeSlug] ?? [])
     : [];
+  const localizedSubCategories = useMemo(
+    () => localizeSubCategories(activeSubCategories, locale),
+    [activeSubCategories, locale],
+  );
   const subCategoryNameMap = useMemo(
-    () => buildSubCategoryNameMap(activeSubCategories),
-    [activeSubCategories],
+    () => buildSubCategoryNameMap(activeSubCategories, locale),
+    [activeSubCategories, locale],
   );
   const rawTools = activeSlug ? (toolsBySlug[activeSlug] ?? []) : [];
 
@@ -187,7 +191,7 @@ export function HomeCategoryExplorer({
                 {activeCategory.description}
               </p>
             }
-            subCategories={activeSubCategories}
+            subCategories={localizedSubCategories}
             activeSub={activeSubSlug}
             onSubSelect={setActiveSubSlug}
             categoryColor={activeCategory.color}

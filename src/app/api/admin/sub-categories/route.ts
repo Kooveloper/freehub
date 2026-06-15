@@ -86,6 +86,7 @@ export async function POST(request: Request) {
     .insert({
       slug: input.slug,
       name: input.name,
+      name_en: input.name_en || null,
       category_slug: input.category_slug,
       sort_order: input.sort_order,
       is_active: input.is_active,

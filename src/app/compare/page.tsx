@@ -18,6 +18,7 @@ import { toolInSubCategory } from '@/lib/tool-categories';
 import {
   buildSubCategoryNameMap,
   groupSubCategoriesByCategory,
+  localizeSubCategories,
 } from '@/lib/sub-categories';
 import { cn, formatFreeLimit } from '@/lib/utils';
 import type { Category, SubCategory, Tool } from '@/types/tool';
@@ -107,9 +108,16 @@ function ComparePageContent() {
     () => groupSubCategoriesByCategory(subCategories),
     [subCategories],
   );
+  const localizedSubByCategory = useMemo(() => {
+    const localized: Record<string, SubCategory[]> = {};
+    for (const [slug, subs] of Object.entries(subByCategory)) {
+      localized[slug] = localizeSubCategories(subs, locale);
+    }
+    return localized;
+  }, [subByCategory, locale]);
   const subNameMap = useMemo(
-    () => buildSubCategoryNameMap(subCategories),
-    [subCategories],
+    () => buildSubCategoryNameMap(subCategories, locale),
+    [subCategories, locale],
   );
 
   const updateSlugs = useCallback(
@@ -276,7 +284,7 @@ function ComparePageContent() {
   const canAddMore = slugs.length < MAX_COMPARE;
   const selectedSet = new Set(slugs);
   const activeSubCategories = selectedCategory
-    ? (subByCategory[selectedCategory] ?? [])
+    ? (localizedSubByCategory[selectedCategory] ?? [])
     : [];
 
   const availableCategoryTools = useMemo(() => {

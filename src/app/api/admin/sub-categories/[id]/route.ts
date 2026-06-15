@@ -55,6 +55,7 @@ export async function PATCH(
     .from('sub_categories')
     .update({
       name: input.name,
+      name_en: input.name_en || null,
       sort_order: input.sort_order,
       is_active: input.is_active,
       updated_at: new Date().toISOString(),

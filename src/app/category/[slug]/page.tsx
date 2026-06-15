@@ -8,7 +8,7 @@ import { CategoryPageToolbar } from '@/components/category/CategoryPageToolbar';
 import { CategoryToolsSection } from '@/components/category/CategoryToolsSection';
 import { SkeletonCardGrid } from '@/components/ui/SkeletonCard';
 import { getCategoryColorHex } from '@/constants/category-colors';
-import { localizeCategory } from '@/lib/i18n/content';
+import { localizeCategory, localizeSubCategories } from '@/lib/i18n/content';
 import { getLocale, getTranslations } from '@/lib/locale';
 import {
   getAllCategories,
@@ -67,6 +67,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const categoryToolCounts = await getCategoryToolCounts();
   const toolCount = categoryToolCounts[slug] ?? 0;
   const subCategories = await getSubCategoriesByCategory(slug);
+  const localizedSubCategories = localizeSubCategories(subCategories, locale);
   const categoryColorHex = getCategoryColorHex(localizedCategory.color);
 
   const categoryIconBox = (
@@ -104,7 +105,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       <Suspense fallback={<ToolbarSkeleton />}>
         <CategoryPageToolbar
           categoryColor={localizedCategory.color}
-          subCategories={subCategories}
+          subCategories={localizedSubCategories}
           leadingSlot={categoryIconBox}
           titleSlot={
             <h1 className="text-lg font-bold leading-tight text-gray-900">

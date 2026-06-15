@@ -1,4 +1,11 @@
+import type { Locale } from '@/i18n/config';
+import {
+  localizeSubCategory,
+  localizeSubCategories,
+} from '@/lib/i18n/content';
 import type { SubCategory } from '@/types/tool';
+
+export { localizeSubCategories };
 
 export function groupSubCategoriesByCategory(
   subCategories: SubCategory[],
@@ -21,8 +28,14 @@ export function groupSubCategoriesByCategory(
 
 export function buildSubCategoryNameMap(
   subCategories: SubCategory[],
+  locale: Locale = 'ko',
 ): Record<string, string> {
-  return Object.fromEntries(subCategories.map((sub) => [sub.slug, sub.name]));
+  return Object.fromEntries(
+    subCategories.map((sub) => [
+      sub.slug,
+      localizeSubCategory(sub, locale).name,
+    ]),
+  );
 }
 
 export function previewSubCategories(

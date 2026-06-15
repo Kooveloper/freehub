@@ -10,6 +10,7 @@ import type { AdminSubCategory } from '@/lib/supabase/admin-queries';
 export interface SubCategoryFormValues {
   slug: string;
   name: string;
+  name_en: string;
   sort_order: number;
   is_active: boolean;
 }
@@ -36,6 +37,7 @@ function buildInitialValues(
     return {
       slug: subCategory.slug,
       name: subCategory.name,
+      name_en: subCategory.name_en ?? '',
       sort_order: subCategory.sort_order,
       is_active: subCategory.is_active,
     };
@@ -44,6 +46,7 @@ function buildInitialValues(
   return {
     slug: '',
     name: '',
+    name_en: '',
     sort_order: nextSortOrder,
     is_active: true,
   };
@@ -159,7 +162,7 @@ export function SubCategoryModal({
 
           <div>
             <label htmlFor="sub-name" className={LABEL_CLASS}>
-              이름 <span className="text-red-500">*</span>
+              이름 (한국어) <span className="text-red-500">*</span>
             </label>
             <input
               id="sub-name"
@@ -171,6 +174,22 @@ export function SubCategoryModal({
               }
               className={INPUT_CLASS}
               placeholder="배경 제거"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sub-name-en" className={LABEL_CLASS}>
+              이름 (English)
+            </label>
+            <input
+              id="sub-name-en"
+              type="text"
+              value={values.name_en}
+              onChange={(event) =>
+                setValues((prev) => ({ ...prev, name_en: event.target.value }))
+              }
+              className={INPUT_CLASS}
+              placeholder="Background Removal"
             />
           </div>
 

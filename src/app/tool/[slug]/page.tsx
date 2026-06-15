@@ -24,6 +24,7 @@ import {
 } from '@/lib/supabase/queries';
 import { localizeCategories, localizeCategory, localizeTool, localizeTools } from '@/lib/i18n/content';
 import { getLocale, getTranslations } from '@/lib/locale';
+import { buildSubCategoryNameMap } from '@/lib/sub-categories';
 import { formatDate, formatFreeLimit } from '@/lib/utils';
 import type { FreeLimitType, Tool } from '@/types/tool';
 
@@ -165,9 +166,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
   const categoryNameMap = Object.fromEntries(
     localizedCategories.map((item) => [item.slug, item.name]),
   );
-  const subNameMap = Object.fromEntries(
-    subCategories.map((sub) => [sub.slug, sub.name]),
-  );
+  const subNameMap = buildSubCategoryNameMap(subCategories, locale);
   const localizedCategory = localizedCategories.find(
     (item) => item.slug === tool.category_slug,
   );

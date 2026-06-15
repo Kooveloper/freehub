@@ -23,7 +23,7 @@ export async function CategoryToolsSection({
     getSubCategoriesByCategory(slug),
   ]);
   const localizedTools = localizeTools(tools, locale);
-  const subCategoryNameMap = buildSubCategoryNameMap(subCategories);
+  const subCategoryNameMap = buildSubCategoryNameMap(subCategories, locale);
 
   return (
     <CategoryToolList

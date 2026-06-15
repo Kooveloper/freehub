@@ -26,7 +26,7 @@ export async function SearchResultsSection({ query }: SearchResultsSectionProps)
   const categoryMap = Object.fromEntries(
     localizedCategories.map((category) => [category.slug, category]),
   );
-  const subCategoryNameMap = buildSubCategoryNameMap(subCategories);
+  const subCategoryNameMap = buildSubCategoryNameMap(subCategories, locale);
 
   return (
     <>

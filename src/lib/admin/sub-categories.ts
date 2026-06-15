@@ -3,6 +3,7 @@ import { SLUG_PATTERN } from '@/lib/admin/categories';
 export interface SubCategoryFormInput {
   slug: string;
   name: string;
+  name_en: string;
   category_slug: string;
   sort_order: number;
   is_active: boolean;
@@ -17,6 +18,7 @@ export function validateSubCategoryInput(
   const input = body as Record<string, unknown>;
   const slug = String(input.slug ?? '').trim();
   const name = String(input.name ?? '').trim();
+  const nameEn = String(input.name_en ?? '').trim();
   const categorySlug = String(input.category_slug ?? '').trim();
   const sortOrder = Number(input.sort_order);
   const isActive =
@@ -27,12 +29,14 @@ export function validateSubCategoryInput(
   }
 
   if (!name || name.length > 50) return null;
+  if (nameEn.length > 80) return null;
   if (!categorySlug) return null;
   if (!Number.isInteger(sortOrder) || sortOrder < 0) return null;
 
   return {
     slug,
     name,
+    name_en: nameEn,
     category_slug: categorySlug,
     sort_order: sortOrder,
     is_active: isActive,
@@ -41,6 +45,7 @@ export function validateSubCategoryInput(
 
 export function validateSubCategoryPatch(body: unknown): {
   name: string;
+  name_en: string;
   sort_order: number;
   is_active: boolean;
 } | null {
@@ -48,15 +53,18 @@ export function validateSubCategoryPatch(body: unknown): {
 
   const input = body as Record<string, unknown>;
   const name = String(input.name ?? '').trim();
+  const nameEn = String(input.name_en ?? '').trim();
   const sortOrder = Number(input.sort_order);
   const isActive =
     input.is_active === undefined ? true : Boolean(input.is_active);
 
   if (!name || name.length > 50) return null;
+  if (nameEn.length > 80) return null;
   if (!Number.isInteger(sortOrder) || sortOrder < 0) return null;
 
   return {
     name,
+    name_en: nameEn,
     sort_order: sortOrder,
     is_active: isActive,
   };
