@@ -40,6 +40,12 @@ function getPageTitle(pathname: string): string {
   }
 
   if (
+    pathname.startsWith('/admin/blog/preview/')
+  ) {
+    return '블로그 미리보기';
+  }
+
+  if (
     pathname.startsWith('/admin/blog/') &&
     pathname !== '/admin/blog/new' &&
     !pathname.startsWith('/admin/blog/automation')

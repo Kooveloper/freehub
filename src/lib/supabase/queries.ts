@@ -498,6 +498,7 @@ export {
   getAutomationSettings,
   getBlogPostByIdAdmin,
   getBlogPostBySlug,
+  getBlogPostBySlugAdmin,
   getBlogPostsByCategory,
   getRecentBlogPosts,
   incrementBlogViewCount,

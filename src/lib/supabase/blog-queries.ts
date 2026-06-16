@@ -59,7 +59,28 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
     .eq('status', 'published')
     .maybeSingle();
 
-  if (error) throw new Error(`블로그 글 조회 실패: ${error.message}`);
+  if (error) {
+    console.error('블로그 글 조회 실패:', error.message);
+    return null;
+  }
+  return data ? mapPost(data) : null;
+}
+
+/** 어드민 미리보기 — 초안 포함 slug로 조회 (service role) */
+export async function getBlogPostBySlugAdmin(
+  slug: string,
+): Promise<BlogPost | null> {
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('slug', slug)
+    .maybeSingle();
+
+  if (error) {
+    console.error('블로그 글(관리자) 조회 실패:', error.message);
+    return null;
+  }
   return data ? mapPost(data) : null;
 }
 

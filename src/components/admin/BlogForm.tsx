@@ -121,7 +121,15 @@ export function BlogForm({ initialPost, source = 'manual' }: BlogFormProps) {
     }
   };
 
-  const previewUrl = slug ? `/blog/${slug}` : '#';
+  const handlePreviewClick = () => {
+    if (!slug) return;
+    if (!initialPost) {
+      showToast('임시저장 후 미리보기할 수 있습니다.', 'error');
+      setEditorTab('preview');
+      return;
+    }
+    window.open(`/admin/blog/preview/${slug}`, '_blank', 'noopener,noreferrer');
+  };
   const metaLeft = 150 - metaDescription.length;
 
   return (
@@ -150,15 +158,14 @@ export function BlogForm({ initialPost, source = 'manual' }: BlogFormProps) {
               className={cn(INPUT_CLASS, 'max-w-md font-mono text-xs')}
             />
             {slug && (
-              <a
-                href={previewUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={handlePreviewClick}
                 className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
               >
                 미리보기
                 <ExternalLink className="h-3.5 w-3.5" />
-              </a>
+              </button>
             )}
           </div>
 
