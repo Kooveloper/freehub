@@ -17,7 +17,7 @@ interface SearchEmptyStateProps {
   subByCategory?: Record<string, SubCategory[]>;
 }
 
-/** 검색 결과 없음 — 추천 카테고리 + 인기 툴 */
+/** 검색 결과 없음 — 추천 카테고리 + 인기 서비스 */
 export function SearchEmptyState({
   query,
   categories,
@@ -58,7 +58,7 @@ export function SearchEmptyState({
       </section>
 
       <section>
-        <h2 className="mb-4 text-xl font-bold text-gray-900">인기 툴</h2>
+        <h2 className="mb-4 text-xl font-bold text-gray-900">인기 서비스</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {sortedTools.map((tool) => (
             <ToolCard key={tool.id} tool={tool} favoriteIds={favorites} />

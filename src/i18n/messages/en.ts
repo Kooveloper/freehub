@@ -24,14 +24,13 @@ export const en: Messages = {
     copyright: 'All rights reserved.',
   },
   home: {
-    heroTagline: 'Discover every service you can use for free!',
-    heroTitleLine1: 'Discover every service you can use for free!',
-    heroTitleLine2: 'Compare them all in one place',
-    heroSubtitle: 'Compare them all in one place',
+    heroTitleLine1: 'Every service you can use for free',
+    heroTitleLine2: 'All in one place',
+    heroSubtitle: 'Find the services you need on FREEHUB!',
     searchPlaceholder: 'ChatGPT, Notion, Midjourney...',
     categoriesTitle: 'Browse by category',
     mostPopular: 'Most searched services',
-    stats: '{toolCount} tools | {categoryCount} categories | Updated monthly',
+    stats: '{toolCount} services | {categoryCount} categories',
     statsPrefix: 'Currently',
     requestCtaTitle: 'Missing a service?',
     requestCtaDescription: 'Request a tool you would like to see on FreeHub!',
@@ -51,7 +50,7 @@ export const en: Messages = {
     noCardRequired: 'No card required',
     viewDetails: 'View details',
     freeSuffix: 'free',
-    toolCount: '{count} tools',
+    toolCount: '{count} services',
   },
   freeLimit: {
     unlimited: 'Unlimited',
@@ -65,14 +64,14 @@ export const en: Messages = {
     cancel: 'Cancel',
     register: 'Register',
     saving: 'Saving…',
-    noTools: 'No tools in this category.',
+    noTools: 'No services in this category.',
   },
   category: {
     all: 'All',
   },
   metadata: {
-    defaultTitle: '{appName} - Free AI & SaaS Tool Directory',
+    defaultTitle: '{appName} - Free AI & SaaS Service Directory',
     defaultDescription:
-      'Try before you pay. Compare free plans, limits, and features for AI and SaaS tools in one place.',
+      'Try before you pay. Compare free plans, limits, and features for AI and SaaS services in one place.',
   },
 };

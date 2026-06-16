@@ -127,7 +127,7 @@ export async function getAdminAnalytics(
     throw new Error(`서브카테고리 조회 실패: ${subCategoriesRes.error.message}`);
   }
   if (toolsRes.error) {
-    throw new Error(`툴 조회 실패: ${toolsRes.error.message}`);
+    throw new Error(`서비스 조회 실패: ${toolsRes.error.message}`);
   }
 
   const categoryNameMap = Object.fromEntries(
@@ -234,7 +234,7 @@ export async function getAdminAnalytics(
   };
 }
 
-/** 툴 상세 조회 이벤트 기록 (모든 분류에 각각 기록) */
+/** 서비스 상세 조회 이벤트 기록 (모든 분류에 각각 기록) */
 export async function logToolViewEvent(toolId: string): Promise<void> {
   const supabase = createServiceClient();
 
@@ -269,7 +269,7 @@ export async function logToolViewEvent(toolId: string): Promise<void> {
   }
 
   if (rows.length === 0) {
-    console.error('조회 이벤트용 툴 조회 실패: 없음');
+    console.error('조회 이벤트용 서비스 조회 실패: 없음');
     return;
   }
 

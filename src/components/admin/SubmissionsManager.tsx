@@ -18,10 +18,10 @@ interface SubmissionsManagerProps {
 }
 
 const TYPE_LABELS: Record<SubmissionType, string> = {
-  new_tool: '새 툴',
+  new_tool: '새 서비스',
   limit_change: '한도 변경',
   bug: '버그 신고',
-  inquiry: '기타 문의',
+  inquiry: '문의',
 };
 
 const STATUS_BADGE: Record<AdminItemStatus, BadgeVariant> = {
@@ -112,7 +112,7 @@ export function SubmissionsManager({ submissions }: SubmissionsManagerProps) {
             <thead>
               <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
                 <th className="px-4 py-3 font-medium">유형</th>
-                <th className="px-4 py-3 font-medium">제목/툴명</th>
+                <th className="px-4 py-3 font-medium">제목/서비스명</th>
                 <th className="px-4 py-3 font-medium">내용</th>
                 <th className="px-4 py-3 font-medium">이메일</th>
                 <th className="px-4 py-3 font-medium">접수일</th>

@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ tools });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : '비교 툴 조회 실패';
+      error instanceof Error ? error.message : '비교 서비스 조회 실패';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

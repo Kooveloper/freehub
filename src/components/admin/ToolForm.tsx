@@ -450,8 +450,8 @@ export function ToolForm({
       if (!response.ok) await parseApiError(response);
 
       const successMessage = isEdit
-        ? '툴 정보가 저장되었습니다.'
-        : '새 툴이 등록되었습니다.';
+        ? '서비스 정보가 저장되었습니다.'
+        : '새 서비스가 등록되었습니다.';
 
       queueAdminToolToast(successMessage, 'success');
 
@@ -516,7 +516,7 @@ export function ToolForm({
           <div>
             <span className={LABEL_CLASS}>카테고리 / 서브카테고리</span>
             <p className="mb-3 text-xs text-gray-500">
-              한 툴을 여러 카테고리·서브카테고리에 동시에 노출할 수 있습니다. 첫
+              한 서비스를 여러 카테고리·서브카테고리에 동시에 노출할 수 있습니다. 첫
               번째 항목이 주 분류입니다.
             </p>
             <CategoryAssignmentsEditor
@@ -742,7 +742,7 @@ export function ToolForm({
         <Section title="관리">
           {isEdit && initialTool && (
             <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600">
-              툴 상세 페이지 조회수:{' '}
+              서비스 상세 페이지 조회수:{' '}
               <span className="font-semibold tabular-nums text-gray-900">
                 누적 {initialTool.view_count.toLocaleString('ko-KR')}
               </span>

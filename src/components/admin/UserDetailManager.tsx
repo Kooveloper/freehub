@@ -295,7 +295,7 @@ export function UserDetailManager({ user, favorites }: UserDetailManagerProps) {
               <div className="flex items-center gap-2">
                 <Heart className="h-4 w-4 text-gray-500" />
                 <h2 className="text-base font-semibold text-gray-900">
-                  즐겨찾기한 툴
+                  즐겨찾기한 서비스
                 </h2>
               </div>
               <span className="text-sm text-gray-500">
@@ -305,7 +305,7 @@ export function UserDetailManager({ user, favorites }: UserDetailManagerProps) {
 
             {favorites.length === 0 ? (
               <p className="mt-4 rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-                즐겨찾기한 툴이 없습니다.
+                즐겨찾기한 서비스가 없습니다.
               </p>
             ) : (
               <ul className="mt-4 divide-y divide-gray-100">

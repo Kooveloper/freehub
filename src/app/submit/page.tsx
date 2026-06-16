@@ -7,7 +7,7 @@ import { getToolOptions } from '@/lib/supabase/queries';
 export const metadata: Metadata = {
   title: '제보하기 | FreeHub',
   description:
-    '새 툴 제보, 무료 한도 변경 신고, 버그/오류 제보, 기타 문의를 보내주세요.',
+    '새 서비스 제보, 무료 한도 변경 신고, 버그/오류 제보를 보내주세요.',
 };
 
 function SubmitFormFallback() {

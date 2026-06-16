@@ -5,7 +5,7 @@ export type SubmissionType =
   | 'bug'
   | 'inquiry';
 
-/** 새 툴 제보 */
+/** 새 서비스 제보 */
 export interface NewToolPayload {
   toolName: string;
   url: string;
@@ -26,7 +26,7 @@ export interface BugPayload {
   pageUrl?: string;
 }
 
-/** 기타 문의 */
+/** 문의 */
 export interface InquiryPayload {
   title: string;
   content: string;
@@ -40,12 +40,12 @@ export type SubmissionPayload =
 
 export interface SubmissionRequest {
   type: SubmissionType;
-  /** 기타 문의 시 필수 */
+  /** 문의 시 필수 */
   email?: string;
   payload: SubmissionPayload;
 }
 
-/** 툴 선택 드롭다운용 */
+/** 서비스 선택 드롭다운용 */
 export interface ToolOption {
   id: string;
   name: string;

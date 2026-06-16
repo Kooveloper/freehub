@@ -9,7 +9,7 @@ function gtagEvent(eventName: string, params: Record<string, unknown>) {
   window.gtag('event', eventName, params);
 }
 
-/** 툴 상세 페이지 조회 */
+/** 서비스 상세 페이지 조회 */
 export function trackToolView(toolName: string, category: string) {
   gtagEvent('tool_view', {
     tool_name: toolName,

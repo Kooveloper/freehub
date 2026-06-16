@@ -132,8 +132,8 @@ export function AnalyticsDashboard() {
       <div className="rounded-xl border border-blue-100 bg-blue-50/60 px-5 py-4 text-sm text-blue-900">
         <p className="font-medium">집계 기준</p>
         <p className="mt-1 text-blue-800/80">
-          공개 툴 상세 페이지(/tool/슬러그) 방문만 집계합니다. IP당 24시간 1회 ·
-          홈·카테고리 탭 선택은 포함되지 않습니다. 누적 조회수는 툴 테이블 기준,
+          공개 서비스 상세 페이지(/tool/슬러그) 방문만 집계합니다. IP당 24시간 1회 ·
+          홈·카테고리 탭 선택은 포함되지 않습니다. 누적 조회수는 서비스 테이블 기준,
           기간 조회수는 이벤트 로그 기준입니다.
         </p>
       </div>
@@ -219,7 +219,7 @@ export function AnalyticsDashboard() {
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-medium text-gray-500">
-                조회된 툴 수 (기간 내)
+                조회된 서비스 수 (기간 내)
               </p>
               <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">
                 {data.summary.uniqueTools.toLocaleString('ko-KR')}
@@ -234,7 +234,7 @@ export function AnalyticsDashboard() {
                   [
                     ['categories', '카테고리'],
                     ['subCategories', '서브카테고리'],
-                    ['tools', '툴'],
+                    ['tools', '서비스'],
                   ] as const
                 ).map(([tab, label]) => (
                   <button
@@ -370,7 +370,7 @@ export function AnalyticsDashboard() {
                 <table className="w-full min-w-[900px] text-sm">
                   <thead>
                     <tr className="border-b border-gray-100 text-left text-gray-500">
-                      <th className="px-5 py-3 font-medium">툴</th>
+                      <th className="px-5 py-3 font-medium">서비스</th>
                       <th className="px-5 py-3 font-medium">카테고리</th>
                       <th className="px-5 py-3 font-medium">서브카테고리</th>
                       <th className="px-5 py-3 text-right font-medium">

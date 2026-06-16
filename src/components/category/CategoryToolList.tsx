@@ -113,7 +113,7 @@ export function CategoryToolList({
   if (processedTools.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 py-16 text-center">
-        <p className="text-gray-500">조건에 맞는 툴이 없어요</p>
+        <p className="text-gray-500">조건에 맞는 서비스가 없어요</p>
         <p className="mt-1 text-sm text-gray-400">
           필터를 변경하거나 다른 카테고리를 탐색해 보세요.
         </p>
@@ -142,7 +142,7 @@ export function CategoryToolList({
       {(othersOnPage.length > 0 || !showFavoriteSection) && (
         <div>
           {showFavoriteSection && othersOnPage.length > 0 && (
-            <h2 className="mb-4 text-lg font-bold text-gray-900">전체 툴</h2>
+            <h2 className="mb-4 text-lg font-bold text-gray-900">전체 서비스</h2>
           )}
           <ToolGrid
             tools={showFavoriteSection ? othersOnPage : pageTools}

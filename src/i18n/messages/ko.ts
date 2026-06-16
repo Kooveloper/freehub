@@ -22,14 +22,13 @@ export const ko = {
     copyright: 'All rights reserved.',
   },
   home: {
-    heroTagline: '무료로 쓸 수 있는 모든 서비스를 모아보자!',
-    heroTitleLine1: '무료로 쓸 수 있는 모든 서비스를 모아보자!',
-    heroTitleLine2: '각 서비스들을 한곳에서 비교해보세요',
-    heroSubtitle: '각 서비스들을 한곳에서 비교해보세요',
+    heroTitleLine1: '무료로 쓸 수 있는 모든 서비스',
+    heroTitleLine2: '한곳에서 모아보자!',
+    heroSubtitle: 'FREEHUB에서 필요한 서비스를 찾아보세요!',
     searchPlaceholder: 'ChatGPT, Notion, Midjourney...',
     categoriesTitle: '카테고리별 탐색',
     mostPopular: '가장 많이 찾은 서비스',
-    stats: '{toolCount}개 툴 | {categoryCount}개 카테고리 | 매월 업데이트',
+    stats: '{toolCount}개 서비스 | {categoryCount}개 카테고리',
     statsPrefix: '현재',
     requestCtaTitle: '등록되지 않은 서비스가 있나요?',
     requestCtaDescription: '추가되었으면 하는 서비스가 있다면 요청해주세요!',
@@ -49,7 +48,7 @@ export const ko = {
     noCardRequired: '카드 불필요',
     viewDetails: '자세히 보기',
     freeSuffix: '무료',
-    toolCount: '{count}개 툴',
+    toolCount: '{count}개 서비스',
   },
   freeLimit: {
     unlimited: '무제한',
@@ -63,15 +62,15 @@ export const ko = {
     cancel: '취소',
     register: '등록',
     saving: '저장 중…',
-    noTools: '등록된 툴이 없습니다.',
+    noTools: '등록된 서비스가 없습니다.',
   },
   category: {
     all: '전체',
   },
   metadata: {
-    defaultTitle: '{appName} - 무료 AI·SaaS 도구 큐레이션',
+    defaultTitle: '{appName} - 무료 AI·SaaS 서비스 큐레이션',
     defaultDescription:
-      '돈 내기 전에 무료로 써봐. AI·SaaS 도구의 무료 플랜, 한도, 기능을 한곳에서 비교하고 찾아보세요.',
+      '돈 내기 전에 무료로 써봐. AI·SaaS 서비스의 무료 플랜, 한도, 기능을 한곳에서 비교하고 찾아보세요.',
   },
 };
 

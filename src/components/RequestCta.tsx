@@ -9,7 +9,7 @@ interface RequestCtaProps {
   buttonLabel: string;
 }
 
-/** 홈 하단 — 서비스 추가 요청 CTA (제보하기 새 툴 제보 탭) */
+/** 홈 하단 — 서비스 추가 요청 CTA (제보하기 새 서비스 제보 탭) */
 export function RequestCta({ title, description, buttonLabel }: RequestCtaProps) {
   return (
     <section className="border-t border-neutral-200 bg-gradient-to-b from-white to-neutral-50 px-4 sm:px-6 lg:px-8">

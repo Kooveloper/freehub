@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import type { Tool } from '@/types/tool';
 
-/** 사이드바 관련 툴 링크 */
+/** 사이드바 관련 서비스 링크 */
 export function RelatedToolItem({ tool }: { tool: Tool }) {
   return (
     <Link

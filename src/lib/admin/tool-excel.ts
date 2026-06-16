@@ -480,7 +480,7 @@ export async function importToolsFromExcelRows(
     .select('id, slug, is_verified, verified_date');
 
   if (existingError) {
-    throw new Error(`기존 툴 조회 실패: ${existingError.message}`);
+    throw new Error(`기존 서비스 조회 실패: ${existingError.message}`);
   }
 
   const slugToExisting = new Map(
@@ -571,7 +571,7 @@ export async function importToolsFromExcelRows(
       result.failed.push({
         row: rowNumber,
         slug: input.slug,
-        error: error?.message ?? '툴 생성 실패',
+        error: error?.message ?? '서비스 생성 실패',
       });
       continue;
     }

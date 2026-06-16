@@ -38,11 +38,11 @@ export interface AdminToolRequest {
 
 export type AdminCategory = Category & {
   tool_count: number;
-  /** 소속 툴 상세 페이지 조회수 합계 */
+  /** 소속 서비스 상세 페이지 조회수 합계 */
   view_count_sum: number;
 };
 
-/** 관리자 카테고리 목록 (툴 수·누적 조회수 포함) */
+/** 관리자 카테고리 목록 (서비스 수·누적 조회수 포함) */
 export async function getAdminCategories(): Promise<AdminCategory[]> {
   const supabase = createServiceClient();
 
@@ -58,10 +58,10 @@ export async function getAdminCategories(): Promise<AdminCategory[]> {
     throw new Error(`카테고리 조회 실패: ${categoriesRes.error.message}`);
   }
   if (assignmentsRes.error) {
-    throw new Error(`툴 분류 조회 실패: ${assignmentsRes.error.message}`);
+    throw new Error(`서비스 분류 조회 실패: ${assignmentsRes.error.message}`);
   }
   if (toolsRes.error) {
-    throw new Error(`툴 수 조회 실패: ${toolsRes.error.message}`);
+    throw new Error(`서비스 수 조회 실패: ${toolsRes.error.message}`);
   }
 
   const viewCountByTool = new Map(
@@ -102,7 +102,7 @@ export type AdminSubCategory = SubCategory & {
   view_count_sum: number;
 };
 
-/** 관리자 서브카테고리 전체 목록 (툴 수·누적 조회수 포함) */
+/** 관리자 서브카테고리 전체 목록 (서비스 수·누적 조회수 포함) */
 export async function getAdminSubCategories(): Promise<AdminSubCategory[]> {
   const supabase = createServiceClient();
 
@@ -123,10 +123,10 @@ export async function getAdminSubCategories(): Promise<AdminSubCategory[]> {
     throw new Error(`서브카테고리 조회 실패: ${subCategoriesRes.error.message}`);
   }
   if (assignmentsRes.error) {
-    throw new Error(`툴 분류 조회 실패: ${assignmentsRes.error.message}`);
+    throw new Error(`서비스 분류 조회 실패: ${assignmentsRes.error.message}`);
   }
   if (toolsRes.error) {
-    throw new Error(`툴 수 조회 실패: ${toolsRes.error.message}`);
+    throw new Error(`서비스 수 조회 실패: ${toolsRes.error.message}`);
   }
 
   const viewCountByTool = new Map(
@@ -219,7 +219,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   ]);
 
   if (toolsCountRes.error) {
-    throw new Error(`툴 개수 조회 실패: ${toolsCountRes.error.message}`);
+    throw new Error(`서비스 개수 조회 실패: ${toolsCountRes.error.message}`);
   }
   if (categoriesCountRes.error) {
     throw new Error(`카테고리 개수 조회 실패: ${categoriesCountRes.error.message}`);
@@ -235,7 +235,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
     );
   }
   if (recentToolsRes.error) {
-    throw new Error(`최근 툴 조회 실패: ${recentToolsRes.error.message}`);
+    throw new Error(`최근 서비스 조회 실패: ${recentToolsRes.error.message}`);
   }
   if (pendingSubmissionsRes.error) {
     throw new Error(`미처리 제보 조회 실패: ${pendingSubmissionsRes.error.message}`);
@@ -257,7 +257,7 @@ export async function getAdminDashboardData(): Promise<AdminDashboardData> {
   };
 }
 
-/** 관리자 툴 목록 */
+/** 관리자 서비스 목록 */
 export async function getAdminTools(): Promise<Tool[]> {
   const supabase = createServiceClient();
 
@@ -267,7 +267,7 @@ export async function getAdminTools(): Promise<Tool[]> {
     .order('updated_at', { ascending: false });
 
   if (error) {
-    throw new Error(`툴 목록 조회 실패: ${error.message}`);
+    throw new Error(`서비스 목록 조회 실패: ${error.message}`);
   }
 
   const tools = (data ?? []) as Tool[];
@@ -290,7 +290,7 @@ export async function getAdminToolById(id: string): Promise<Tool | null> {
     .maybeSingle();
 
   if (error) {
-    throw new Error(`툴 조회 실패: ${error.message}`);
+    throw new Error(`서비스 조회 실패: ${error.message}`);
   }
 
   if (!data) return null;

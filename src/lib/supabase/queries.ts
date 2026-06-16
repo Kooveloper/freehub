@@ -83,7 +83,7 @@ export async function getToolBySlug(slug: string): Promise<Tool> {
   return attachAssignmentsToTools([tool], assignmentMap)[0];
 }
 
-/** SSG용 전체 툴 slug 목록 */
+/** SSG용 전체 서비스 slug 목록 */
 export async function getAllToolSlugs(): Promise<string[]> {
   const supabase = createStaticClient();
 
@@ -96,7 +96,7 @@ export async function getAllToolSlugs(): Promise<string[]> {
   return (data ?? []).map((row) => row.slug as string);
 }
 
-/** 같은 카테고리 관련 툴 (현재 툴 제외, 분류 기준) */
+/** 같은 카테고리 관련 서비스 (현재 툴 제외, 분류 기준) */
 export async function getRelatedTools(
   categorySlugs: string[],
   excludeId: string,
@@ -113,7 +113,7 @@ export async function getRelatedTools(
     .neq('tool_id', excludeId);
 
   if (assignmentError) {
-    throw new Error(`관련 툴 조회 실패: ${assignmentError.message}`);
+    throw new Error(`관련 서비스 조회 실패: ${assignmentError.message}`);
   }
 
   const toolIds = [
@@ -130,7 +130,7 @@ export async function getRelatedTools(
     .limit(limit);
 
   if (error) {
-    throw new Error(`관련 툴 조회 실패: ${error.message}`);
+    throw new Error(`관련 서비스 조회 실패: ${error.message}`);
   }
 
   const tools = (data ?? []) as Tool[];
@@ -138,7 +138,7 @@ export async function getRelatedTools(
   return attachAssignmentsToTools(tools, assignmentMap);
 }
 
-/** 제보 폼 툴 선택용 (이름순) */
+/** 제보 폼 서비스 선택용 (이름순) */
 export async function getToolOptions(): Promise<{ id: string; name: string }[]> {
   const supabase = createStaticClient();
 
@@ -148,7 +148,7 @@ export async function getToolOptions(): Promise<{ id: string; name: string }[]> 
     .order('name', { ascending: true });
 
   if (error) {
-    throw new Error(`툴 목록 조회 실패: ${error.message}`);
+    throw new Error(`서비스 목록 조회 실패: ${error.message}`);
   }
 
   return data ?? [];
@@ -179,7 +179,7 @@ export async function getToolsBySlugs(slugs: string[]): Promise<Tool[]> {
     .filter((tool): tool is Tool => tool != null);
 }
 
-/** 유저 즐겨찾기 툴 목록 (favorites JOIN tools, 추가 순) */
+/** 유저 즐겨찾기 서비스 목록 (favorites JOIN tools, 추가 순) */
 export async function getFavoriteToolsForUser(userId: string): Promise<Tool[]> {
   const supabase = await createClient();
 
@@ -205,7 +205,7 @@ export async function getFavoriteToolsForUser(userId: string): Promise<Tool[]> {
     .in('id', toolIds);
 
   if (toolsError) {
-    throw new Error(`즐겨찾기 툴 조회 실패: ${toolsError.message}`);
+    throw new Error(`즐겨찾기 서비스 조회 실패: ${toolsError.message}`);
   }
 
   const toolMap = new Map((tools ?? []).map((tool) => [tool.id as string, tool as Tool]));
@@ -353,7 +353,7 @@ export async function getEditorPicks(limit = 6): Promise<Tool[]> {
   return (data ?? []) as Tool[];
 }
 
-/** 전체 툴 개수 */
+/** 전체 서비스 개수 */
 export async function getToolCount(): Promise<number> {
   const supabase = await createClient();
 
@@ -362,13 +362,13 @@ export async function getToolCount(): Promise<number> {
     .select('*', { count: 'exact', head: true });
 
   if (error) {
-    throw new Error(`툴 개수 조회 실패: ${error.message}`);
+    throw new Error(`서비스 개수 조회 실패: ${error.message}`);
   }
 
   return count ?? 0;
 }
 
-/** 카테고리별 툴 개수 (category_slug → count, 분류 기준) */
+/** 카테고리별 서비스 개수 (category_slug → count, 분류 기준) */
 export async function getCategoryToolCounts(): Promise<Record<string, number>> {
   const supabase = await createClient();
 
@@ -377,7 +377,7 @@ export async function getCategoryToolCounts(): Promise<Record<string, number>> {
     .select('category_slug, tool_id');
 
   if (error) {
-    throw new Error(`카테고리별 툴 수 조회 실패: ${error.message}`);
+    throw new Error(`카테고리별 서비스 수 조회 실패: ${error.message}`);
   }
 
   const counts: Record<string, number> = {};
@@ -469,7 +469,7 @@ export async function getSubCategoriesByCategory(
   return all.filter((sub) => sub.category_slug === categorySlug);
 }
 
-/** 서브카테고리 slug로 툴 목록 조회 */
+/** 서브카테고리 slug로 서비스 목록 조회 */
 export async function getToolsBySubCategory(subSlug: string): Promise<Tool[]> {
   const supabase = await createClient();
 

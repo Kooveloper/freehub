@@ -26,10 +26,10 @@ import type { Tool } from '@/types/tool';
 export const dynamic = 'force-dynamic';
 
 const SUBMISSION_TYPE_LABELS: Record<AdminSubmission['type'], string> = {
-  new_tool: '새 툴',
+  new_tool: '새 서비스',
   limit_change: '한도 변경',
   bug: '버그 신고',
-  inquiry: '기타 문의',
+  inquiry: '문의',
 };
 
 const STATUS_LABELS = ADMIN_STATUS_LABELS;
@@ -111,7 +111,7 @@ export default async function AdminDashboardPage() {
       {/* 통계 카드 */}
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="전체 툴"
+          label="전체 서비스"
           value={stats.toolCount}
           icon={Wrench}
           accent="bg-blue-50 text-blue-600"
@@ -136,15 +136,15 @@ export default async function AdminDashboardPage() {
         />
       </section>
 
-      {/* 카테고리별 툴 상세 조회 (누적) */}
+      {/* 카테고리별 서비스 상세 조회 (누적) */}
       <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4">
           <div>
             <h2 className="font-semibold text-gray-900">
-              카테고리별 툴 상세 조회
+              카테고리별 서비스 상세 조회
             </h2>
             <p className="mt-1 text-xs text-gray-500">
-              공개 툴 상세 페이지(/tool/슬러그) 방문 시 집계 · IP당 24시간 1회 ·
+              공개 서비스 상세 페이지(/tool/슬러그) 방문 시 집계 · IP당 24시간 1회 ·
               홈·카테고리 탭 선택은 포함되지 않음
             </p>
           </div>
@@ -161,7 +161,7 @@ export default async function AdminDashboardPage() {
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500">
                 <th className="px-5 py-3 font-medium">카테고리</th>
-                <th className="px-5 py-3 font-medium">툴 수</th>
+                <th className="px-5 py-3 font-medium">서비스 수</th>
                 <th className="px-5 py-3 font-medium">조회수 (누적 / 30일)</th>
               </tr>
             </thead>
@@ -201,7 +201,7 @@ export default async function AdminDashboardPage() {
           className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
         >
           <Plus className="h-4 w-4" />
-          새 툴 추가
+          새 서비스 추가
         </Link>
         <Link
           href="/admin/categories"
@@ -212,10 +212,10 @@ export default async function AdminDashboardPage() {
         </Link>
       </section>
 
-      {/* 최근 추가 툴 */}
+      {/* 최근 추가 서비스 */}
       <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="border-b border-gray-200 px-5 py-4">
-          <h2 className="font-semibold text-gray-900">최근 추가 툴</h2>
+          <h2 className="font-semibold text-gray-900">최근 추가 서비스</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -230,7 +230,7 @@ export default async function AdminDashboardPage() {
             </thead>
             <tbody>
               {recentTools.length === 0 ? (
-                <EmptyRow colSpan={5} message="등록된 툴이 없습니다." />
+                <EmptyRow colSpan={5} message="등록된 서비스가 없습니다." />
               ) : (
                 recentTools.map((tool: Tool) => (
                   <tr

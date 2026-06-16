@@ -49,19 +49,19 @@ function buildAdminHtml(
 ): string {
   const typeLabel =
     type === 'new_tool'
-      ? '새 툴 제보'
+      ? '새 서비스 제보'
       : type === 'limit_change'
         ? '한도 변경 신고'
         : type === 'bug'
           ? '버그/오류 신고'
-          : '기타 문의';
+          : '문의';
 
   let details = `<p><strong>유형:</strong> ${escapeHtml(typeLabel)}</p>`;
 
   if (type === 'new_tool') {
     const p = payload as NewToolPayload;
     details += `
-      <p><strong>툴 이름:</strong> ${escapeHtml(p.toolName)}</p>
+      <p><strong>서비스 이름:</strong> ${escapeHtml(p.toolName)}</p>
       <p><strong>URL:</strong> <a href="${escapeHtml(p.url)}">${escapeHtml(p.url)}</a></p>`;
     if (p.freeLimit) {
       details += `<p><strong>무료 한도:</strong> ${escapeHtml(p.freeLimit)}</p>`;
@@ -74,7 +74,7 @@ function buildAdminHtml(
   } else if (type === 'limit_change') {
     const p = payload as LimitChangePayload;
     details += `
-      <p><strong>툴:</strong> ${escapeHtml(p.toolName)}</p>
+      <p><strong>서비스:</strong> ${escapeHtml(p.toolName)}</p>
       <p><strong>변경 내용:</strong></p>
       <p>${escapeHtml(p.changeContent).replace(/\n/g, '<br>')}</p>`;
   } else if (type === 'inquiry') {

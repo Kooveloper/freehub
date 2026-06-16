@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
     if (rows.length === 0) {
       return NextResponse.json(
-        { error: '업로드한 파일에 툴 데이터가 없습니다.' },
+        { error: '업로드한 파일에 서비스 데이터가 없습니다.' },
         { status: 400 },
       );
     }

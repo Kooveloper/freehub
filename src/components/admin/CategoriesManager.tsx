@@ -224,7 +224,7 @@ export function CategoriesManager({
   const handleDelete = async (category: AdminCategory) => {
     if (category.tool_count > 0) {
       window.alert(
-        `이 카테고리에 ${category.tool_count}개의 툴이 연결되어 있어 삭제할 수 없습니다.`,
+        `이 카테고리에 ${category.tool_count}개의 서비스가 연결되어 있어 삭제할 수 없습니다.`,
       );
       return;
     }
@@ -289,7 +289,7 @@ export function CategoriesManager({
                 <th className="px-4 py-3 font-medium">아이콘</th>
                 <th className="px-4 py-3 font-medium">이름</th>
                 <th className="px-4 py-3 font-medium">슬러그</th>
-                <th className="px-4 py-3 font-medium">툴 수</th>
+                <th className="px-4 py-3 font-medium">서비스 수</th>
                 <th className="px-4 py-3 font-medium">조회수 (누적 / 30일)</th>
                 <th className="px-4 py-3 font-medium">활성화</th>
                 <th className="px-4 py-3 font-medium">순서</th>
@@ -477,7 +477,7 @@ export function CategoriesManager({
                                     <tr className="border-b border-gray-100 text-left text-xs text-gray-500">
                                       <th className="px-4 py-2 font-medium">이름</th>
                                       <th className="px-4 py-2 font-medium">슬러그</th>
-                                      <th className="px-4 py-2 font-medium">툴 수</th>
+                                      <th className="px-4 py-2 font-medium">서비스 수</th>
                                       <th className="px-4 py-2 font-medium">
                                         조회수 (누적 / 30일)
                                       </th>

@@ -23,7 +23,7 @@ export async function GET() {
     return NextResponse.json({ tools });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : '툴 목록 조회 실패';
+      error instanceof Error ? error.message : '서비스 목록 조회 실패';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

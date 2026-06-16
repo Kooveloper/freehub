@@ -125,7 +125,7 @@ export async function fetchAssignmentsByToolIds(
     .order('sort_order', { ascending: true });
 
   if (error) {
-    throw new Error(`툴 분류 조회 실패: ${error.message}`);
+    throw new Error(`서비스 분류 조회 실패: ${error.message}`);
   }
 
   for (const row of data ?? []) {

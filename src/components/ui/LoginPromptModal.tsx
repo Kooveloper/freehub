@@ -64,7 +64,7 @@ export function LoginPromptModal({ isOpen, onClose }: LoginPromptModalProps) {
             즐겨찾기 기능을 사용해보세요
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-gray-500">
-            로그인하면 자주 쓰는 툴을 즐겨찾기하고 목록 맨 위에서 바로 찾을 수
+            로그인하면 자주 쓰는 서비스를 즐겨찾기하고 목록 맨 위에서 바로 찾을 수
             있어요.
           </p>
 

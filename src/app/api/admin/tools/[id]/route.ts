@@ -26,11 +26,11 @@ export async function GET(
   try {
     const tool = await getAdminToolById(id);
     if (!tool) {
-      return NextResponse.json({ error: '툴을 찾을 수 없습니다.' }, { status: 404 });
+      return NextResponse.json({ error: '서비스를 찾을 수 없습니다.' }, { status: 404 });
     }
     return NextResponse.json({ tool });
   } catch (error) {
-    const message = error instanceof Error ? error.message : '툴 조회 실패';
+    const message = error instanceof Error ? error.message : '서비스 조회 실패';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -68,7 +68,7 @@ export async function PATCH(
     .maybeSingle();
 
   if (!existing) {
-    return NextResponse.json({ error: '툴을 찾을 수 없습니다.' }, { status: 404 });
+    return NextResponse.json({ error: '서비스를 찾을 수 없습니다.' }, { status: 404 });
   }
 
   if (existing.slug !== input.slug) {
@@ -153,7 +153,7 @@ export async function DELETE(
     .maybeSingle();
 
   if (!existing) {
-    return NextResponse.json({ error: '툴을 찾을 수 없습니다.' }, { status: 404 });
+    return NextResponse.json({ error: '서비스를 찾을 수 없습니다.' }, { status: 404 });
   }
 
   const { error } = await supabase.from('tools').delete().eq('id', id);

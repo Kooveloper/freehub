@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 function ToolFormFallback() {
   return (
     <div className="mx-auto max-w-4xl rounded-xl border border-gray-200 bg-white px-6 py-16 text-center text-sm text-gray-400">
-      툴 정보를 불러오는 중…
+      서비스 정보를 불러오는 중…
     </div>
   );
 }

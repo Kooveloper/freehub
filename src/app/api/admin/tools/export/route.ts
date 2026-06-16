@@ -20,7 +20,7 @@ export async function GET() {
     ]);
 
     const buffer = buildToolsExcelBuffer(tools, categories, subCategories);
-    const filename = `FreeHub_Admin_툴데이터_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const filename = `FreeHub_Admin_서비스데이터_${new Date().toISOString().slice(0, 10)}.xlsx`;
 
     return new NextResponse(new Uint8Array(buffer), {
       headers: {

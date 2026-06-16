@@ -7,8 +7,8 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar';
 const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': '대시보드',
   '/admin/analytics': '조회 통계',
-  '/admin/tools': '툴 관리',
-  '/admin/tools/new': '툴 등록',
+  '/admin/tools': '서비스 관리',
+  '/admin/tools/new': '서비스 등록',
   '/admin/categories': '카테고리',
   '/admin/featured': '인기 서비스',
   '/admin/submissions': '제보 관리',
@@ -26,7 +26,7 @@ function getPageTitle(pathname: string): string {
     pathname.startsWith('/admin/tools/') &&
     pathname !== '/admin/tools/new'
   ) {
-    return '툴 수정';
+    return '서비스 수정';
   }
 
   if (

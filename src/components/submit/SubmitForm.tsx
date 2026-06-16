@@ -11,23 +11,23 @@ import {
 } from '@/lib/ui/form';
 import type { SubmissionType, ToolOption } from '@/types/submission';
 
-const EMAIL_MAX = 100;
 const COOLDOWN_MS = 3000;
 
 type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
-const TABS: { id: SubmissionType; label: string }[] = [
-  { id: 'new_tool', label: '새 툴 제보' },
+type SubmitTab = Exclude<SubmissionType, 'inquiry'>;
+
+const TABS: { id: SubmitTab; label: string }[] = [
+  { id: 'new_tool', label: '새 서비스 제보' },
   { id: 'limit_change', label: '한도 변경' },
   { id: 'bug', label: '버그/오류' },
-  { id: 'inquiry', label: '기타 문의' },
 ];
 
-const TAB_SET = new Set<SubmissionType>(TABS.map((tab) => tab.id));
+const TAB_SET = new Set<SubmitTab>(TABS.map((tab) => tab.id));
 
-function resolveInitialTab(value: string | null): SubmissionType {
-  if (value && TAB_SET.has(value as SubmissionType)) {
-    return value as SubmissionType;
+function resolveInitialTab(value: string | null): SubmitTab {
+  if (value && TAB_SET.has(value as SubmitTab)) {
+    return value as SubmitTab;
   }
   return 'new_tool';
 }
@@ -39,31 +39,23 @@ interface SubmitFormProps {
 /** 제보 탭 폼 */
 export function SubmitForm({ tools }: SubmitFormProps) {
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState<SubmissionType>(() =>
+  const [activeTab, setActiveTab] = useState<SubmitTab>(() =>
     resolveInitialTab(searchParams.get('tab')),
   );
   const [status, setStatus] = useState<FormStatus>('idle');
   const [cooldown, setCooldown] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
 
-  // 탭1: 새 툴 제보
   const [toolName, setToolName] = useState('');
   const [toolUrl, setToolUrl] = useState('');
   const [freeLimit, setFreeLimit] = useState('');
   const [description, setDescription] = useState('');
 
-  // 탭2: 한도 변경
   const [selectedToolId, setSelectedToolId] = useState('');
   const [changeContent, setChangeContent] = useState('');
 
-  // 탭3: 버그
   const [bugDescription, setBugDescription] = useState('');
   const [pageUrl, setPageUrl] = useState('');
-
-  // 탭4: 기타 문의
-  const [inquiryTitle, setInquiryTitle] = useState('');
-  const [inquiryContent, setInquiryContent] = useState('');
-  const [inquiryEmail, setInquiryEmail] = useState('');
 
   useEffect(() => {
     const tab = resolveInitialTab(searchParams.get('tab'));
@@ -89,16 +81,10 @@ export function SubmitForm({ tools }: SubmitFormProps) {
 
   const isBugValid = bugDescription.trim().length > 0;
 
-  const isInquiryValid =
-    inquiryTitle.trim().length > 0 &&
-    inquiryContent.trim().length > 0 &&
-    inquiryEmail.trim().length > 0;
-
   const isValid =
     (activeTab === 'new_tool' && isNewToolValid) ||
     (activeTab === 'limit_change' && isLimitChangeValid) ||
-    (activeTab === 'bug' && isBugValid) ||
-    (activeTab === 'inquiry' && isInquiryValid);
+    (activeTab === 'bug' && isBugValid);
 
   const isDisabled = status === 'submitting' || cooldown || !isValid;
 
@@ -122,11 +108,6 @@ export function SubmitForm({ tools }: SubmitFormProps) {
           description: bugDescription.trim(),
           ...(pageUrl.trim() ? { pageUrl: pageUrl.trim() } : {}),
         };
-      case 'inquiry':
-        return {
-          title: inquiryTitle.trim(),
-          content: inquiryContent.trim(),
-        };
     }
   };
 
@@ -139,12 +120,9 @@ export function SubmitForm({ tools }: SubmitFormProps) {
     setChangeContent('');
     setBugDescription('');
     setPageUrl('');
-    setInquiryTitle('');
-    setInquiryContent('');
-    setInquiryEmail('');
   };
 
-  const handleTabChange = (tab: SubmissionType) => {
+  const handleTabChange = (tab: SubmitTab) => {
     setActiveTab(tab);
     resetStatus();
     setShowSuccessToast(false);
@@ -168,9 +146,6 @@ export function SubmitForm({ tools }: SubmitFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: activeTab,
-          ...(activeTab === 'inquiry'
-            ? { email: inquiryEmail.trim() }
-            : {}),
           payload: buildPayload(),
         }),
       });
@@ -186,9 +161,6 @@ export function SubmitForm({ tools }: SubmitFormProps) {
       startCooldown();
     }
   };
-
-  const successMessage =
-    activeTab === 'inquiry' ? '문의가 접수되었습니다' : '제보가 접수되었습니다';
 
   return (
     <>
@@ -214,7 +186,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4 p-6 sm:p-8">
           {activeTab === 'new_tool' && (
             <>
-              <Field label="툴 이름" required>
+              <Field label="서비스 이름" required>
                 <input
                   type="text"
                   value={toolName}
@@ -272,7 +244,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
 
           {activeTab === 'limit_change' && (
             <>
-              <Field label="툴 선택" required>
+              <Field label="서비스 선택" required>
                 <select
                   value={selectedToolId}
                   onChange={(e) => {
@@ -282,7 +254,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   required
                   className={UI_INPUT_CLASS}
                 >
-                  <option value="">툴을 선택해주세요</option>
+                  <option value="">서비스를 선택해주세요</option>
                   {tools.map((tool) => (
                     <option key={tool.id} value={tool.id}>
                       {tool.name}
@@ -338,63 +310,12 @@ export function SubmitForm({ tools }: SubmitFormProps) {
             </>
           )}
 
-          {activeTab === 'inquiry' && (
-            <>
-              <Field label="제목" required>
-                <input
-                  type="text"
-                  value={inquiryTitle}
-                  onChange={(e) => {
-                    resetStatus();
-                    setInquiryTitle(e.target.value);
-                  }}
-                  placeholder="문의 제목을 입력해주세요"
-                  maxLength={120}
-                  required
-                  className={UI_INPUT_CLASS}
-                />
-              </Field>
-              <Field label="내용" required>
-                <textarea
-                  value={inquiryContent}
-                  onChange={(e) => {
-                    resetStatus();
-                    setInquiryContent(e.target.value);
-                  }}
-                  placeholder="문의 내용을 자세히 입력해주세요"
-                  maxLength={2000}
-                  required
-                  rows={5}
-                  className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
-                />
-              </Field>
-              <Field label="답변 받을 이메일" required>
-                <input
-                  type="email"
-                  value={inquiryEmail}
-                  onChange={(e) => {
-                    resetStatus();
-                    setInquiryEmail(e.target.value.slice(0, EMAIL_MAX));
-                  }}
-                  placeholder="you@example.com"
-                  maxLength={EMAIL_MAX}
-                  required
-                  className={UI_INPUT_CLASS}
-                />
-              </Field>
-            </>
-          )}
-
           <button
             type="submit"
             disabled={isDisabled}
             className={uiButtonPrimaryClass(isDisabled)}
           >
-            {status === 'submitting'
-              ? '제출 중...'
-              : activeTab === 'inquiry'
-                ? '문의하기'
-                : '제보하기'}
+            {status === 'submitting' ? '제출 중...' : '제보하기'}
           </button>
 
           {status === 'error' && (
@@ -410,7 +331,9 @@ export function SubmitForm({ tools }: SubmitFormProps) {
           role="status"
           className="fixed bottom-6 left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border border-green-200 bg-white px-4 py-3 shadow-lg"
         >
-          <p className="text-sm font-semibold text-gray-900">{successMessage}</p>
+          <p className="text-sm font-semibold text-gray-900">
+            제보가 접수되었습니다
+          </p>
           <p className="mt-1 text-xs text-gray-500">
             검토 후 답변드릴게요. 감사합니다!
           </p>

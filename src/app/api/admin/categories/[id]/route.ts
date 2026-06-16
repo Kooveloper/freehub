@@ -149,13 +149,13 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     if (toolCount > 0) {
       return NextResponse.json(
         {
-          error: `이 카테고리에 ${toolCount}개의 툴이 연결되어 있어 삭제할 수 없습니다.`,
+          error: `이 카테고리에 ${toolCount}개의 서비스가 연결되어 있어 삭제할 수 없습니다.`,
         },
         { status: 409 },
       );
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : '툴 수 조회 실패';
+    const message = error instanceof Error ? error.message : '서비스 수 조회 실패';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 

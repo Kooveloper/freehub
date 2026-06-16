@@ -46,8 +46,8 @@ export async function generateMetadata({
   return {
     title:
       locale === 'en'
-        ? `Free ${localized.name} Tools (${tools.length}) | FreeHub`
-        : `무료 ${localized.name} 툴 ${tools.length}개 | FreeHub`,
+        ? `Free ${localized.name} Services (${tools.length}) | FreeHub`
+        : `무료 ${localized.name} 서비스 ${tools.length}개 | FreeHub`,
     description: localized.description,
   };
 }

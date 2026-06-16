@@ -107,7 +107,7 @@ export async function getPopularToolsByCategory(): Promise<
     throw new Error(`카테고리 조회 실패: ${categoriesRes.error.message}`);
   }
   if (toolsRes.error) {
-    throw new Error(`툴 조회 실패: ${toolsRes.error.message}`);
+    throw new Error(`서비스 조회 실패: ${toolsRes.error.message}`);
   }
 
   const categories = (categoriesRes.data ?? []) as Category[];

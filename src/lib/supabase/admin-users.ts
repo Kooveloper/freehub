@@ -91,7 +91,7 @@ export async function getAdminUserById(id: string): Promise<AdminUser | null> {
   return mapAuthUser(data.user);
 }
 
-/** 회원 즐겨찾기 툴 목록 */
+/** 회원 즐겨찾기 서비스 목록 */
 export async function getAdminUserFavorites(
   userId: string,
 ): Promise<AdminUserFavorite[]> {
@@ -117,7 +117,7 @@ export async function getAdminUserFavorites(
     .in('id', toolIds);
 
   if (toolsError) {
-    throw new Error(`즐겨찾기 툴 조회 실패: ${toolsError.message}`);
+    throw new Error(`즐겨찾기 서비스 조회 실패: ${toolsError.message}`);
   }
 
   const toolMap = new Map(

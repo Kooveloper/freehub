@@ -4,7 +4,7 @@ import { createStaticClient } from '@/lib/supabase/server';
 import { formatFreeLimit } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
 
-export const alt = 'FreeHub 툴 정보';
+export const alt = 'FreeHub 서비스 정보';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 

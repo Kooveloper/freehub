@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 function ToolsManagerFallback() {
   return (
     <div className="rounded-xl border border-gray-200 bg-white px-6 py-16 text-center text-sm text-gray-400">
-      툴 목록을 불러오는 중…
+      서비스 목록을 불러오는 중…
     </div>
   );
 }

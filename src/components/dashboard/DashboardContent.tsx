@@ -55,15 +55,15 @@ export function DashboardContent({
         {favoriteTools.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 px-6 py-16 text-center">
             <p className="text-gray-600">
-              아직 즐겨찾기한 툴이 없어요.
+              아직 즐겨찾기한 서비스가 없어요.
               <br />
-              마음에 드는 툴에 ♥를 눌러보세요!
+              마음에 드는 서비스에 ♥를 눌러보세요!
             </p>
             <Link
               href="/"
               className="mt-6 inline-flex h-[60px] items-center justify-center rounded-xl bg-blue-600 px-6 text-base font-semibold text-white transition-colors hover:bg-blue-700"
             >
-              툴 둘러보기
+              서비스 둘러보기
             </Link>
           </div>
         ) : (

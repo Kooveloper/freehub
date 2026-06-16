@@ -26,7 +26,7 @@ function chunkTools(items: Tool[], size: number): Tool[][] {
   return pages;
 }
 
-/** 카테고리 툴 목록 — 3열×2행(6개) 단위 슬라이드 + 스와이프·점 페이지네이션 */
+/** 카테고리 서비스 목록 — 3열×2행(6개) 단위 슬라이드 + 스와이프·점 페이지네이션 */
 export function CategoryToolsCarousel({
   tools,
   categoryName,
@@ -151,7 +151,7 @@ export function CategoryToolsCarousel({
             type="button"
             onClick={goPrev}
             disabled={activeIndex === 0}
-            aria-label="이전 툴"
+            aria-label="이전 서비스"
             className="absolute -left-1 top-[42%] z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-left-3 sm:top-1/2 sm:p-2.5"
           >
             <ChevronLeft className="h-4 w-4 text-neutral-700 sm:h-5 sm:w-5" />
@@ -160,7 +160,7 @@ export function CategoryToolsCarousel({
             type="button"
             onClick={goNext}
             disabled={activeIndex === pages.length - 1}
-            aria-label="다음 툴"
+            aria-label="다음 서비스"
             className="absolute -right-1 top-[42%] z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-right-3 sm:top-1/2 sm:p-2.5"
           >
             <ChevronRight className="h-4 w-4 text-neutral-700 sm:h-5 sm:w-5" />

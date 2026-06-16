@@ -18,7 +18,7 @@ export interface SoftwareApplicationJsonLdProps {
   url: string;
 }
 
-/** 툴 상세 페이지용 SoftwareApplication 스키마 */
+/** 서비스 상세 페이지용 SoftwareApplication 스키마 */
 export function SoftwareApplicationJsonLd({
   name,
   description,

@@ -16,7 +16,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     const tools = await getToolsByCategory(slug);
     return NextResponse.json({ tools: localizeTools(tools, locale) });
   } catch (error) {
-    const message = error instanceof Error ? error.message : '툴 조회 실패';
+    const message = error instanceof Error ? error.message : '서비스 조회 실패';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -135,7 +135,7 @@ export async function generateMetadata({
   } catch {
     return {
       title:
-        locale === 'en' ? 'Tool not found | FreeHub' : '툴을 찾을 수 없습니다 | FreeHub',
+        locale === 'en' ? 'Service not found | FreeHub' : '서비스를 찾을 수 없습니다 | FreeHub',
     };
   }
 }
@@ -355,7 +355,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
               {relatedTools.length > 0 && (
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <h3 className="font-semibold text-gray-900">관련 툴</h3>
+                  <h3 className="font-semibold text-gray-900">관련 서비스</h3>
                   <div className="mt-3 space-y-2">
                     {relatedTools.map((related) => (
                       <RelatedToolItem key={related.id} tool={related} />

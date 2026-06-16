@@ -49,7 +49,8 @@ export default async function HomePage() {
           <div className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <div className="mx-auto max-w-3xl text-center">
               <h1 className="text-2xl font-bold leading-snug text-white sm:text-3xl lg:text-4xl lg:leading-tight">
-                {t('home.heroTagline')}
+                <span className="block">{t('home.heroTitleLine1')}</span>
+                <span className="mt-1 block">{t('home.heroTitleLine2')}</span>
               </h1>
               <p className="mt-4 text-base font-normal leading-relaxed text-neutral-300 sm:text-lg">
                 {t('home.heroSubtitle')}

@@ -389,11 +389,11 @@ function ComparePageContent() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-          {locale === 'en' ? 'Compare tools' : '툴 비교'}
+          {locale === 'en' ? 'Compare services' : '서비스 비교'}
         </h1>
         <p className="mt-1 text-sm text-gray-500">
           {locale === 'en'
-            ? `Compare up to ${MAX_COMPARE} tools side by side.`
+            ? `Compare up to ${MAX_COMPARE} services side by side.`
             : `최대 ${MAX_COMPARE}개까지 무료 플랜과 기능을 나란히 비교할 수 있습니다.`}
         </p>
       </div>
@@ -402,7 +402,7 @@ function ComparePageContent() {
         {slugs.length > 0 && (
           <div className="mb-6 border-b border-gray-100 pb-6">
             <h2 className="mb-3 text-sm font-bold text-gray-900">
-              {locale === 'en' ? 'Selected tools' : '선택된 툴'}{' '}
+              {locale === 'en' ? 'Selected services' : '선택된 서비스'}{' '}
               <span className="font-medium text-gray-400">
                 ({slugs.length}/{MAX_COMPARE})
               </span>
@@ -430,7 +430,7 @@ function ComparePageContent() {
               htmlFor="compare-search"
               className="mb-2 block text-sm font-bold text-gray-900"
             >
-              {locale === 'en' ? 'Search tools' : '툴 검색'}
+              {locale === 'en' ? 'Search services' : '서비스 검색'}
             </label>
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -450,7 +450,7 @@ function ComparePageContent() {
             <p className="mt-1.5 text-xs text-gray-400">
               {locale === 'en'
                 ? 'Name, description, or tags containing your keyword'
-                : '이름·설명·태그에 키워드가 포함된 툴을 검색합니다'}
+                : '이름·설명·태그에 키워드가 포함된 서비스를 검색합니다'}
             </p>
           </form>
 
@@ -550,7 +550,7 @@ function ComparePageContent() {
             {selectedCategory && (
               <div className="mt-5">
                 <h3 className="text-sm font-bold text-gray-900">
-                  {locale === 'en' ? 'Select a tool' : '툴 선택'}
+                  {locale === 'en' ? 'Select a service' : '서비스 선택'}
                 </h3>
                 {loadingCategoryTools ? (
                   <p className="mt-4 text-sm text-gray-400">
@@ -559,8 +559,8 @@ function ComparePageContent() {
                 ) : availableCategoryTools.length === 0 ? (
                   <p className="mt-4 text-sm text-gray-400">
                     {locale === 'en'
-                      ? 'No tools available for this selection.'
-                      : '선택한 조건에 해당하는 툴이 없습니다.'}
+                      ? 'No services available for this selection.'
+                      : '선택한 조건에 해당하는 서비스가 없습니다.'}
                   </p>
                 ) : (
                   <div className="scrollbar-hide -mx-1 mt-3 flex gap-3 overflow-x-auto px-1 pb-2">
@@ -586,7 +586,7 @@ function ComparePageContent() {
         ) : (
           <p className="text-sm text-gray-500">
             {locale === 'en'
-              ? `Maximum ${MAX_COMPARE} tools selected. Use the X above to remove one.`
+              ? `Maximum ${MAX_COMPARE} services selected. Use the X above to remove one.`
               : `최대 ${MAX_COMPARE}개까지 선택되었습니다. 위 X 버튼으로 해제할 수 있습니다.`}
           </p>
         )}
@@ -601,8 +601,8 @@ function ComparePageContent() {
           <div className="rounded-xl border border-dashed border-gray-300 bg-white px-6 py-20 text-center">
             <p className="text-lg font-bold text-gray-700">
               {locale === 'en'
-                ? 'Add tools to compare'
-                : '비교할 툴을 추가해보세요'}
+                ? 'Add services to compare'
+                : '비교할 서비스를 추가해보세요'}
             </p>
             <p className="mt-2 text-sm text-gray-500">
               {locale === 'en'

@@ -155,7 +155,7 @@ export function ToolsManager({
   };
 
   const handleDelete = async (tool: Tool) => {
-    if (!window.confirm(`"${tool.name}" 툴을 삭제하시겠습니까?`)) {
+    if (!window.confirm(`"${tool.name}" 서비스를 삭제하시겠습니까?`)) {
       return;
     }
 
@@ -258,7 +258,7 @@ export function ToolsManager({
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"
           >
             <Plus className="h-4 w-4" />
-            툴 추가
+            서비스 추가
           </Link>
         </div>
       </div>
@@ -320,7 +320,7 @@ export function ToolsManager({
                     className="px-4 py-10 text-center text-gray-400"
                   >
                     {tools.length === 0
-                      ? '등록된 툴이 없습니다.'
+                      ? '등록된 서비스가 없습니다.'
                       : '검색 결과가 없습니다.'}
                   </td>
                 </tr>

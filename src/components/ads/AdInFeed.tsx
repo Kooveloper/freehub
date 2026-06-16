@@ -6,7 +6,7 @@ interface AdInFeedProps {
   className?: string;
 }
 
-/** 인피드 네이티브 광고 — 툴 카드 그리드 안에 삽입 */
+/** 인피드 네이티브 광고 — 서비스 카드 그리드 안에 삽입 */
 export function AdInFeed({ className }: AdInFeedProps) {
   return (
     <AdSlot
