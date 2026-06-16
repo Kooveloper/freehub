@@ -51,24 +51,18 @@ export function ToolCard({
         isFavorited ? 'border-yellow-400 ring-1 ring-yellow-400' : 'border-gray-200',
       )}
     >
-      {isFavorited && (
-        <div className="absolute left-3 top-3 z-10">
+      <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
+        {isFavorited && (
           <Badge variant="yellow" className="gap-1">
             <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
             {t('tool.favorite')}
           </Badge>
-        </div>
-      )}
-
-      {tool.is_sponsored && (
-        <div className="absolute right-12 top-3 z-10">
+        )}
+        {tool.is_sponsored && (
           <Badge variant="orange" className="text-[10px] font-bold tracking-wide">
             SPONSORED
           </Badge>
-        </div>
-      )}
-
-      <div className="absolute right-3 top-3 z-10">
+        )}
         <FavoriteButton toolId={tool.id} toolName={tool.name} size="sm" />
       </div>
 
