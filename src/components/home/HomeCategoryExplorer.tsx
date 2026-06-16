@@ -1,11 +1,10 @@
 'use client';
 
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { AdInFeed } from '@/components/ads/AdInFeed';
 import { CategoryIcon } from '@/components/category/CategoryIcon';
 import { CategoryBrowseToolbar } from '@/components/category/CategoryBrowseToolbar';
-import { ToolCard } from '@/components/tools/ToolCard';
+import { CategoryToolsCarousel } from '@/components/home/CategoryToolsCarousel';
 import type { SortOption } from '@/components/tools/tool-filter-options';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -112,8 +111,8 @@ export function HomeCategoryExplorer({
 
   return (
     <div>
-      <div className="scrollbar-hide -mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-        <div className="flex min-w-max gap-3 sm:gap-4">
+      <div className="flex justify-center px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
           {categories.map((category) => {
             const isSelected = activeSlug === category.slug;
             return (
@@ -214,24 +213,13 @@ export function HomeCategoryExplorer({
               {t('common.noTools')}
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {displayedTools.map((tool, index) => (
-                <Fragment key={tool.id}>
-                  <ToolCard
-                    tool={tool}
-                    categoryName={activeCategory.name}
-                    categoryIcon={activeCategory.icon}
-                    subCategoryName={
-                      tool.sub_category
-                        ? subCategoryNameMap[tool.sub_category]
-                        : undefined
-                    }
-                    favoriteIds={favorites}
-                  />
-                  {index === 2 && <AdInFeed className="sm:col-span-1" />}
-                </Fragment>
-              ))}
-            </div>
+            <CategoryToolsCarousel
+              tools={displayedTools}
+              categoryName={activeCategory.name}
+              categoryIcon={activeCategory.icon}
+              subCategoryNameMap={subCategoryNameMap}
+              favoriteIds={favorites}
+            />
           )}
         </div>
       )}

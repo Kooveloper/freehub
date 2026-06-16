@@ -48,10 +48,7 @@ export default async function HomePage() {
         <section className="bg-black text-white">
           <div className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="text-3xl font-extrabold uppercase tracking-[0.12em] text-white sm:text-4xl lg:text-5xl">
-                FREEHUB
-              </p>
-              <h1 className="mt-8 text-2xl font-bold leading-snug text-white sm:text-3xl lg:text-[2rem] lg:leading-tight">
+              <h1 className="text-2xl font-bold leading-snug text-white sm:text-3xl lg:text-4xl lg:leading-tight">
                 {t('home.heroTagline')}
               </h1>
               <p className="mt-4 text-base font-normal leading-relaxed text-neutral-300 sm:text-lg">
