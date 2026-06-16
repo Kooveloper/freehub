@@ -58,16 +58,11 @@ export default async function PrivacyPage() {
     locale === 'en'
       ? page?.content_en || page?.content_ko || FALLBACK.content_en
       : page?.content_ko || FALLBACK.content_ko;
-  const effectiveDate = page?.effective_date ?? FALLBACK.effective_date;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
       <header className="mb-10 border-b border-gray-200 pb-6">
         <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
-        <p className="mt-2 text-sm text-gray-500">
-          {locale === 'en' ? 'Effective date: ' : '시행일: '}
-          {effectiveDate}
-        </p>
       </header>
 
       <LegalPageContent content={content} />

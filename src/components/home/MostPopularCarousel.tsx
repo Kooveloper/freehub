@@ -64,6 +64,7 @@ export function MostPopularCarousel({
   const { ref: dragRef, wasDragging } = useDragScroll<HTMLDivElement>();
   const [activeIndex, setActiveIndex] = useState(0);
   const isProgrammaticScroll = useRef(false);
+  const pendingIndex = useRef<number | null>(null);
 
   const visibleEntries = entries.filter((entry) => entry.tools.length > 0);
 
@@ -85,15 +86,40 @@ export function MostPopularCarousel({
     const slide = slides[index];
     if (!slide) return;
 
+    pendingIndex.current = index;
     isProgrammaticScroll.current = true;
-    const targetLeft =
-      slide.offsetLeft - (container.clientWidth - slide.offsetWidth) / 2;
 
-    container.scrollTo({
-      left: Math.max(0, targetLeft),
-      behavior: 'smooth',
+    const runScroll = () => {
+      const targetLeft =
+        slide.offsetLeft - (container.clientWidth - slide.offsetWidth) / 2;
+      const left = Math.max(0, targetLeft);
+
+      if (Math.abs(container.scrollLeft - left) < 2) {
+        isProgrammaticScroll.current = false;
+        pendingIndex.current = null;
+        setActiveIndex(index);
+        return;
+      }
+
+      container.scrollTo({ left, behavior: 'smooth' });
+    };
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(runScroll);
     });
-    setActiveIndex(index);
+
+    window.setTimeout(() => {
+      if (pendingIndex.current !== index) return;
+      const targetLeft =
+        slide.offsetLeft - (container.clientWidth - slide.offsetWidth) / 2;
+      const left = Math.max(0, targetLeft);
+      if (Math.abs(container.scrollLeft - left) > 2) {
+        container.scrollLeft = left;
+      }
+      pendingIndex.current = null;
+      isProgrammaticScroll.current = false;
+      setActiveIndex(index);
+    }, 450);
   }, []);
 
   useEffect(() => {
@@ -133,22 +159,27 @@ export function MostPopularCarousel({
     slides.forEach((slide) => observer.observe(slide));
 
     const handleScrollEnd = () => {
+      if (pendingIndex.current !== null) {
+        setActiveIndex(pendingIndex.current);
+        pendingIndex.current = null;
+      } else {
+        const center = container.scrollLeft + container.clientWidth / 2;
+        let closest = 0;
+        let minDist = Infinity;
+
+        slides.forEach((slide, index) => {
+          const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+          const dist = Math.abs(slideCenter - center);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = index;
+          }
+        });
+
+        setActiveIndex(closest);
+      }
+
       isProgrammaticScroll.current = false;
-
-      const center = container.scrollLeft + container.clientWidth / 2;
-      let closest = 0;
-      let minDist = Infinity;
-
-      slides.forEach((slide, index) => {
-        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
-        const dist = Math.abs(slideCenter - center);
-        if (dist < minDist) {
-          minDist = dist;
-          closest = index;
-        }
-      });
-
-      setActiveIndex(closest);
     };
 
     container.addEventListener('scrollend', handleScrollEnd);

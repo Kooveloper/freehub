@@ -97,14 +97,12 @@ export default async function HomePage() {
         />
 
         <section className="border-t border-neutral-800 bg-black px-4 py-8 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-neutral-400 sm:text-base">
+          <p className="text-center text-xs text-white sm:text-sm">
             {t('home.statsPrefix')}{' '}
-            <span className="font-medium text-white">
-              {t('home.stats', {
-                toolCount: toolCount.toLocaleString(numberLocale),
-                categoryCount: categories.length.toLocaleString(numberLocale),
-              })}
-            </span>
+            {t('home.stats', {
+              toolCount: toolCount.toLocaleString(numberLocale),
+              categoryCount: categories.length.toLocaleString(numberLocale),
+            })}
           </p>
         </section>
       </div>

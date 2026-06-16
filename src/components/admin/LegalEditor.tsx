@@ -13,12 +13,15 @@ const LABEL_CLASS = 'mb-1.5 block text-sm font-medium text-gray-700';
 interface LegalEditorProps {
   slug: LegalPageSlug;
   label: string;
+  showEffectiveDate?: boolean;
 }
 
-export function LegalEditor({ slug, label }: LegalEditorProps) {
+export function LegalEditor({
+  slug,
+  label,
+  showEffectiveDate = false,
+}: LegalEditorProps) {
   const { toast, showToast, hideToast } = useToast();
-  const [titleKo, setTitleKo] = useState('');
-  const [titleEn, setTitleEn] = useState('');
   const [contentKo, setContentKo] = useState('');
   const [contentEn, setContentEn] = useState('');
   const [effectiveDate, setEffectiveDate] = useState('');
@@ -30,8 +33,6 @@ export function LegalEditor({ slug, label }: LegalEditorProps) {
       .then((res) => res.json())
       .then((data) => {
         if (data.page) {
-          setTitleKo(data.page.title_ko ?? '');
-          setTitleEn(data.page.title_en ?? '');
           setContentKo(data.page.content_ko ?? '');
           setContentEn(data.page.content_en ?? '');
           setEffectiveDate(data.page.effective_date ?? '');
@@ -48,11 +49,9 @@ export function LegalEditor({ slug, label }: LegalEditorProps) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title_ko: titleKo,
-          title_en: titleEn,
           content_ko: contentKo,
           content_en: contentEn,
-          effective_date: effectiveDate,
+          ...(showEffectiveDate ? { effective_date: effectiveDate } : {}),
         }),
       });
       const data = await response.json();
@@ -72,37 +71,18 @@ export function LegalEditor({ slug, label }: LegalEditorProps) {
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
+        {showEffectiveDate && (
           <div>
-            <label className={LABEL_CLASS}>제목 (한국어)</label>
+            <label className={LABEL_CLASS}>시행일</label>
             <input
-              type="text"
-              value={titleKo}
-              onChange={(e) => setTitleKo(e.target.value)}
+              type="date"
+              value={effectiveDate}
+              onChange={(e) => setEffectiveDate(e.target.value)}
               required
               className={INPUT_CLASS}
             />
           </div>
-          <div>
-            <label className={LABEL_CLASS}>제목 (English)</label>
-            <input
-              type="text"
-              value={titleEn}
-              onChange={(e) => setTitleEn(e.target.value)}
-              className={INPUT_CLASS}
-            />
-          </div>
-        </div>
-        <div>
-          <label className={LABEL_CLASS}>시행일</label>
-          <input
-            type="date"
-            value={effectiveDate}
-            onChange={(e) => setEffectiveDate(e.target.value)}
-            required
-            className={INPUT_CLASS}
-          />
-        </div>
+        )}
         <div>
           <label className={LABEL_CLASS}>본문 (한국어)</label>
           <textarea

@@ -30,7 +30,7 @@ export const en: Messages = {
     searchPlaceholder: 'ChatGPT, Notion, Midjourney...',
     categoriesTitle: 'Browse by category',
     mostPopular: 'Most searched services',
-    stats: '{toolCount} services | {categoryCount} categories',
+    stats: '{categoryCount} categories · {toolCount} services',
     statsPrefix: 'Currently',
     requestCtaTitle: 'Missing a service?',
     requestCtaDescription: 'Request a tool you would like to see on FreeHub!',

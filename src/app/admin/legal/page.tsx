@@ -30,7 +30,11 @@ export default function AdminLegalPage() {
           </button>
         ))}
       </div>
-      <LegalEditor slug={active} label={TABS.find((t) => t.slug === active)!.label} />
+      <LegalEditor
+        slug={active}
+        label={TABS.find((t) => t.slug === active)!.label}
+        showEffectiveDate={active === 'terms'}
+      />
     </div>
   );
 }
