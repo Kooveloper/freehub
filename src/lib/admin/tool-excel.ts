@@ -41,6 +41,7 @@ const SECTION_ROW: string[] = [
   '',
   '관리',
   '',
+  '',
 ];
 
 export const TOOL_EXCEL_HEADERS: string[] = [
@@ -71,6 +72,7 @@ export const TOOL_EXCEL_HEADERS: string[] = [
   '태그 (English)',
   '검증 완료 (Y/N)',
   '한국 서비스 (Y/N)',
+  '로고 URL',
 ];
 
 const LIMIT_TYPE_TO_KO: Record<FreeLimitType, string> = {
@@ -298,6 +300,7 @@ export function toolToExcelRow(
     joinList(tool.tags_en),
     formatYn(tool.is_verified),
     formatYn(tool.is_sponsored),
+    tool.logo_url ?? '',
   ];
 }
 
@@ -418,13 +421,15 @@ export function excelRowToToolInput(
     return { error: '한국 서비스(Y/N) 값이 올바르지 않습니다.' };
   }
 
+  const logoUrlRaw = String(row[27] ?? '').trim();
+
   const candidate = {
     slug: String(row[2] ?? '').trim(),
     name: String(row[0] ?? '').trim(),
     name_en: String(row[1] ?? '').trim(),
     category_slug: categorySlug,
     sub_category: subCategorySlug,
-    logo_url: null,
+    logo_url: logoUrlRaw || null,
     homepage_url: String(row[5] ?? '').trim(),
     description: String(row[6] ?? '').trim(),
     description_en: String(row[7] ?? '').trim(),
@@ -477,7 +482,7 @@ export async function importToolsFromExcelRows(
 
   const { data: existingTools, error: existingError } = await supabase
     .from('tools')
-    .select('id, slug, is_verified, verified_date');
+    .select('id, slug, is_verified, verified_date, logo_url');
 
   if (existingError) {
     throw new Error(`기존 서비스 조회 실패: ${existingError.message}`);
@@ -512,6 +517,9 @@ export async function importToolsFromExcelRows(
     const existing = slugToExisting.get(input.slug);
 
     if (existing) {
+      if (!input.logo_url && existing.logo_url) {
+        payload.logo_url = existing.logo_url as string;
+      }
       let verifiedDate: string | null = existing.verified_date ?? null;
       if (input.is_verified && !existing.is_verified) {
         verifiedDate = now;
@@ -601,6 +609,7 @@ export async function importToolsFromExcelRows(
       slug: input.slug,
       is_verified: input.is_verified,
       verified_date: input.is_verified ? now : null,
+      logo_url: input.logo_url,
     });
   }
 
