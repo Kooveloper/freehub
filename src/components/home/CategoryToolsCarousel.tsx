@@ -1,9 +1,10 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { ToolCard } from '@/components/tools/ToolCard';
+import { useDragScroll } from '@/hooks/useDragScroll';
 import { cn } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
 
@@ -17,15 +18,15 @@ interface CategoryToolsCarouselProps {
   favoriteIds: string[];
 }
 
-function chunkTools(tools: Tool[], size: number): Tool[][] {
+function chunkTools(items: Tool[], size: number): Tool[][] {
   const pages: Tool[][] = [];
-  for (let i = 0; i < tools.length; i += size) {
-    pages.push(tools.slice(i, i + size));
+  for (let i = 0; i < items.length; i += size) {
+    pages.push(items.slice(i, i + size));
   }
   return pages;
 }
 
-/** 카테고리 툴 목록 — 3열×2행(6개) 단위 페이지 + 좌우 이동·점 페이지네이션 */
+/** 카테고리 툴 목록 — 3열×2행(6개) 단위 슬라이드 + 스와이프·점 페이지네이션 */
 export function CategoryToolsCarousel({
   tools,
   categoryName,
@@ -34,24 +35,113 @@ export function CategoryToolsCarousel({
   favoriteIds,
 }: CategoryToolsCarouselProps) {
   const pages = useMemo(() => chunkTools(tools, TOOLS_PER_PAGE), [tools]);
-  const [pageIndex, setPageIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const { ref: dragRef } = useDragScroll<HTMLDivElement>();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const isProgrammaticScroll = useRef(false);
+
+  const setScrollContainer = useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollRef.current = node;
+      dragRef.current = node;
+    },
+    [dragRef],
+  );
+
+  const scrollToIndex = useCallback((index: number) => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const slides = Array.from(
+      container.querySelectorAll('[data-slide]'),
+    ) as HTMLElement[];
+    const slide = slides[index];
+    if (!slide) return;
+
+    isProgrammaticScroll.current = true;
+    container.scrollTo({
+      left: slide.offsetLeft,
+      behavior: 'smooth',
+    });
+    setActiveIndex(index);
+  }, []);
 
   useEffect(() => {
-    setPageIndex(0);
+    setActiveIndex(0);
+    const container = scrollRef.current;
+    if (container) {
+      container.scrollTo({ left: 0, behavior: 'instant' });
+    }
   }, [tools]);
 
   useEffect(() => {
-    if (pageIndex > pages.length - 1) {
-      setPageIndex(Math.max(0, pages.length - 1));
-    }
-  }, [pageIndex, pages.length]);
+    const container = scrollRef.current;
+    if (!container || pages.length <= 1) return;
 
-  const currentTools = pages[pageIndex] ?? [];
+    const slides = Array.from(
+      container.querySelectorAll('[data-slide]'),
+    ) as HTMLElement[];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isProgrammaticScroll.current) return;
+
+        let bestIndex = -1;
+        let bestRatio = 0;
+
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const index = Number((entry.target as HTMLElement).dataset.index);
+          if (entry.intersectionRatio > bestRatio) {
+            bestRatio = entry.intersectionRatio;
+            bestIndex = index;
+          }
+        }
+
+        if (bestIndex >= 0) {
+          setActiveIndex(bestIndex);
+        }
+      },
+      {
+        root: container,
+        threshold: [0.55, 0.65, 0.75, 0.85, 0.95],
+      },
+    );
+
+    slides.forEach((slide) => observer.observe(slide));
+
+    const handleScrollEnd = () => {
+      isProgrammaticScroll.current = false;
+
+      const center = container.scrollLeft + container.clientWidth / 2;
+      let closest = 0;
+      let minDist = Infinity;
+
+      slides.forEach((slide, index) => {
+        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+        const dist = Math.abs(slideCenter - center);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = index;
+        }
+      });
+
+      setActiveIndex(closest);
+    };
+
+    container.addEventListener('scrollend', handleScrollEnd);
+
+    return () => {
+      observer.disconnect();
+      container.removeEventListener('scrollend', handleScrollEnd);
+    };
+  }, [pages.length]);
+
   const hasMultiplePages = pages.length > 1;
 
-  const goPrev = () => setPageIndex((i) => Math.max(0, i - 1));
+  const goPrev = () => scrollToIndex(Math.max(0, activeIndex - 1));
   const goNext = () =>
-    setPageIndex((i) => Math.min(pages.length - 1, i + 1));
+    scrollToIndex(Math.min(pages.length - 1, activeIndex + 1));
 
   return (
     <div className="relative">
@@ -60,53 +150,71 @@ export function CategoryToolsCarousel({
           <button
             type="button"
             onClick={goPrev}
-            disabled={pageIndex === 0}
+            disabled={activeIndex === 0}
             aria-label="이전 툴"
-            className="absolute -left-1 top-1/2 z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-left-3 sm:p-2.5"
+            className="absolute -left-1 top-[42%] z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-left-3 sm:top-1/2 sm:p-2.5"
           >
-            <ChevronLeft className="h-5 w-5 text-neutral-700" />
+            <ChevronLeft className="h-4 w-4 text-neutral-700 sm:h-5 sm:w-5" />
           </button>
           <button
             type="button"
             onClick={goNext}
-            disabled={pageIndex === pages.length - 1}
+            disabled={activeIndex === pages.length - 1}
             aria-label="다음 툴"
-            className="absolute -right-1 top-1/2 z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-right-3 sm:p-2.5"
+            className="absolute -right-1 top-[42%] z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-right-3 sm:top-1/2 sm:p-2.5"
           >
-            <ChevronRight className="h-5 w-5 text-neutral-700" />
+            <ChevronRight className="h-4 w-4 text-neutral-700 sm:h-5 sm:w-5" />
           </button>
         </>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {currentTools.map((tool) => (
-          <ToolCard
-            key={tool.id}
-            tool={tool}
-            categoryName={categoryName}
-            categoryIcon={categoryIcon}
-            subCategoryName={
-              tool.sub_category
-                ? subCategoryNameMap[tool.sub_category]
-                : undefined
-            }
-            favoriteIds={favoriteIds}
-          />
+      <div
+        ref={setScrollContainer}
+        className={cn(
+          'scrollbar-hide flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain',
+          'cursor-grab touch-pan-x active:cursor-grabbing',
+          hasMultiplePages && '-mx-1 px-1 sm:-mx-2 sm:px-2',
+        )}
+      >
+        {pages.map((pageTools, slideIndex) => (
+          <div
+            key={slideIndex}
+            data-slide
+            data-index={slideIndex}
+            className="w-full shrink-0 snap-center"
+          >
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+              {pageTools.map((tool) => (
+                <ToolCard
+                  key={tool.id}
+                  tool={tool}
+                  categoryName={categoryName}
+                  categoryIcon={categoryIcon}
+                  subCategoryName={
+                    tool.sub_category
+                      ? subCategoryNameMap[tool.sub_category]
+                      : undefined
+                  }
+                  favoriteIds={favoriteIds}
+                />
+              ))}
+            </div>
+          </div>
         ))}
       </div>
 
       {hasMultiplePages && (
-        <div className="mt-6 flex items-center justify-center gap-2">
+        <div className="mt-5 flex items-center justify-center gap-2 sm:mt-6">
           {pages.map((_, index) => (
             <button
               key={index}
               type="button"
               aria-label={`${index + 1}페이지`}
-              aria-current={index === pageIndex ? 'true' : undefined}
-              onClick={() => setPageIndex(index)}
+              aria-current={index === activeIndex ? 'true' : undefined}
+              onClick={() => scrollToIndex(index)}
               className={cn(
                 'h-2 rounded-full transition-all duration-300',
-                index === pageIndex
+                index === activeIndex
                   ? 'w-7 bg-neutral-900'
                   : 'w-2 bg-neutral-300 hover:bg-neutral-400',
               )}
