@@ -1,4 +1,5 @@
 import { AdSlot } from '@/components/ads/AdSlot';
+import { HomeBlogSection } from '@/components/home/HomeBlogSection';
 import { HomeCategoryExplorer } from '@/components/home/HomeCategoryExplorer';
 import { HomeSectionTitle } from '@/components/home/HomeSectionTitle';
 import { MostPopularSection } from '@/components/home/MostPopularSection';
@@ -89,6 +90,8 @@ export default async function HomePage() {
             outerClassName="mx-auto mt-10 max-w-7xl px-4 sm:px-6 lg:px-8"
           />
         </div>
+
+        <HomeBlogSection />
 
         <RequestCta
           title={t('home.requestCtaTitle')}

@@ -490,3 +490,16 @@ export async function getToolsBySubCategory(subSlug: string): Promise<Tool[]> {
   const assignmentMap = await fetchAssignmentsByToolIds(supabase, toolIds);
   return attachAssignmentsToTools(tools, assignmentMap);
 }
+
+export {
+  getAllBlogPosts,
+  getAllBlogPostsAdmin,
+  getAllBlogSlugs,
+  getAutomationSettings,
+  getBlogPostByIdAdmin,
+  getBlogPostBySlug,
+  getBlogPostsByCategory,
+  getRecentBlogPosts,
+  incrementBlogViewCount,
+  updateAutomationSettings,
+} from './blog-queries';

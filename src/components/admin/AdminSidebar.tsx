@@ -9,6 +9,7 @@ import {
   Inbox,
   LogOut,
   MessageSquare,
+  NotebookPen,
   Settings,
   TrendingUp,
   Users,
@@ -34,12 +35,18 @@ const NAV_ITEMS = [
   { href: '/admin/legal', label: '약관/정책', icon: FileText },
 ] as const;
 
+const BLOG_ITEMS = [
+  { href: '/admin/blog', label: '블로그 글 관리' },
+  { href: '/admin/blog/automation', label: '자동화 세팅' },
+] as const;
+
 function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const blogActive = pathname.startsWith('/admin/blog');
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col bg-slate-900 lg:flex">
@@ -75,6 +82,37 @@ export function AdminSidebar() {
             </Link>
           );
         })}
+
+        <div className="pt-3">
+          <p className="mb-1 flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <NotebookPen className="h-3.5 w-3.5" />
+            블로그
+          </p>
+          {BLOG_ITEMS.map(({ href, label }) => {
+            const active =
+              href === '/admin/blog'
+                ? pathname === '/admin/blog' ||
+                  (pathname.startsWith('/admin/blog/') &&
+                    !pathname.startsWith('/admin/blog/automation'))
+                : pathname.startsWith(href);
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
+                  blogActive && !active && 'text-slate-400',
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       <div className="space-y-1 border-t border-slate-800 px-3 py-4">

@@ -4,6 +4,7 @@ export const en: Messages = {
   nav: {
     home: 'Home',
     categories: 'Categories',
+    blog: 'Blog',
     compare: 'Compare',
     submit: 'Submit',
     login: 'Log in',

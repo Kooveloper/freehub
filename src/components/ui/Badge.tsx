@@ -8,6 +8,7 @@ const VARIANT_STYLES = {
   yellow: 'bg-yellow-50 text-yellow-700',
   gray: 'bg-gray-100 text-gray-600',
   orange: 'bg-orange-50 text-orange-700',
+  purple: 'bg-purple-50 text-purple-700',
 } as const;
 
 export type BadgeVariant = keyof typeof VARIANT_STYLES;

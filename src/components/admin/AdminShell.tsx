@@ -16,6 +16,9 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/users': '회원 관리',
   '/admin/settings': '사이트 설정',
   '/admin/legal': '약관/정책',
+  '/admin/blog': '블로그 글 관리',
+  '/admin/blog/new': '블로그 글 작성',
+  '/admin/blog/automation': '자동화 세팅',
 };
 
 function getPageTitle(pathname: string): string {
@@ -34,6 +37,14 @@ function getPageTitle(pathname: string): string {
     pathname !== '/admin/users'
   ) {
     return '회원 상세';
+  }
+
+  if (
+    pathname.startsWith('/admin/blog/') &&
+    pathname !== '/admin/blog/new' &&
+    !pathname.startsWith('/admin/blog/automation')
+  ) {
+    return '블로그 글 수정';
   }
 
   for (const [path, title] of Object.entries(PAGE_TITLES)) {

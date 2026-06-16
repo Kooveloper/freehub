@@ -86,6 +86,9 @@ export function Header() {
           <Link href="/" className={navLinkClass}>
             {t('nav.home')}
           </Link>
+          <Link href="/blog" className={navLinkClass}>
+            {t('nav.blog')}
+          </Link>
           <Link href="/compare" className={navLinkClass}>
             {t('nav.compare')}
           </Link>
@@ -166,6 +169,13 @@ export function Header() {
               onClick={() => setMobileOpen(false)}
             >
               {t('nav.home')}
+            </Link>
+            <Link
+              href="/blog"
+              className="py-2.5 text-base font-semibold text-neutral-900"
+              onClick={() => setMobileOpen(false)}
+            >
+              {t('nav.blog')}
             </Link>
             <Link
               href="/compare"

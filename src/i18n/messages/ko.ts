@@ -2,6 +2,7 @@ export const ko = {
   nav: {
     home: '홈',
     categories: '카테고리',
+    blog: '블로그',
     compare: '비교하기',
     submit: '제보하기',
     login: '로그인',

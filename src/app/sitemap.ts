@@ -1,13 +1,14 @@
 import type { MetadataRoute } from 'next';
 
-import { getAllCategories, getAllToolSlugs } from '@/lib/supabase/queries';
+import { getAllBlogSlugs, getAllCategories, getAllToolSlugs } from '@/lib/supabase/queries';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://freehub.kr';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [categories, toolSlugs] = await Promise.all([
+  const [categories, toolSlugs, blogSlugs] = await Promise.all([
     getAllCategories(),
     getAllToolSlugs(),
+    getAllBlogSlugs().catch(() => [] as string[]),
   ]);
 
   const home: MetadataRoute.Sitemap = [
@@ -25,6 +26,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/blog`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.8,
     },
     {
       url: `${BASE_URL}/compare`,
@@ -60,5 +67,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...home, ...categoryPages, ...staticPages, ...toolPages];
+  const blogPages: MetadataRoute.Sitemap = blogSlugs.map((slug) => ({
+    url: `${BASE_URL}/blog/${slug}`,
+    lastModified: new Date(),
+    changeFrequency: 'weekly' as const,
+    priority: 0.7,
+  }));
+
+  return [...home, ...categoryPages, ...staticPages, ...toolPages, ...blogPages];
 }

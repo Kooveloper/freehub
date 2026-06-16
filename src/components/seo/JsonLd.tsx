@@ -71,3 +71,42 @@ export function WebSiteJsonLd({ name, url, searchUrl }: WebSiteJsonLdProps) {
     />
   );
 }
+
+export interface BlogPostingJsonLdProps {
+  title: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  dateModified: string;
+}
+
+/** 블로그 상세용 BlogPosting 스키마 */
+export function BlogPostingJsonLd({
+  title,
+  description,
+  url,
+  datePublished,
+  dateModified,
+}: BlogPostingJsonLdProps) {
+  return (
+    <JsonLdScript
+      data={{
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        headline: title,
+        description,
+        url,
+        datePublished,
+        dateModified,
+        author: {
+          '@type': 'Organization',
+          name: 'FreeHub',
+        },
+        publisher: {
+          '@type': 'Organization',
+          name: 'FreeHub',
+        },
+      }}
+    />
+  );
+}
