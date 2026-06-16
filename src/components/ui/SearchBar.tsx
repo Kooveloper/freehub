@@ -19,7 +19,7 @@ import type { Tool } from '@/types/tool';
 const SIZE_STYLES = {
   sm: 'h-9 text-sm',
   md: 'h-11 text-sm',
-  lg: 'h-12 text-base',
+  lg: 'h-[60px] text-base',
 } as const;
 
 interface SearchBarProps {

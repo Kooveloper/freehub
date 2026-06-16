@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { CategoryIcon } from '@/components/category/CategoryIcon';
+import { HomeSectionTitle } from '@/components/home/HomeSectionTitle';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import { getCategoryColorHex } from '@/constants/category-colors';
 import { useDragScroll } from '@/hooks/useDragScroll';
@@ -171,12 +172,7 @@ export function MostPopularCarousel({
   return (
     <section className="px-4 pb-2 pt-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold tracking-tight text-neutral-900 sm:text-3xl">
-            {title}
-          </h2>
-          <p className="mt-1.5 text-sm text-neutral-500">{subtitle}</p>
-        </div>
+        <HomeSectionTitle title={title} subtitle={subtitle} />
 
         <div className="relative">
           {visibleEntries.length > 1 && (

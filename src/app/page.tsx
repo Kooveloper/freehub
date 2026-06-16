@@ -1,7 +1,8 @@
 import { AdSlot } from '@/components/ads/AdSlot';
-import { RequestCta } from '@/components/RequestCta';
 import { HomeCategoryExplorer } from '@/components/home/HomeCategoryExplorer';
+import { HomeSectionTitle } from '@/components/home/HomeSectionTitle';
 import { MostPopularSection } from '@/components/home/MostPopularSection';
+import { RequestCta } from '@/components/RequestCta';
 import { WebSiteJsonLd } from '@/components/seo/JsonLd';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { getPopularToolsByCategory } from '@/lib/featured-tools';
@@ -47,13 +48,13 @@ export default async function HomePage() {
         <section className="bg-black text-white">
           <div className="px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
             <div className="mx-auto max-w-3xl text-center">
-              <p className="text-4xl font-extrabold uppercase tracking-[0.08em] text-white sm:text-5xl lg:text-6xl">
+              <p className="text-3xl font-extrabold uppercase tracking-[0.12em] text-white sm:text-4xl lg:text-5xl">
                 FREEHUB
               </p>
-              <h1 className="mt-6 text-lg font-medium leading-relaxed text-white sm:text-xl lg:text-2xl">
+              <h1 className="mt-8 text-2xl font-bold leading-snug text-white sm:text-3xl lg:text-[2rem] lg:leading-tight">
                 {t('home.heroTagline')}
               </h1>
-              <p className="mt-3 text-sm text-neutral-400 sm:text-base">
+              <p className="mt-4 text-base font-normal leading-relaxed text-neutral-300 sm:text-lg">
                 {t('home.heroSubtitle')}
               </p>
               <div className="mx-auto mt-10 max-w-xl">
@@ -68,9 +69,10 @@ export default async function HomePage() {
 
           <div className="border-t border-white/10 px-4 pb-14 pt-12 sm:px-6 lg:px-8">
             <div className="mx-auto max-w-7xl">
-              <h2 className="mb-8 text-lg font-bold uppercase tracking-wider text-white sm:text-xl">
-                {t('home.categoriesTitle')}
-              </h2>
+              <HomeSectionTitle
+                dark
+                title={t('home.categoriesTitle')}
+              />
               <HomeCategoryExplorer
                 categories={localizedCategories}
                 subByCategory={subByCategory}

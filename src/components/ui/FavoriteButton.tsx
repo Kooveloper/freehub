@@ -31,7 +31,7 @@ export function FavoriteButton({
   className,
   size = 'md',
 }: FavoriteButtonProps) {
-  const { isFavorite, toggleFavorite, isLoading } = useFavorites();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [bouncing, setBouncing] = useState(false);
 
   const favorited = isFavorite(toolId);
@@ -59,10 +59,9 @@ export function FavoriteButton({
     <button
       type="button"
       onClick={handleClick}
-      disabled={isLoading}
       className={cn(
         'flex items-center justify-center rounded-full transition-all duration-200',
-        'hover:bg-gray-100 disabled:opacity-50',
+        'hover:bg-gray-100',
         bouncing && 'scale-125',
         BUTTON_SIZE_MAP[size],
         className,

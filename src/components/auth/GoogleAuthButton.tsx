@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 import { buildAuthCallbackUrl } from '@/lib/auth-redirect';
+import { UI_BUTTON_OUTLINE_CLASS } from '@/lib/ui/form';
 import { cn } from '@/lib/utils';
 
 function GoogleIcon() {
@@ -58,10 +59,7 @@ export function GoogleAuthButton({
     <button
       type="button"
       onClick={handleGoogleAuth}
-      className={cn(
-        'flex w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50',
-        className,
-      )}
+      className={cn(UI_BUTTON_OUTLINE_CLASS, className)}
     >
       <GoogleIcon />
       {label}

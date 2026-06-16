@@ -8,10 +8,7 @@ import { AuthCard } from '@/components/auth/AuthCard';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 import { getOAuthCallbackErrorMessage } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
-
-const INPUT_CLASS =
-  'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20';
+import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
 
 function getErrorMessage(message: string): string {
   const map: Record<string, string> = {
@@ -65,38 +62,28 @@ export function LoginForm() {
   return (
     <AuthCard title="로그인">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="login-email" className="mb-1.5 block text-sm font-medium text-gray-700">
-            이메일
-          </label>
-          <input
-            id="login-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-            autoComplete="email"
-            className={INPUT_CLASS}
-          />
-        </div>
+        <input
+          id="login-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="이메일"
+          required
+          autoComplete="email"
+          className={UI_INPUT_CLASS}
+        />
 
-        <div>
-          <label htmlFor="login-password" className="mb-1.5 block text-sm font-medium text-gray-700">
-            비밀번호
-          </label>
-          <input
-            id="login-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="비밀번호"
-            required
-            minLength={6}
-            autoComplete="current-password"
-            className={INPUT_CLASS}
-          />
-        </div>
+        <input
+          id="login-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="비밀번호"
+          required
+          minLength={6}
+          autoComplete="current-password"
+          className={UI_INPUT_CLASS}
+        />
 
         {displayError && (
           <p className="text-sm text-red-600" role="alert">
@@ -107,12 +94,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className={cn(
-            'w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors',
-            loading
-              ? 'cursor-not-allowed bg-blue-300'
-              : 'bg-brand-600 hover:bg-brand-700',
-          )}
+          className={uiButtonPrimaryClass(loading)}
         >
           {loading ? '로그인 중...' : '로그인'}
         </button>
@@ -128,7 +110,7 @@ export function LoginForm() {
 
       <p className="mt-6 text-center text-sm text-gray-500">
         계정이 없으신가요?{' '}
-        <Link href="/signup" className="font-medium text-brand-600 hover:text-brand-700">
+        <Link href="/signup" className="font-bold text-brand-600 hover:text-brand-700">
           회원가입
         </Link>
       </p>

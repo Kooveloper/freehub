@@ -62,17 +62,21 @@ function buildAdminHtml(
     const p = payload as NewToolPayload;
     details += `
       <p><strong>툴 이름:</strong> ${escapeHtml(p.toolName)}</p>
-      <p><strong>URL:</strong> <a href="${escapeHtml(p.url)}">${escapeHtml(p.url)}</a></p>
-      <p><strong>무료 한도:</strong> ${escapeHtml(p.freeLimit)}</p>
+      <p><strong>URL:</strong> <a href="${escapeHtml(p.url)}">${escapeHtml(p.url)}</a></p>`;
+    if (p.freeLimit) {
+      details += `<p><strong>무료 한도:</strong> ${escapeHtml(p.freeLimit)}</p>`;
+    }
+    if (p.description) {
+      details += `
       <p><strong>설명:</strong></p>
       <p>${escapeHtml(p.description).replace(/\n/g, '<br>')}</p>`;
+    }
   } else if (type === 'limit_change') {
     const p = payload as LimitChangePayload;
     details += `
       <p><strong>툴:</strong> ${escapeHtml(p.toolName)}</p>
       <p><strong>변경 내용:</strong></p>
-      <p>${escapeHtml(p.changeContent).replace(/\n/g, '<br>')}</p>
-      <p><strong>증거 URL:</strong> <a href="${escapeHtml(p.evidenceUrl)}">${escapeHtml(p.evidenceUrl)}</a></p>`;
+      <p>${escapeHtml(p.changeContent).replace(/\n/g, '<br>')}</p>`;
   } else if (type === 'inquiry') {
     const p = payload as InquiryPayload;
     details += `

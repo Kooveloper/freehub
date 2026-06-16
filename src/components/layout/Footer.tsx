@@ -7,9 +7,9 @@ export async function Footer() {
   const t = await getTranslations();
 
   const footerLinks = [
+    { href: '/submit?tab=inquiry', label: t('footer.inquiry') },
     { href: '/privacy', label: t('footer.privacy') },
     { href: '/terms', label: t('footer.terms') },
-    { href: '/submit', label: t('footer.report') },
   ] as const;
 
   return (

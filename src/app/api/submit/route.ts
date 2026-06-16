@@ -58,10 +58,15 @@ function validateNewTool(payload: unknown): NewToolPayload | null {
 
   if (!toolName || toolName.length > 100) return null;
   if (!url || !isValidUrl(url)) return null;
-  if (!freeLimit || freeLimit.length > 200) return null;
-  if (!description || description.length > 1000) return null;
+  if (freeLimit.length > 200) return null;
+  if (description.length > 1000) return null;
 
-  return { toolName, url, freeLimit, description };
+  return {
+    toolName,
+    url,
+    ...(freeLimit ? { freeLimit } : {}),
+    ...(description ? { description } : {}),
+  };
 }
 
 function validateLimitChange(payload: unknown): LimitChangePayload | null {
@@ -70,13 +75,11 @@ function validateLimitChange(payload: unknown): LimitChangePayload | null {
   const toolId = String(p.toolId ?? '').trim();
   const toolName = String(p.toolName ?? '').trim();
   const changeContent = String(p.changeContent ?? '').trim();
-  const evidenceUrl = String(p.evidenceUrl ?? '').trim();
 
   if (!toolId || !toolName) return null;
   if (!changeContent || changeContent.length > 1000) return null;
-  if (!evidenceUrl || !isValidUrl(evidenceUrl)) return null;
 
-  return { toolId, toolName, changeContent, evidenceUrl };
+  return { toolId, toolName, changeContent };
 }
 
 function validateBug(payload: unknown): BugPayload | null {
@@ -125,11 +128,16 @@ function submissionToRow(
   switch (type) {
     case 'new_tool': {
       const p = payload as NewToolPayload;
+      const descriptionParts = [
+        p.freeLimit ? `[무료 한도] ${p.freeLimit}` : null,
+        p.description ?? null,
+      ].filter(Boolean);
+
       return {
         type,
         tool_name: p.toolName,
         tool_url: p.url,
-        description: `[무료 한도] ${p.freeLimit}\n\n${p.description}`,
+        description: descriptionParts.join('\n\n') || p.toolName,
         submitter_email: null,
         status: 'pending' as const,
       };
@@ -139,7 +147,7 @@ function submissionToRow(
       return {
         type,
         tool_name: p.toolName,
-        tool_url: p.evidenceUrl,
+        tool_url: null,
         description: p.changeContent,
         submitter_email: null,
         status: 'pending' as const,

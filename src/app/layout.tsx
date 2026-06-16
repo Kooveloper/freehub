@@ -7,6 +7,7 @@ import { HeaderWrapper } from '@/components/layout/HeaderWrapper';
 import { SiteBodyTopCode, SiteHeadCode } from '@/components/site/SiteCustomCode';
 import { LoginPromptModalHost } from '@/components/ui/LoginPromptModalHost';
 import { LoginPromptProvider } from '@/contexts/LoginPromptContext';
+import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import { getLocale, getTranslations } from '@/lib/locale';
@@ -68,10 +69,12 @@ export default async function RootLayout({
         <SiteSettingsProvider settings={settings}>
           <LocaleProvider initialLocale={locale}>
             <LoginPromptProvider>
-              <HeaderWrapper />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <LoginPromptModalHost />
+              <FavoritesProvider>
+                <HeaderWrapper />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <LoginPromptModalHost />
+              </FavoritesProvider>
             </LoginPromptProvider>
           </LocaleProvider>
         </SiteSettingsProvider>

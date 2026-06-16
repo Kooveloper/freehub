@@ -4,6 +4,8 @@ import { Star, X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 
+import { UI_BUTTON_OUTLINE_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
+
 interface LoginPromptModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -70,14 +72,14 @@ export function LoginPromptModal({ isOpen, onClose }: LoginPromptModalProps) {
             <Link
               href="/login"
               onClick={onClose}
-              className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+              className={uiButtonPrimaryClass(false)}
             >
               로그인하기
             </Link>
             <Link
               href="/signup"
               onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+              className={UI_BUTTON_OUTLINE_CLASS}
             >
               회원가입
             </Link>

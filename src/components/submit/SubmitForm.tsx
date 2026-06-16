@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
+import {
+  UI_INPUT_CLASS,
+  UI_TEXTAREA_CLASS,
+  uiButtonPrimaryClass,
+} from '@/lib/ui/form';
 import type { SubmissionType, ToolOption } from '@/types/submission';
-
-const INPUT_CLASS =
-  'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
 const EMAIL_MAX = 100;
 const COOLDOWN_MS = 3000;
@@ -53,7 +55,6 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   // 탭2: 한도 변경
   const [selectedToolId, setSelectedToolId] = useState('');
   const [changeContent, setChangeContent] = useState('');
-  const [evidenceUrl, setEvidenceUrl] = useState('');
 
   // 탭3: 버그
   const [bugDescription, setBugDescription] = useState('');
@@ -81,15 +82,10 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   const selectedTool = tools.find((t) => t.id === selectedToolId);
 
   const isNewToolValid =
-    toolName.trim().length > 0 &&
-    toolUrl.trim().length > 0 &&
-    freeLimit.trim().length > 0 &&
-    description.trim().length > 0;
+    toolName.trim().length > 0 && toolUrl.trim().length > 0;
 
   const isLimitChangeValid =
-    selectedToolId.length > 0 &&
-    changeContent.trim().length > 0 &&
-    evidenceUrl.trim().length > 0;
+    selectedToolId.length > 0 && changeContent.trim().length > 0;
 
   const isBugValid = bugDescription.trim().length > 0;
 
@@ -112,15 +108,14 @@ export function SubmitForm({ tools }: SubmitFormProps) {
         return {
           toolName: toolName.trim(),
           url: toolUrl.trim(),
-          freeLimit: freeLimit.trim(),
-          description: description.trim(),
+          ...(freeLimit.trim() ? { freeLimit: freeLimit.trim() } : {}),
+          ...(description.trim() ? { description: description.trim() } : {}),
         };
       case 'limit_change':
         return {
           toolId: selectedToolId,
           toolName: selectedTool?.name ?? '',
           changeContent: changeContent.trim(),
-          evidenceUrl: evidenceUrl.trim(),
         };
       case 'bug':
         return {
@@ -142,7 +137,6 @@ export function SubmitForm({ tools }: SubmitFormProps) {
     setDescription('');
     setSelectedToolId('');
     setChangeContent('');
-    setEvidenceUrl('');
     setBugDescription('');
     setPageUrl('');
     setInquiryTitle('');
@@ -231,7 +225,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   placeholder="예: ChatGPT"
                   maxLength={100}
                   required
-                  className={INPUT_CLASS}
+                  className={UI_INPUT_CLASS}
                 />
               </Field>
               <Field label="URL" required>
@@ -244,10 +238,10 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   }}
                   placeholder="https://..."
                   required
-                  className={INPUT_CLASS}
+                  className={UI_INPUT_CLASS}
                 />
               </Field>
-              <Field label="무료 한도" required>
+              <Field label="무료 한도">
                 <input
                   type="text"
                   value={freeLimit}
@@ -257,11 +251,10 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   }}
                   placeholder="예: 매일 20회, 월 10,000토큰"
                   maxLength={200}
-                  required
-                  className={INPUT_CLASS}
+                  className={UI_INPUT_CLASS}
                 />
               </Field>
-              <Field label="설명" required>
+              <Field label="설명">
                 <textarea
                   value={description}
                   onChange={(e) => {
@@ -270,9 +263,8 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   }}
                   placeholder="무료 플랜의 주요 기능과 특징을 알려주세요"
                   maxLength={1000}
-                  required
                   rows={4}
-                  className={cn(INPUT_CLASS, 'resize-none')}
+                  className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
                 />
               </Field>
             </>
@@ -288,7 +280,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                     setSelectedToolId(e.target.value);
                   }}
                   required
-                  className={INPUT_CLASS}
+                  className={UI_INPUT_CLASS}
                 >
                   <option value="">툴을 선택해주세요</option>
                   {tools.map((tool) => (
@@ -309,20 +301,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   maxLength={1000}
                   required
                   rows={4}
-                  className={cn(INPUT_CLASS, 'resize-none')}
-                />
-              </Field>
-              <Field label="증거 URL" required>
-                <input
-                  type="url"
-                  value={evidenceUrl}
-                  onChange={(e) => {
-                    resetStatus();
-                    setEvidenceUrl(e.target.value);
-                  }}
-                  placeholder="공식 페이지, 스크린샷 링크 등"
-                  required
-                  className={INPUT_CLASS}
+                  className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
                 />
               </Field>
             </>
@@ -341,7 +320,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   maxLength={1000}
                   required
                   rows={4}
-                  className={cn(INPUT_CLASS, 'resize-none')}
+                  className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
                 />
               </Field>
               <Field label="발생 페이지 URL">
@@ -353,7 +332,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                     setPageUrl(e.target.value);
                   }}
                   placeholder="https://freehub.kr/tool/... (선택)"
-                  className={INPUT_CLASS}
+                  className={UI_INPUT_CLASS}
                 />
               </Field>
             </>
@@ -372,7 +351,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   placeholder="문의 제목을 입력해주세요"
                   maxLength={120}
                   required
-                  className={INPUT_CLASS}
+                  className={UI_INPUT_CLASS}
                 />
               </Field>
               <Field label="내용" required>
@@ -386,7 +365,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   maxLength={2000}
                   required
                   rows={5}
-                  className={cn(INPUT_CLASS, 'resize-none')}
+                  className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
                 />
               </Field>
               <Field label="답변 받을 이메일" required>
@@ -400,7 +379,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   placeholder="you@example.com"
                   maxLength={EMAIL_MAX}
                   required
-                  className={INPUT_CLASS}
+                  className={UI_INPUT_CLASS}
                 />
               </Field>
             </>
@@ -409,12 +388,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
           <button
             type="submit"
             disabled={isDisabled}
-            className={cn(
-              'w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors',
-              isDisabled
-                ? 'cursor-not-allowed bg-blue-300'
-                : 'bg-blue-600 hover:bg-blue-700',
-            )}
+            className={uiButtonPrimaryClass(isDisabled)}
           >
             {status === 'submitting'
               ? '제출 중...'

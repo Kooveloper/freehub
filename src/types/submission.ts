@@ -9,8 +9,8 @@ export type SubmissionType =
 export interface NewToolPayload {
   toolName: string;
   url: string;
-  freeLimit: string;
-  description: string;
+  freeLimit?: string;
+  description?: string;
 }
 
 /** 한도 변경 신고 */
@@ -18,7 +18,6 @@ export interface LimitChangePayload {
   toolId: string;
   toolName: string;
   changeContent: string;
-  evidenceUrl: string;
 }
 
 /** 버그/오류 신고 */

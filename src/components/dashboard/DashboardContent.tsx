@@ -60,8 +60,8 @@ export function DashboardContent({
               마음에 드는 툴에 ♥를 눌러보세요!
             </p>
             <Link
-              href="/category/ai-image"
-              className="mt-6 inline-block rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+              href="/"
+              className="mt-6 inline-flex h-[60px] items-center justify-center rounded-xl bg-blue-600 px-6 text-base font-semibold text-white transition-colors hover:bg-blue-700"
             >
               툴 둘러보기
             </Link>

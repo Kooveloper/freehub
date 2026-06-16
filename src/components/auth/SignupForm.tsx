@@ -7,17 +7,18 @@ import { AuthCard } from '@/components/auth/AuthCard';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 import { useLocale } from '@/contexts/LocaleContext';
 import { buildAuthCallbackUrl } from '@/lib/auth-redirect';
+import {
+  isValidSignupPassword,
+  SIGNUP_PASSWORD_PLACEHOLDER,
+  SIGNUP_PASSWORD_RULE_MESSAGE,
+} from '@/lib/password';
 import { createClient } from '@/lib/supabase/client';
-import { cn } from '@/lib/utils';
-
-const INPUT_CLASS =
-  'w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20';
+import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
 
 function getErrorMessage(message: string): string {
   const map: Record<string, string> = {
     'User already registered': '이미 가입된 이메일입니다.',
-    'Password should be at least 6 characters':
-      '비밀번호는 6자 이상이어야 합니다.',
+    'Password should be at least 6 characters': SIGNUP_PASSWORD_RULE_MESSAGE,
     'Error sending confirmation email':
       '인증 메일 발송에 실패했습니다. 잠시 후 다시 시도하거나 Google 로그인을 이용해주세요.',
     'Email rate limit exceeded':
@@ -38,6 +39,12 @@ export function SignupForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!isValidSignupPassword(password)) {
+      setError(SIGNUP_PASSWORD_RULE_MESSAGE);
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -84,38 +91,28 @@ export function SignupForm() {
   return (
     <AuthCard title="회원가입">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label htmlFor="signup-email" className="mb-1.5 block text-sm font-medium text-gray-700">
-            이메일
-          </label>
-          <input
-            id="signup-email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-            autoComplete="email"
-            className={INPUT_CLASS}
-          />
-        </div>
+        <input
+          id="signup-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="이메일"
+          required
+          autoComplete="email"
+          className={UI_INPUT_CLASS}
+        />
 
-        <div>
-          <label htmlFor="signup-password" className="mb-1.5 block text-sm font-medium text-gray-700">
-            비밀번호
-          </label>
-          <input
-            id="signup-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="6자 이상"
-            required
-            minLength={6}
-            autoComplete="new-password"
-            className={INPUT_CLASS}
-          />
-        </div>
+        <input
+          id="signup-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={SIGNUP_PASSWORD_PLACEHOLDER}
+          required
+          minLength={6}
+          autoComplete="new-password"
+          className={UI_INPUT_CLASS}
+        />
 
         {error && (
           <p className="text-sm text-red-600" role="alert">
@@ -126,12 +123,7 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className={cn(
-            'w-full rounded-lg px-4 py-3 text-sm font-semibold text-white transition-colors',
-            loading
-              ? 'cursor-not-allowed bg-blue-300'
-              : 'bg-brand-600 hover:bg-brand-700',
-          )}
+          className={uiButtonPrimaryClass(loading)}
         >
           {loading ? '가입 중...' : '회원가입'}
         </button>
@@ -150,7 +142,7 @@ export function SignupForm() {
 
       <p className="mt-6 text-center text-sm text-gray-500">
         이미 계정이 있으신가요?{' '}
-        <Link href="/login" className="font-medium text-brand-600 hover:text-brand-700">
+        <Link href="/login" className="font-bold text-brand-600 hover:text-brand-700">
           로그인
         </Link>
       </p>
