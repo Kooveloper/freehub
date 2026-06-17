@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { useLocale } from '@/contexts/LocaleContext';
 import {
   UI_INPUT_CLASS,
   UI_TEXTAREA_CLASS,
@@ -16,6 +17,7 @@ type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 /** 문의하기 폼 */
 export function InquiryForm() {
+  const { t } = useLocale();
   const [status, setStatus] = useState<FormStatus>('idle');
   const [cooldown, setCooldown] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -65,7 +67,7 @@ export function InquiryForm() {
         }),
       });
 
-      if (!res.ok) throw new Error('문의 접수 실패');
+      if (!res.ok) throw new Error('inquiry failed');
 
       setStatus('success');
       setShowSuccessToast(true);
@@ -83,7 +85,7 @@ export function InquiryForm() {
     <>
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <form onSubmit={handleSubmit} className="space-y-4 p-6 sm:p-8">
-          <Field label="제목" required>
+          <Field label={t('inquiry.title')} required>
             <input
               type="text"
               value={title}
@@ -91,27 +93,27 @@ export function InquiryForm() {
                 resetStatus();
                 setTitle(e.target.value);
               }}
-              placeholder="문의 제목을 입력해주세요"
+              placeholder={t('inquiry.titlePlaceholder')}
               maxLength={120}
               required
               className={UI_INPUT_CLASS}
             />
           </Field>
-          <Field label="내용" required>
+          <Field label={t('inquiry.content')} required>
             <textarea
               value={content}
               onChange={(e) => {
                 resetStatus();
                 setContent(e.target.value);
               }}
-              placeholder="문의 내용을 자세히 입력해주세요"
+              placeholder={t('inquiry.contentPlaceholder')}
               maxLength={2000}
               required
               rows={5}
               className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
             />
           </Field>
-          <Field label="답변 받을 이메일" required>
+          <Field label={t('inquiry.email')} required>
             <input
               type="email"
               value={email}
@@ -119,7 +121,7 @@ export function InquiryForm() {
                 resetStatus();
                 setEmail(e.target.value.slice(0, EMAIL_MAX));
               }}
-              placeholder="you@example.com"
+              placeholder={t('inquiry.emailPlaceholder')}
               maxLength={EMAIL_MAX}
               required
               className={UI_INPUT_CLASS}
@@ -131,12 +133,14 @@ export function InquiryForm() {
             disabled={isDisabled}
             className={uiButtonPrimaryClass(isDisabled)}
           >
-            {status === 'submitting' ? '제출 중...' : '문의하기'}
+            {status === 'submitting'
+              ? t('inquiry.submitting')
+              : t('inquiry.submitButton')}
           </button>
 
           {status === 'error' && (
             <p className="text-center text-sm font-medium text-red-600">
-              잠시 후 다시 시도해주세요
+              {t('inquiry.error')}
             </p>
           )}
         </form>
@@ -148,10 +152,10 @@ export function InquiryForm() {
           className="fixed bottom-6 left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border border-green-200 bg-white px-4 py-3 shadow-lg"
         >
           <p className="text-sm font-semibold text-gray-900">
-            문의가 접수되었습니다
+            {t('inquiry.successTitle')}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            검토 후 답변드릴게요. 감사합니다!
+            {t('inquiry.successDescription')}
           </p>
         </div>
       )}

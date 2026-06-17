@@ -8,7 +8,9 @@ import { useDragScroll } from '@/hooks/useDragScroll';
 import { cn } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
 
-const TOOLS_PER_PAGE = 6;
+const DESKTOP_TOOLS_PER_PAGE = 6;
+const MOBILE_TOOLS_PER_PAGE = 2;
+const MOBILE_MEDIA_QUERY = '(max-width: 639px)';
 
 interface CategoryToolsCarouselProps {
   tools: Tool[];
@@ -26,7 +28,26 @@ function chunkTools(items: Tool[], size: number): Tool[][] {
   return pages;
 }
 
-/** 카테고리 서비스 목록 — 3열×2행(6개) 단위 슬라이드 + 스와이프·점 페이지네이션 */
+function useToolsPerPage() {
+  const [toolsPerPage, setToolsPerPage] = useState(DESKTOP_TOOLS_PER_PAGE);
+
+  useEffect(() => {
+    const media = window.matchMedia(MOBILE_MEDIA_QUERY);
+    const update = () => {
+      setToolsPerPage(
+        media.matches ? MOBILE_TOOLS_PER_PAGE : DESKTOP_TOOLS_PER_PAGE,
+      );
+    };
+
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
+  return toolsPerPage;
+}
+
+/** 카테고리 서비스 목록 — 모바일 1열×2행, 데스크톱 3열×2행 단위 슬라이드 */
 export function CategoryToolsCarousel({
   tools,
   categoryName,
@@ -34,7 +55,11 @@ export function CategoryToolsCarousel({
   subCategoryNameMap,
   favoriteIds,
 }: CategoryToolsCarouselProps) {
-  const pages = useMemo(() => chunkTools(tools, TOOLS_PER_PAGE), [tools]);
+  const toolsPerPage = useToolsPerPage();
+  const pages = useMemo(
+    () => chunkTools(tools, toolsPerPage),
+    [tools, toolsPerPage],
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const { ref: dragRef } = useDragScroll<HTMLDivElement>();
   const [activeIndex, setActiveIndex] = useState(0);
@@ -72,7 +97,7 @@ export function CategoryToolsCarousel({
     if (container) {
       container.scrollTo({ left: 0, behavior: 'instant' });
     }
-  }, [tools]);
+  }, [tools, toolsPerPage]);
 
   useEffect(() => {
     const container = scrollRef.current;
@@ -172,7 +197,7 @@ export function CategoryToolsCarousel({
         ref={setScrollContainer}
         className={cn(
           'scrollbar-hide flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain',
-          'cursor-grab touch-pan-x active:cursor-grabbing',
+          'sm:cursor-grab sm:active:cursor-grabbing',
           hasMultiplePages && '-mx-1 px-1 sm:-mx-2 sm:px-2',
         )}
       >
@@ -183,7 +208,7 @@ export function CategoryToolsCarousel({
             data-index={slideIndex}
             className="w-full shrink-0 snap-center"
           >
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {pageTools.map((tool) => (
                 <ToolCard
                   key={tool.id}

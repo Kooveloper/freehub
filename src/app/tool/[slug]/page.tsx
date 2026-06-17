@@ -199,10 +199,10 @@ export default async function ToolPage({ params }: ToolPageProps) {
         url={tool.homepage_url}
       />
 
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="grid gap-8 lg:grid-cols-3">
+      <div className="mx-auto max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 lg:px-8">
+        <div className="grid min-w-0 gap-8 lg:grid-cols-3">
           {/* 좌측 본문 (2/3) */}
-          <div className="space-y-8 lg:col-span-2">
+          <div className="min-w-0 space-y-8 lg:col-span-2">
             {/* 브레드크럼 */}
             <nav className="flex flex-wrap items-center gap-1 text-sm text-gray-500">
               <Link href="/" className="hover:text-gray-900">
@@ -220,15 +220,15 @@ export default async function ToolPage({ params }: ToolPageProps) {
             </nav>
 
             {/* 헤더 */}
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex items-start gap-4">
+            <div className="flex min-w-0 items-start justify-between gap-3 sm:gap-4">
+              <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
                 <ToolLogo
                   name={tool.name}
                   logoUrl={tool.logo_url}
-                  className="rounded-xl"
+                  className="shrink-0 rounded-xl"
                 />
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                <div className="min-w-0">
+                  <h1 className="text-xl font-bold text-gray-900 sm:text-2xl lg:text-3xl">
                     {tool.name}
                   </h1>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -265,7 +265,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
                   </div>
                 </div>
               </div>
-              <FavoriteButton toolId={tool.id} toolName={tool.name} size="md" />
+              <FavoriteButton
+                toolId={tool.id}
+                toolName={tool.name}
+                size="md"
+                className="shrink-0"
+              />
             </div>
 
             {/* 무료 한도 카드 */}
@@ -340,7 +345,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
           </div>
 
           {/* 우측 사이드바 (1/3) */}
-          <aside className="space-y-6">
+          <aside className="min-w-0 space-y-6">
             <div className="sticky top-24 space-y-6">
               <ExternalToolLink
                 toolName={tool.name}

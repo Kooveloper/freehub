@@ -111,8 +111,8 @@ export function HomeCategoryExplorer({
 
   return (
     <div>
-      <div className="flex justify-center px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
+      <div className="-mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="scrollbar-hide flex gap-3 overflow-x-auto overscroll-x-contain pb-2 sm:flex-wrap sm:justify-center sm:gap-4 sm:overflow-visible sm:pb-0">
           {categories.map((category) => {
             const isSelected = activeSlug === category.slug;
             return (

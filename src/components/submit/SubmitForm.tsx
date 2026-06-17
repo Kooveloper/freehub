@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 import {
   UI_INPUT_CLASS,
@@ -17,13 +18,8 @@ type FormStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 type SubmitTab = Exclude<SubmissionType, 'inquiry'>;
 
-const TABS: { id: SubmitTab; label: string }[] = [
-  { id: 'new_tool', label: '새 서비스 제보' },
-  { id: 'limit_change', label: '한도 변경' },
-  { id: 'bug', label: '버그/오류' },
-];
-
-const TAB_SET = new Set<SubmitTab>(TABS.map((tab) => tab.id));
+const TAB_IDS: SubmitTab[] = ['new_tool', 'limit_change', 'bug'];
+const TAB_SET = new Set<SubmitTab>(TAB_IDS);
 
 function resolveInitialTab(value: string | null): SubmitTab {
   if (value && TAB_SET.has(value as SubmitTab)) {
@@ -38,6 +34,7 @@ interface SubmitFormProps {
 
 /** 제보 탭 폼 */
 export function SubmitForm({ tools }: SubmitFormProps) {
+  const { t } = useLocale();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SubmitTab>(() =>
     resolveInitialTab(searchParams.get('tab')),
@@ -57,6 +54,16 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   const [bugDescription, setBugDescription] = useState('');
   const [pageUrl, setPageUrl] = useState('');
 
+  const tabs = useMemo(
+    () =>
+      [
+        { id: 'new_tool' as const, label: t('submit.tabNewTool') },
+        { id: 'limit_change' as const, label: t('submit.tabLimitChange') },
+        { id: 'bug' as const, label: t('submit.tabBug') },
+      ] satisfies { id: SubmitTab; label: string }[],
+    [t],
+  );
+
   useEffect(() => {
     const tab = resolveInitialTab(searchParams.get('tab'));
     setActiveTab(tab);
@@ -71,7 +78,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
     setTimeout(() => setCooldown(false), COOLDOWN_MS);
   };
 
-  const selectedTool = tools.find((t) => t.id === selectedToolId);
+  const selectedTool = tools.find((item) => item.id === selectedToolId);
 
   const isNewToolValid =
     toolName.trim().length > 0 && toolUrl.trim().length > 0;
@@ -150,7 +157,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
         }),
       });
 
-      if (!res.ok) throw new Error('제보 실패');
+      if (!res.ok) throw new Error('submit failed');
 
       setStatus('success');
       setShowSuccessToast(true);
@@ -166,7 +173,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
     <>
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="flex overflow-x-auto border-b border-gray-200">
-          {TABS.map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.id}
               type="button"
@@ -186,7 +193,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4 p-6 sm:p-8">
           {activeTab === 'new_tool' && (
             <>
-              <Field label="서비스 이름" required>
+              <Field label={t('submit.toolName')} required>
                 <input
                   type="text"
                   value={toolName}
@@ -194,13 +201,13 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                     resetStatus();
                     setToolName(e.target.value);
                   }}
-                  placeholder="예: ChatGPT"
+                  placeholder={t('submit.toolNamePlaceholder')}
                   maxLength={100}
                   required
                   className={UI_INPUT_CLASS}
                 />
               </Field>
-              <Field label="URL" required>
+              <Field label={t('submit.url')} required>
                 <input
                   type="url"
                   value={toolUrl}
@@ -208,12 +215,12 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                     resetStatus();
                     setToolUrl(e.target.value);
                   }}
-                  placeholder="https://..."
+                  placeholder={t('submit.urlPlaceholder')}
                   required
                   className={UI_INPUT_CLASS}
                 />
               </Field>
-              <Field label="무료 한도">
+              <Field label={t('submit.freeLimit')}>
                 <input
                   type="text"
                   value={freeLimit}
@@ -221,19 +228,19 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                     resetStatus();
                     setFreeLimit(e.target.value);
                   }}
-                  placeholder="예: 매일 20회, 월 10,000토큰"
+                  placeholder={t('submit.freeLimitPlaceholder')}
                   maxLength={200}
                   className={UI_INPUT_CLASS}
                 />
               </Field>
-              <Field label="설명">
+              <Field label={t('submit.description')}>
                 <textarea
                   value={description}
                   onChange={(e) => {
                     resetStatus();
                     setDescription(e.target.value);
                   }}
-                  placeholder="무료 플랜의 주요 기능과 특징을 알려주세요"
+                  placeholder={t('submit.descriptionPlaceholder')}
                   maxLength={1000}
                   rows={4}
                   className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
@@ -244,7 +251,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
 
           {activeTab === 'limit_change' && (
             <>
-              <Field label="서비스 선택" required>
+              <Field label={t('submit.selectTool')} required>
                 <select
                   value={selectedToolId}
                   onChange={(e) => {
@@ -254,7 +261,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   required
                   className={UI_INPUT_CLASS}
                 >
-                  <option value="">서비스를 선택해주세요</option>
+                  <option value="">{t('submit.selectToolPlaceholder')}</option>
                   {tools.map((tool) => (
                     <option key={tool.id} value={tool.id}>
                       {tool.name}
@@ -262,14 +269,14 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                   ))}
                 </select>
               </Field>
-              <Field label="변경 내용" required>
+              <Field label={t('submit.changeContent')} required>
                 <textarea
                   value={changeContent}
                   onChange={(e) => {
                     resetStatus();
                     setChangeContent(e.target.value);
                   }}
-                  placeholder="어떤 한도가 어떻게 변경되었는지 알려주세요"
+                  placeholder={t('submit.changeContentPlaceholder')}
                   maxLength={1000}
                   required
                   rows={4}
@@ -281,21 +288,21 @@ export function SubmitForm({ tools }: SubmitFormProps) {
 
           {activeTab === 'bug' && (
             <>
-              <Field label="오류 내용" required>
+              <Field label={t('submit.bugContent')} required>
                 <textarea
                   value={bugDescription}
                   onChange={(e) => {
                     resetStatus();
                     setBugDescription(e.target.value);
                   }}
-                  placeholder="어떤 오류가 발생했는지 자세히 알려주세요"
+                  placeholder={t('submit.bugContentPlaceholder')}
                   maxLength={1000}
                   required
                   rows={4}
                   className={cn(UI_TEXTAREA_CLASS, 'resize-none')}
                 />
               </Field>
-              <Field label="발생 페이지 URL">
+              <Field label={t('submit.pageUrl')}>
                 <input
                   type="url"
                   value={pageUrl}
@@ -303,7 +310,7 @@ export function SubmitForm({ tools }: SubmitFormProps) {
                     resetStatus();
                     setPageUrl(e.target.value);
                   }}
-                  placeholder="https://freehub.kr/tool/... (선택)"
+                  placeholder={t('submit.pageUrlPlaceholder')}
                   className={UI_INPUT_CLASS}
                 />
               </Field>
@@ -315,12 +322,14 @@ export function SubmitForm({ tools }: SubmitFormProps) {
             disabled={isDisabled}
             className={uiButtonPrimaryClass(isDisabled)}
           >
-            {status === 'submitting' ? '제출 중...' : '제보하기'}
+            {status === 'submitting'
+              ? t('submit.submitting')
+              : t('submit.submitButton')}
           </button>
 
           {status === 'error' && (
             <p className="text-center text-sm font-medium text-red-600">
-              잠시 후 다시 시도해주세요
+              {t('submit.error')}
             </p>
           )}
         </form>
@@ -332,10 +341,10 @@ export function SubmitForm({ tools }: SubmitFormProps) {
           className="fixed bottom-6 left-1/2 z-50 w-[min(92vw,24rem)] -translate-x-1/2 rounded-xl border border-green-200 bg-white px-4 py-3 shadow-lg"
         >
           <p className="text-sm font-semibold text-gray-900">
-            제보가 접수되었습니다
+            {t('submit.successTitle')}
           </p>
           <p className="mt-1 text-xs text-gray-500">
-            검토 후 답변드릴게요. 감사합니다!
+            {t('submit.successDescription')}
           </p>
         </div>
       )}
