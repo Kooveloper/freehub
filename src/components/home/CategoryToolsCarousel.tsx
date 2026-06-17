@@ -29,7 +29,7 @@ function chunkTools(items: Tool[], size: number): Tool[][] {
 }
 
 function useToolsPerPage() {
-  const [toolsPerPage, setToolsPerPage] = useState(DESKTOP_TOOLS_PER_PAGE);
+  const [toolsPerPage, setToolsPerPage] = useState(MOBILE_TOOLS_PER_PAGE);
 
   useEffect(() => {
     const media = window.matchMedia(MOBILE_MEDIA_QUERY);
@@ -169,7 +169,7 @@ export function CategoryToolsCarousel({
     scrollToIndex(Math.min(pages.length - 1, activeIndex + 1));
 
   return (
-    <div className="relative">
+    <div className="relative sm:px-1">
       {hasMultiplePages && (
         <>
           <button
@@ -177,7 +177,7 @@ export function CategoryToolsCarousel({
             onClick={goPrev}
             disabled={activeIndex === 0}
             aria-label="이전 서비스"
-            className="absolute -left-1 top-[42%] z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-left-3 sm:top-1/2 sm:p-2.5"
+            className="absolute -left-1 top-[42%] z-10 hidden -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-left-3 sm:top-1/2 sm:flex sm:p-2.5"
           >
             <ChevronLeft className="h-4 w-4 text-neutral-700 sm:h-5 sm:w-5" />
           </button>
@@ -186,7 +186,7 @@ export function CategoryToolsCarousel({
             onClick={goNext}
             disabled={activeIndex === pages.length - 1}
             aria-label="다음 서비스"
-            className="absolute -right-1 top-[42%] z-10 -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-right-3 sm:top-1/2 sm:p-2.5"
+            className="absolute -right-1 top-[42%] z-10 hidden -translate-y-1/2 rounded-full border border-neutral-200 bg-white p-2 shadow-lg transition hover:border-neutral-300 hover:shadow-xl disabled:opacity-30 sm:-right-3 sm:top-1/2 sm:flex sm:p-2.5"
           >
             <ChevronRight className="h-4 w-4 text-neutral-700 sm:h-5 sm:w-5" />
           </button>
@@ -196,9 +196,8 @@ export function CategoryToolsCarousel({
       <div
         ref={setScrollContainer}
         className={cn(
-          'scrollbar-hide flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain',
+          'scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain',
           'sm:cursor-grab sm:active:cursor-grabbing',
-          hasMultiplePages && '-mx-1 px-1 sm:-mx-2 sm:px-2',
         )}
       >
         {pages.map((pageTools, slideIndex) => (
@@ -206,9 +205,9 @@ export function CategoryToolsCarousel({
             key={slideIndex}
             data-slide
             data-index={slideIndex}
-            className="w-full shrink-0 snap-center"
+            className="box-border w-full min-w-full max-w-full shrink-0 grow-0 basis-full snap-center snap-always"
           >
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3">
               {pageTools.map((tool) => (
                 <ToolCard
                   key={tool.id}

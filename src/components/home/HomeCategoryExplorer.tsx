@@ -174,9 +174,9 @@ export function HomeCategoryExplorer({
       {activeCategory && (
         <div
           className={cn(
-            'mt-8 space-y-6 overflow-visible',
+            'mt-8 space-y-6',
             isDark &&
-              'rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 lg:p-8',
+              'overflow-x-hidden rounded-xl border border-neutral-200 bg-white p-5 sm:p-6 lg:p-8',
           )}
         >
           <CategoryBrowseToolbar
