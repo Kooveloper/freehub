@@ -49,7 +49,7 @@ function buildAdminHtml(
 ): string {
   const typeLabel =
     type === 'new_tool'
-      ? '새 서비스 제보'
+      ? '새 서비스 요청'
       : type === 'limit_change'
         ? '한도 변경 신고'
         : type === 'bug'
@@ -101,7 +101,7 @@ function buildAdminHtml(
     <!DOCTYPE html>
     <html lang="ko">
       <body style="font-family:sans-serif;line-height:1.6;color:#333;max-width:600px;margin:0 auto;padding:24px">
-        <h2 style="color:#2563eb;margin-bottom:16px">새 제보가 접수되었습니다</h2>
+        <h2 style="color:#2563eb;margin-bottom:16px">새 요청이 접수되었습니다</h2>
         ${details}
         <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0">
         <p style="font-size:12px;color:#9ca3af">FreeHub 관리자 알림</p>
@@ -133,7 +133,7 @@ export async function sendSubmissionEmails(
   await resend.emails.send({
     from: FROM,
     to: adminEmail,
-    subject: `[FreeHub] 새 제보: ${toolLabel}`,
+    subject: `[FreeHub] 새 요청: ${toolLabel}`,
     html: buildAdminHtml(type, payload, submitterEmail),
   });
 }

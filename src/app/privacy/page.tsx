@@ -13,7 +13,7 @@ const FALLBACK = {
 
 ## 1. 수집하는 개인정보
 
-- 이메일 주소: 회원가입, 제보·요청 접수 시
+- 이메일 주소: 회원가입, 요청 접수 시
 - 쿠키: Google Analytics, Google AdSense
 - IP 주소: Rate Limiting 등 남용 방지
 

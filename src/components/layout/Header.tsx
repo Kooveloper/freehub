@@ -1,10 +1,8 @@
 'use client';
 
 import {
-  ChevronDown,
   LogOut,
   Menu,
-  Star,
   User,
   X,
 } from 'lucide-react';
@@ -86,15 +84,20 @@ export function Header() {
           <Link href="/" className={navLinkClass}>
             {t('nav.home')}
           </Link>
-          <Link href="/blog" className={navLinkClass}>
-            {t('nav.blog')}
-          </Link>
           <Link href="/compare" className={navLinkClass}>
             {t('nav.compare')}
           </Link>
           <Link href="/submit" className={navLinkClass}>
             {t('nav.submit')}
           </Link>
+          <Link href="/blog" className={navLinkClass}>
+            {t('nav.blog')}
+          </Link>
+          {user && (
+            <Link href="/dashboard" className={navLinkClass}>
+              {t('nav.myPage')}
+            </Link>
+          )}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
@@ -119,8 +122,8 @@ export function Header() {
                     className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-neutral-800 transition-colors hover:bg-neutral-50"
                     onClick={() => setProfileOpen(false)}
                   >
-                    <Star className="h-4 w-4 text-neutral-600" />
-                    {t('nav.favorites')}
+                    <User className="h-4 w-4 text-neutral-600" />
+                    {t('nav.myPage')}
                   </Link>
                   <button
                     type="button"
@@ -171,13 +174,6 @@ export function Header() {
               {t('nav.home')}
             </Link>
             <Link
-              href="/blog"
-              className="py-2.5 text-base font-semibold text-neutral-900"
-              onClick={() => setMobileOpen(false)}
-            >
-              {t('nav.blog')}
-            </Link>
-            <Link
               href="/compare"
               className="py-2.5 text-base font-semibold text-neutral-900"
               onClick={() => setMobileOpen(false)}
@@ -191,6 +187,23 @@ export function Header() {
             >
               {t('nav.submit')}
             </Link>
+            <Link
+              href="/blog"
+              className="py-2.5 text-base font-semibold text-neutral-900"
+              onClick={() => setMobileOpen(false)}
+            >
+              {t('nav.blog')}
+            </Link>
+
+            {user && (
+              <Link
+                href="/dashboard"
+                className="py-2.5 text-base font-semibold text-neutral-900"
+                onClick={() => setMobileOpen(false)}
+              >
+                {t('nav.myPage')}
+              </Link>
+            )}
 
             <div className="mt-4 border-t border-neutral-100 pt-4">
               {user ? (
@@ -200,8 +213,8 @@ export function Header() {
                     className="flex items-center gap-2 py-2.5 text-base font-semibold text-neutral-900"
                     onClick={() => setMobileOpen(false)}
                   >
-                    <Star className="h-4 w-4 text-neutral-600" />
-                    {t('nav.favorites')}
+                    <User className="h-4 w-4 text-neutral-600" />
+                    {t('nav.myPage')}
                   </Link>
                   <button
                     type="button"

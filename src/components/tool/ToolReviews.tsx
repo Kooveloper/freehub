@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { StarRatingDisplay, StarRatingInput } from '@/components/tool/StarRating';
 import { useLoginPrompt } from '@/contexts/LoginPromptContext';
+import { useLocale } from '@/contexts/LocaleContext';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import type { ReviewListResponse, ReviewSort, ToolReview } from '@/types/review';
@@ -99,6 +100,7 @@ function ReviewItem({
 
 export function ToolReviews({ toolId }: ToolReviewsProps) {
   const { showLoginPrompt } = useLoginPrompt();
+  const { t } = useLocale();
   const [data, setData] = useState<ReviewListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -428,11 +430,14 @@ export function ToolReviews({ toolId }: ToolReviewsProps) {
 
       {userId && !data?.userReview && (
         <p className="mt-4 text-xs text-gray-400">
-          닉네임 변경은{' '}
-          <Link href="/dashboard" className="text-brand-600 hover:underline">
-            마이페이지
+          {t('dashboard.nicknameEditHint')}{' '}
+          <Link
+            href="/dashboard/profile"
+            className="text-brand-600 hover:underline"
+          >
+            {t('dashboard.myPageLink')}
           </Link>
-          에서 할 수 있습니다.
+          {t('dashboard.nicknameEditSuffix')}
         </p>
       )}
     </section>

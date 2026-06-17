@@ -127,8 +127,8 @@ export function SubmissionsManager({ submissions }: SubmissionsManagerProps) {
                     className="px-4 py-10 text-center text-gray-400"
                   >
                     {submissions.length === 0
-                      ? '접수된 제보가 없습니다.'
-                      : '해당 상태의 제보가 없습니다.'}
+                      ? '접수된 요청이 없습니다.'
+                      : '해당 상태의 요청이 없습니다.'}
                   </td>
                 </tr>
               ) : (

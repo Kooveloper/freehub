@@ -48,7 +48,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     return NextResponse.json({ error: fetchError.message }, { status: 500 });
   }
   if (!existing) {
-    return NextResponse.json({ error: '제보를 찾을 수 없습니다.' }, { status: 404 });
+    return NextResponse.json({ error: '요청을 찾을 수 없습니다.' }, { status: 404 });
   }
 
   const { data, error } = await supabase

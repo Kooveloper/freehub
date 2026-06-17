@@ -123,13 +123,13 @@ export default async function AdminDashboardPage() {
           accent="bg-violet-50 text-violet-600"
         />
         <StatCard
-          label="미처리 제보"
+          label="미처리 요청"
           value={stats.pendingSubmissionCount}
           icon={FolderPlus}
           accent="bg-amber-50 text-amber-600"
         />
         <StatCard
-          label="미처리 요청"
+          label="미처리 추가 요청"
           value={stats.pendingRequestCount}
           icon={MessageSquare}
           accent="bg-rose-50 text-rose-600"
@@ -265,10 +265,10 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
-      {/* 미처리 제보 / 요청 */}
+      {/* 미처리 요청 / 추가 요청 */}
       <section className="grid gap-6 lg:grid-cols-2">
         <PendingList
-          title="미처리 제보"
+          title="미처리 요청"
           viewAllHref="/admin/submissions"
           items={pendingSubmissions.map((item) => ({
             id: item.id,
@@ -277,10 +277,10 @@ export default async function AdminDashboardPage() {
             date: item.created_at,
             status: item.status,
           }))}
-          emptyMessage="미처리 제보가 없습니다."
+          emptyMessage="미처리 요청이 없습니다."
         />
         <PendingList
-          title="미처리 요청"
+          title="미처리 추가 요청"
           viewAllHref="/admin/requests"
           items={pendingRequests.map((item: AdminToolRequest) => ({
             id: item.id,
@@ -289,7 +289,7 @@ export default async function AdminDashboardPage() {
             date: item.created_at,
             status: item.status,
           }))}
-          emptyMessage="미처리 요청이 없습니다."
+          emptyMessage="미처리 추가 요청이 없습니다."
         />
       </section>
     </div>

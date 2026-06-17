@@ -100,3 +100,32 @@ export async function createUserProfile(
 
   return { profile: data as UserProfile, error: null };
 }
+
+export async function updateUserNickname(
+  supabase: SupabaseClient,
+  userId: string,
+  nicknameInput: string,
+): Promise<{ profile: UserProfile | null; error: string | null }> {
+  const validationError = validateNickname(nicknameInput);
+  if (validationError) {
+    return { profile: null, error: validationError };
+  }
+
+  const nickname = normalizeNickname(nicknameInput);
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ nickname, updated_at: new Date().toISOString() })
+    .eq('user_id', userId)
+    .select('user_id, nickname, created_at, updated_at')
+    .single();
+
+  if (error) {
+    if (error.code === '23505') {
+      return { profile: null, error: '이미 사용 중인 닉네임입니다.' };
+    }
+    return { profile: null, error: error.message };
+  }
+
+  return { profile: data as UserProfile, error: null };
+}

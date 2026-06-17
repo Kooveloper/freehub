@@ -199,7 +199,7 @@ export async function POST(request: Request) {
   const emailRaw = (body?.email as string | undefined)?.trim() ?? '';
 
   if (!type || !VALID_TYPES.has(type)) {
-    return NextResponse.json({ error: '유효하지 않은 제보 유형입니다.' }, { status: 400 });
+    return NextResponse.json({ error: '유효하지 않은 요청 유형입니다.' }, { status: 400 });
   }
 
   if (type === 'inquiry') {
@@ -265,7 +265,7 @@ export async function POST(request: Request) {
   if (error) {
     console.error('submissions INSERT 실패:', error.message);
     return NextResponse.json(
-      { error: '제보 저장에 실패했습니다.' },
+      { error: '요청 저장에 실패했습니다.' },
       { status: 500 },
     );
   }
