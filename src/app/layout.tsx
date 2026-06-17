@@ -10,7 +10,7 @@ import { LoginPromptProvider } from '@/contexts/LoginPromptContext';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
-import { getLocale, getTranslations } from '@/lib/locale';
+import { getLocale } from '@/lib/locale';
 import { getSiteSettings } from '@/lib/site-settings';
 
 import './globals.css';
@@ -26,17 +26,9 @@ const geistMono = Geist_Mono({
 });
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://freehub.kr';
-const appName = process.env.NEXT_PUBLIC_APP_NAME ?? 'FreeHub';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations();
-
   return {
-    title: {
-      default: t('metadata.defaultTitle', { appName }),
-      template: `%s | ${appName}`,
-    },
-    description: t('metadata.defaultDescription'),
     metadataBase: new URL(appUrl),
     icons: {
       icon: '/Freehub_Fabicon.ico',

@@ -1,14 +1,6 @@
-import type { Metadata } from 'next';
-
 import { FavoritesSection } from '@/components/dashboard/FavoritesSection';
 import { getFavoriteToolsForUser } from '@/lib/supabase/queries';
 import { createClient } from '@/lib/supabase/server';
-import { getTranslations } from '@/lib/locale';
-
-export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations();
-  return { title: t('dashboard.favorites') };
-}
 
 export default async function DashboardFavoritesPage() {
   const supabase = await createClient();

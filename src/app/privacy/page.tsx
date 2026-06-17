@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { LegalPageContent } from '@/components/legal/LegalPageContent';
@@ -32,20 +31,6 @@ const FALLBACK = {
 
 Contact: admin@freehub.kr`,
 };
-
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
-  const page = await getLegalPage('privacy');
-  const title =
-    locale === 'en'
-      ? page?.title_en || page?.title_ko || FALLBACK.title_en
-      : page?.title_ko || FALLBACK.title_ko;
-
-  return {
-    title,
-    description: title,
-  };
-}
 
 export default async function PrivacyPage() {
   const locale = await getLocale();

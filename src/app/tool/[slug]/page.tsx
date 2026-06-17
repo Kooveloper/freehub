@@ -1,5 +1,4 @@
 import { Check, ChevronRight, ExternalLink, Info, X } from 'lucide-react';
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -99,45 +98,6 @@ function FeatureComparisonTable({ tool }: { tool: Tool }) {
 export async function generateStaticParams() {
   const slugs = await getAllToolSlugs();
   return slugs.map((slug) => ({ slug }));
-}
-
-export async function generateMetadata({
-  params,
-}: ToolPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const locale = await getLocale();
-
-  try {
-    const tool = localizeTool(await getToolBySlug(slug), locale);
-    return {
-      title:
-        locale === 'en'
-          ? `${tool.name} Free Limits & Guide | FreeHub`
-          : `${tool.name} 무료 한도 및 사용법 | FreeHub`,
-      description: tool.description,
-      openGraph: {
-        title:
-          locale === 'en'
-            ? `${tool.name} Free Limits | FreeHub`
-            : `${tool.name} 무료 한도 | FreeHub`,
-        description: tool.description,
-        type: 'website',
-      },
-      twitter: {
-        card: 'summary_large_image',
-        title:
-          locale === 'en'
-            ? `${tool.name} Free Limits | FreeHub`
-            : `${tool.name} 무료 한도 | FreeHub`,
-        description: tool.description,
-      },
-    };
-  } catch {
-    return {
-      title:
-        locale === 'en' ? 'Service not found | FreeHub' : '서비스를 찾을 수 없습니다 | FreeHub',
-    };
-  }
 }
 
 export default async function ToolPage({ params }: ToolPageProps) {

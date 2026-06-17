@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { LegalPageContent } from '@/components/legal/LegalPageContent';
@@ -36,20 +35,6 @@ Information is for reference only. Check each service's latest terms.
 
 Contact: admin@freehub.kr`,
 };
-
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = await getLocale();
-  const page = await getLegalPage('terms');
-  const title =
-    locale === 'en'
-      ? page?.title_en || page?.title_ko || FALLBACK.title_en
-      : page?.title_ko || FALLBACK.title_ko;
-
-  return {
-    title,
-    description: title,
-  };
-}
 
 export default async function TermsPage() {
   const locale = await getLocale();

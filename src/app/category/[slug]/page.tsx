@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
@@ -27,29 +26,6 @@ interface CategoryPageProps {
 export async function generateStaticParams() {
   const categories = await getAllCategories();
   return categories.map((category) => ({ slug: category.slug }));
-}
-
-export async function generateMetadata({
-  params,
-}: CategoryPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const locale = await getLocale();
-  const category = await getCategoryBySlug(slug);
-
-  if (!category) {
-    return { title: locale === 'en' ? 'Category not found' : '카테고리를 찾을 수 없습니다' };
-  }
-
-  const localized = localizeCategory(category, locale);
-  const tools = await getToolsByCategory(slug);
-
-  return {
-    title:
-      locale === 'en'
-        ? `Free ${localized.name} Services (${tools.length}) | FreeHub`
-        : `무료 ${localized.name} 서비스 ${tools.length}개 | FreeHub`,
-    description: localized.description,
-  };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {

@@ -29,6 +29,11 @@ export function parseHtmlSnippet(html: string): ReactNode[] {
     nodes.push(<meta key={`meta-${index++}`} {...attrs} />);
   }
 
+  const titleRegex = /<title>([\s\S]*?)<\/title>/gi;
+  while ((match = titleRegex.exec(trimmed)) !== null) {
+    nodes.push(<title key={`title-${index++}`}>{match[1]}</title>);
+  }
+
   const linkRegex = /<link\s+([^>]+?)\s*\/?>/gi;
   while ((match = linkRegex.exec(trimmed)) !== null) {
     const attrs = parseAttrs(match[1]);

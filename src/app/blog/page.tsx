@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { AdSlot } from '@/components/ads/AdSlot';
@@ -10,12 +9,6 @@ import { cn } from '@/lib/utils';
 export const revalidate = 3600;
 
 const PAGE_SIZE = 12;
-
-export const metadata: Metadata = {
-  title: '블로그 — 무료 AI 툴 활용 가이드 | FreeHub',
-  description:
-    'ChatGPT, Remove.bg, ElevenLabs 등 무료 AI 툴 활용법을 제공합니다.',
-};
 
 interface BlogListPageProps {
   searchParams: Promise<{ category?: string; page?: string }>;
