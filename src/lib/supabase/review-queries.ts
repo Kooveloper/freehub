@@ -4,6 +4,9 @@ import type { ReviewListResponse, ReviewSort, ToolReview } from '@/types/review'
 
 const PAGE_SIZE = 5;
 
+const REVIEW_COLUMNS =
+  'id, tool_id, user_id, rating, content, created_at, updated_at';
+
 function createServiceClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,17 +22,32 @@ interface ReviewRow {
   content: string;
   created_at: string;
   updated_at: string;
-  profiles: { nickname: string } | { nickname: string }[] | null;
 }
 
-function getNickname(
-  profiles: ReviewRow['profiles'],
-): string {
-  if (!profiles) return '익명';
-  if (Array.isArray(profiles)) {
-    return profiles[0]?.nickname ?? '익명';
+interface ReviewRowWithTool extends ReviewRow {
+  tools: { name: string; slug: string } | { name: string; slug: string }[] | null;
+}
+
+async function fetchNicknameMap(userIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const uniqueIds = [...new Set(userIds)];
+  if (uniqueIds.length === 0) return map;
+
+  const supabase = createServiceClient();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, nickname')
+    .in('user_id', uniqueIds);
+
+  if (error) {
+    throw new Error(error.message);
   }
-  return profiles.nickname ?? '익명';
+
+  for (const row of data ?? []) {
+    map.set(row.user_id as string, row.nickname as string);
+  }
+
+  return map;
 }
 
 async function attachLikeCounts(
@@ -70,6 +88,7 @@ async function attachLikeCounts(
 
 function mapReviewRow(
   row: ReviewRow,
+  nicknameMap: Map<string, string>,
   likeMeta: { likeCount: number; isLiked: boolean },
   currentUserId?: string | null,
 ): ToolReview {
@@ -81,11 +100,40 @@ function mapReviewRow(
     content: row.content,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    author_nickname: getNickname(row.profiles),
+    author_nickname: nicknameMap.get(row.user_id) ?? '익명',
     like_count: likeMeta.likeCount,
     is_liked: likeMeta.isLiked,
     is_own: currentUserId ? row.user_id === currentUserId : false,
   };
+}
+
+async function mapReviewRows(
+  rows: ReviewRow[],
+  currentUserId?: string | null,
+): Promise<ToolReview[]> {
+  const [nicknameMap, likeMeta] = await Promise.all([
+    fetchNicknameMap(rows.map((row) => row.user_id)),
+    attachLikeCounts(
+      rows.map((row) => row.id),
+      currentUserId,
+    ),
+  ]);
+
+  return rows.map((row) =>
+    mapReviewRow(
+      row,
+      nicknameMap,
+      likeMeta.get(row.id) ?? { likeCount: 0, isLiked: false },
+      currentUserId,
+    ),
+  );
+}
+
+function getToolFromRow(
+  row: ReviewRowWithTool,
+): { name: string; slug: string } | undefined {
+  const tool = Array.isArray(row.tools) ? row.tools[0] : row.tools;
+  return tool ?? undefined;
 }
 
 export async function getToolReviews(params: {
@@ -122,9 +170,7 @@ export async function getToolReviews(params: {
 
   let dataQuery = supabase
     .from('tool_reviews')
-    .select(
-      'id, tool_id, user_id, rating, content, created_at, updated_at, profiles(nickname)',
-    )
+    .select(REVIEW_COLUMNS)
     .eq('tool_id', params.toolId);
 
   if (rating) {
@@ -156,10 +202,8 @@ export async function getToolReviews(params: {
         );
       });
 
-    const pageRows = sorted.slice(from, from + PAGE_SIZE);
-    const reviews = pageRows.map(({ row }) =>
-      mapReviewRow(row, likeMeta.get(row.id) ?? { likeCount: 0, isLiked: false }, params.currentUserId),
-    );
+    const pageRows = sorted.slice(from, from + PAGE_SIZE).map(({ row }) => row);
+    const reviews = await mapReviewRows(pageRows, params.currentUserId);
 
     const summary = await getToolReviewSummary(params.toolId);
 
@@ -188,15 +232,7 @@ export async function getToolReviews(params: {
   }
 
   const rows = (data ?? []) as ReviewRow[];
-  const likeMeta = await attachLikeCounts(
-    rows.map((row) => row.id),
-    params.currentUserId,
-  );
-
-  const reviews = rows.map((row) =>
-    mapReviewRow(row, likeMeta.get(row.id) ?? { likeCount: 0, isLiked: false }, params.currentUserId),
-  );
-
+  const reviews = await mapReviewRows(rows, params.currentUserId);
   const summary = await getToolReviewSummary(params.toolId);
 
   let userReview: ToolReview | null = null;
@@ -253,9 +289,7 @@ export async function getUserReviewForTool(
 
   const { data, error } = await supabase
     .from('tool_reviews')
-    .select(
-      'id, tool_id, user_id, rating, content, created_at, updated_at, profiles(nickname)',
-    )
+    .select(REVIEW_COLUMNS)
     .eq('tool_id', toolId)
     .eq('user_id', userId)
     .maybeSingle();
@@ -266,13 +300,8 @@ export async function getUserReviewForTool(
 
   if (!data) return null;
 
-  const likeMeta = await attachLikeCounts([data.id as string], userId);
-
-  return mapReviewRow(
-    data as ReviewRow,
-    likeMeta.get(data.id as string) ?? { likeCount: 0, isLiked: false },
-    userId,
-  );
+  const [review] = await mapReviewRows([data as ReviewRow], userId);
+  return review ?? null;
 }
 
 export async function getReviewsForAdmin(params: {
@@ -341,9 +370,7 @@ export async function getReviewsForAdmin(params: {
 
   let dataQuery = supabase
     .from('tool_reviews')
-    .select(
-      'id, tool_id, user_id, rating, content, created_at, updated_at, profiles(nickname), tools(name, slug)',
-    )
+    .select(`${REVIEW_COLUMNS}, tools(name, slug)`)
     .order('created_at', { ascending: false })
     .range(from, to);
 
@@ -354,18 +381,15 @@ export async function getReviewsForAdmin(params: {
   const { data, error } = await dataQuery;
   if (error) throw new Error(error.message);
 
-  const rows = (data ?? []) as Array<
-    ReviewRow & { tools: { name: string; slug: string } | { name: string; slug: string }[] | null }
-  >;
-
-  const likeMeta = await attachLikeCounts(rows.map((row) => row.id));
+  const rows = (data ?? []) as ReviewRowWithTool[];
+  const mapped = await mapReviewRows(rows);
 
   return {
     total,
-    reviews: rows.map((row) => {
-      const tool = Array.isArray(row.tools) ? row.tools[0] : row.tools;
+    reviews: mapped.map((review, index) => {
+      const tool = getToolFromRow(rows[index]!);
       return {
-        ...mapReviewRow(row, likeMeta.get(row.id) ?? { likeCount: 0, isLiked: false }),
+        ...review,
         tool_name: tool?.name,
         tool_slug: tool?.slug,
       };
@@ -378,24 +402,19 @@ export async function getUserReviewsForAdmin(userId: string): Promise<ToolReview
 
   const { data, error } = await supabase
     .from('tool_reviews')
-    .select(
-      'id, tool_id, user_id, rating, content, created_at, updated_at, profiles(nickname), tools(name, slug)',
-    )
+    .select(`${REVIEW_COLUMNS}, tools(name, slug)`)
     .eq('user_id', userId)
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
 
-  const rows = (data ?? []) as Array<
-    ReviewRow & { tools: { name: string; slug: string } | { name: string; slug: string }[] | null }
-  >;
+  const rows = (data ?? []) as ReviewRowWithTool[];
+  const mapped = await mapReviewRows(rows);
 
-  const likeMeta = await attachLikeCounts(rows.map((row) => row.id));
-
-  return rows.map((row) => {
-    const tool = Array.isArray(row.tools) ? row.tools[0] : row.tools;
+  return mapped.map((review, index) => {
+    const tool = getToolFromRow(rows[index]!);
     return {
-      ...mapReviewRow(row, likeMeta.get(row.id) ?? { likeCount: 0, isLiked: false }),
+      ...review,
       tool_name: tool?.name,
       tool_slug: tool?.slug,
     };

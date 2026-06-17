@@ -53,7 +53,7 @@ export function ToolCard({
     >
       <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5">
         {isFavorited && (
-          <Badge variant="yellow" className="gap-1">
+          <Badge variant="yellow" className="hidden gap-1 sm:inline-flex">
             <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
             {t('tool.favorite')}
           </Badge>
