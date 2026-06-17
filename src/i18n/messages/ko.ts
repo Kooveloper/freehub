@@ -24,7 +24,7 @@ export const ko = {
     copyright: 'All rights reserved.',
   },
   home: {
-    heroTitleLine1: '무료로 쓸 수 있는 모든 서비스',
+    heroTitleLine1: '모든 무료 서비스',
     heroTitleLine2: '한곳에서 모아보자!',
     heroSubtitle: 'FREEHUB에서 필요한 서비스를 찾아보세요!',
     searchPlaceholder: 'ChatGPT, Notion, Midjourney...',

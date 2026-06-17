@@ -26,8 +26,8 @@ export const en: Messages = {
     copyright: 'All rights reserved.',
   },
   home: {
-    heroTitleLine1: 'Every service you can use for free',
-    heroTitleLine2: 'All in one place',
+    heroTitleLine1: 'All free services',
+    heroTitleLine2: 'All in one place!',
     heroSubtitle: 'Find the services you need on FREEHUB!',
     searchPlaceholder: 'ChatGPT, Notion, Midjourney...',
     categoriesTitle: 'Browse by category',

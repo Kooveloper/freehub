@@ -93,11 +93,6 @@ export function Header() {
           <Link href="/blog" className={navLinkClass}>
             {t('nav.blog')}
           </Link>
-          {user && (
-            <Link href="/dashboard" className={navLinkClass}>
-              {t('nav.myPage')}
-            </Link>
-          )}
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
@@ -194,16 +189,6 @@ export function Header() {
             >
               {t('nav.blog')}
             </Link>
-
-            {user && (
-              <Link
-                href="/dashboard"
-                className="py-2.5 text-base font-semibold text-neutral-900"
-                onClick={() => setMobileOpen(false)}
-              >
-                {t('nav.myPage')}
-              </Link>
-            )}
 
             <div className="mt-4 border-t border-neutral-100 pt-4">
               {user ? (
