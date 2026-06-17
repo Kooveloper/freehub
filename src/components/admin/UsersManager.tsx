@@ -47,7 +47,11 @@ export function UsersManager({ users }: UsersManagerProps) {
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return users;
-    return users.filter((user) => user.email.toLowerCase().includes(query));
+    return users.filter(
+      (user) =>
+        user.email.toLowerCase().includes(query) ||
+        (user.nickname?.toLowerCase().includes(query) ?? false),
+    );
   }, [users, search]);
 
   const handleVerify = async (user: AdminUser) => {
@@ -90,18 +94,19 @@ export function UsersManager({ users }: UsersManagerProps) {
           type="search"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="이메일 검색"
+          placeholder="이메일·닉네임 검색"
           className="w-full rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 sm:max-w-xs"
         />
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px] text-sm">
+          <table className="w-full min-w-[1020px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500">
                 <th className="w-14 px-4 py-3 font-medium">No.</th>
                 <th className="px-4 py-3 font-medium">가입일/시간</th>
+                <th className="px-4 py-3 font-medium">닉네임</th>
                 <th className="px-4 py-3 font-medium">이메일 (아이디)</th>
                 <th className="px-4 py-3 font-medium">인증여부</th>
                 <th className="w-28 px-4 py-3 font-medium">수정</th>
@@ -111,7 +116,7 @@ export function UsersManager({ users }: UsersManagerProps) {
               {filtered.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-12 text-center text-sm text-gray-400"
                   >
                     {search.trim() ? '검색 결과가 없습니다.' : '가입한 회원이 없습니다.'}
@@ -128,6 +133,9 @@ export function UsersManager({ users }: UsersManagerProps) {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-gray-700">
                       {formatDateTime(user.created_at)}
+                    </td>
+                    <td className="px-4 py-3 text-gray-900">
+                      {user.nickname ?? '—'}
                     </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{user.email}</div>

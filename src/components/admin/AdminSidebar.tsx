@@ -24,7 +24,6 @@ const SITE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://freehub.kr';
 
 const NAV_ITEMS = [
   { href: '/admin/dashboard', label: '대시보드', icon: Home },
-  { href: '/admin/analytics', label: '조회 통계', icon: BarChart3 },
   { href: '/admin/tools', label: '서비스 관리', icon: Wrench },
   { href: '/admin/categories', label: '카테고리', icon: Folder },
   { href: '/admin/featured', label: '인기 서비스', icon: TrendingUp },
@@ -33,6 +32,11 @@ const NAV_ITEMS = [
   { href: '/admin/users', label: '회원 관리', icon: Users },
   { href: '/admin/settings', label: '사이트 설정', icon: Settings },
   { href: '/admin/legal', label: '약관/정책', icon: FileText },
+] as const;
+
+const ANALYTICS_ITEMS = [
+  { href: '/admin/analytics', label: '조회 통계' },
+  { href: '/admin/analytics/reviews', label: '리뷰 통계' },
 ] as const;
 
 const BLOG_ITEMS = [
@@ -46,6 +50,7 @@ function isActivePath(pathname: string, href: string) {
 
 export function AdminSidebar() {
   const pathname = usePathname();
+  const analyticsActive = pathname.startsWith('/admin/analytics');
   const blogActive = pathname.startsWith('/admin/blog');
 
   return (
@@ -82,6 +87,35 @@ export function AdminSidebar() {
             </Link>
           );
         })}
+
+        <div className="pt-3">
+          <p className="mb-1 flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <BarChart3 className="h-3.5 w-3.5" />
+            통계
+          </p>
+          {ANALYTICS_ITEMS.map(({ href, label }) => {
+            const active =
+              href === '/admin/analytics'
+                ? pathname === '/admin/analytics'
+                : pathname.startsWith(href);
+
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-slate-800 text-white'
+                    : 'text-slate-300 hover:bg-slate-800/60 hover:text-white',
+                  analyticsActive && !active && 'text-slate-400',
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </div>
 
         <div className="pt-3">
           <p className="mb-1 flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">

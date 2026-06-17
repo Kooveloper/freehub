@@ -12,6 +12,7 @@ function createServiceClient() {
 export interface AdminUser {
   id: string;
   email: string;
+  nickname: string | null;
   created_at: string;
   email_verified: boolean;
   email_confirmed_at: string | null;
@@ -32,7 +33,7 @@ function mapAuthUser(user: {
   last_sign_in_at?: string;
   app_metadata?: { provider?: string };
   identities?: { provider: string }[];
-}): AdminUser {
+}, nickname?: string | null): AdminUser {
   const provider =
     user.app_metadata?.provider ??
     user.identities?.[0]?.provider ??
@@ -41,6 +42,7 @@ function mapAuthUser(user: {
   return {
     id: user.id,
     email: user.email ?? '',
+    nickname: nickname ?? null,
     created_at: user.created_at,
     email_verified: Boolean(user.email_confirmed_at),
     email_confirmed_at: user.email_confirmed_at ?? null,
@@ -56,6 +58,18 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
   let page = 1;
   const perPage = 200;
 
+  const { data: profiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('user_id, nickname');
+
+  if (profileError) {
+    throw new Error(`프로필 조회 실패: ${profileError.message}`);
+  }
+
+  const nicknameMap = new Map(
+    (profiles ?? []).map((row) => [row.user_id as string, row.nickname as string]),
+  );
+
   while (true) {
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
 
@@ -63,7 +77,9 @@ export async function getAdminUsers(): Promise<AdminUser[]> {
       throw new Error(`회원 목록 조회 실패: ${error.message}`);
     }
 
-    const batch = (data.users ?? []).map(mapAuthUser);
+    const batch = (data.users ?? []).map((user) =>
+      mapAuthUser(user, nicknameMap.get(user.id) ?? null),
+    );
     users.push(...batch);
 
     if (batch.length < perPage) break;
@@ -88,7 +104,13 @@ export async function getAdminUserById(id: string): Promise<AdminUser | null> {
 
   if (!data.user) return null;
 
-  return mapAuthUser(data.user);
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('nickname')
+    .eq('user_id', id)
+    .maybeSingle();
+
+  return mapAuthUser(data.user, (profile?.nickname as string | undefined) ?? null);
 }
 
 /** 회원 즐겨찾기 서비스 목록 */
@@ -135,3 +157,5 @@ export async function getAdminUserFavorites(
     })
     .filter((item): item is AdminUserFavorite => item != null);
 }
+
+export { getUserReviewsForAdmin } from '@/lib/supabase/review-queries';

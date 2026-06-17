@@ -9,11 +9,14 @@ import { Toast, useToast } from '@/components/admin/Toast';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import type { AdminUser, AdminUserFavorite } from '@/lib/supabase/admin-users';
+import type { ToolReview } from '@/types/review';
 import { cn } from '@/lib/utils';
+import { StarRatingDisplay } from '@/components/tool/StarRating';
 
 interface UserDetailManagerProps {
   user: AdminUser;
   favorites: AdminUserFavorite[];
+  reviews: ToolReview[];
 }
 
 type DetailTab = 'info' | 'activity';
@@ -46,7 +49,7 @@ function getProviderLabel(provider: string) {
   return provider;
 }
 
-export function UserDetailManager({ user, favorites }: UserDetailManagerProps) {
+export function UserDetailManager({ user, favorites, reviews }: UserDetailManagerProps) {
   const router = useRouter();
   const { toast, showToast, hideToast } = useToast();
   const [activeTab, setActiveTab] = useState<DetailTab>('info');
@@ -165,6 +168,12 @@ export function UserDetailManager({ user, favorites }: UserDetailManagerProps) {
 
             <dl className="mt-5 space-y-4 text-sm">
               <div>
+                <dt className="text-gray-500">닉네임</dt>
+                <dd className="mt-1 font-medium text-gray-900">
+                  {user.nickname ?? '—'}
+                </dd>
+              </div>
+              <div>
                 <dt className="text-gray-500">이메일</dt>
                 <dd className="mt-1 font-medium text-gray-900">{user.email}</dd>
               </div>
@@ -281,13 +290,45 @@ export function UserDetailManager({ user, favorites }: UserDetailManagerProps) {
       ) : (
         <div className="grid gap-6 lg:grid-cols-2">
           <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-gray-500" />
-              <h2 className="text-base font-semibold text-gray-900">작성한 리뷰</h2>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-gray-500" />
+                <h2 className="text-base font-semibold text-gray-900">작성한 리뷰</h2>
+              </div>
+              <span className="text-sm text-gray-500">
+                {reviews.length.toLocaleString('ko-KR')}개
+              </span>
             </div>
-            <p className="mt-4 rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
-              리뷰 기능이 아직 제공되지 않아 작성 내역이 없습니다.
-            </p>
+
+            {reviews.length === 0 ? (
+              <p className="mt-4 rounded-lg bg-gray-50 px-4 py-8 text-center text-sm text-gray-500">
+                작성한 리뷰가 없습니다.
+              </p>
+            ) : (
+              <ul className="mt-4 divide-y divide-gray-100">
+                {reviews.map((review) => (
+                  <li key={review.id} className="py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StarRatingDisplay value={review.rating} size="sm" />
+                      <span className="text-xs text-gray-400">
+                        {formatDateTime(review.created_at)}
+                      </span>
+                    </div>
+                    {review.tool_name && review.tool_slug && (
+                      <Link
+                        href={`/tool/${review.tool_slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 block text-sm font-medium text-gray-900 hover:text-brand-600"
+                      >
+                        {review.tool_name}
+                      </Link>
+                    )}
+                    <p className="mt-1 text-sm text-gray-700">{review.content}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <section className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">

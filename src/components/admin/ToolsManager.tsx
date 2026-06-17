@@ -1,12 +1,16 @@
 'use client';
 
-import { Download, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
+import { Download, MessageSquare, Pencil, Plus, Search, Trash2, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import { Toast, useToast } from '@/components/admin/Toast';
+import {
+  ReviewListModal,
+  type ReviewListFilter,
+} from '@/components/admin/ReviewListModal';
 import type { ToolExcelImportResult } from '@/lib/admin/tool-excel';
 import {
   buildAdminToolsListUrl,
@@ -60,6 +64,8 @@ export function ToolsManager({
     null,
   );
   const [importError, setImportError] = useState<string | null>(null);
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<ReviewListFilter | null>(null);
 
   useEffect(() => {
     setSearch(searchParams.get('q') ?? '');
@@ -405,6 +411,20 @@ export function ToolsManager({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReviewFilter({
+                                toolId: tool.id,
+                                title: `${tool.name} 리뷰`,
+                              });
+                              setReviewModalOpen(true);
+                            }}
+                            className="rounded p-2 text-gray-400 hover:bg-gray-100 hover:text-amber-600"
+                            aria-label="리뷰 보기"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </button>
                           <Link
                             href={`/admin/tools/${tool.id}?return=${encodeURIComponent(listReturnUrl)}`}
                             className={cn(
@@ -436,6 +456,13 @@ export function ToolsManager({
       </div>
 
       <Toast toast={toast} onClose={hideToast} />
+
+      <ReviewListModal
+        open={reviewModalOpen}
+        onOpenChange={setReviewModalOpen}
+        filter={reviewFilter}
+        admin
+      />
     </div>
   );
 }

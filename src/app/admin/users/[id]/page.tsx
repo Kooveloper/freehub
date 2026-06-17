@@ -4,6 +4,7 @@ import { UserDetailManager } from '@/components/admin/UserDetailManager';
 import {
   getAdminUserById,
   getAdminUserFavorites,
+  getUserReviewsForAdmin,
 } from '@/lib/supabase/admin-users';
 
 export const dynamic = 'force-dynamic';
@@ -15,14 +16,15 @@ export default async function AdminUserDetailPage({
 }) {
   const { id } = await params;
 
-  const [user, favorites] = await Promise.all([
+  const [user, favorites, reviews] = await Promise.all([
     getAdminUserById(id),
     getAdminUserFavorites(id),
+    getUserReviewsForAdmin(id),
   ]);
 
   if (!user) {
     notFound();
   }
 
-  return <UserDetailManager user={user} favorites={favorites} />;
+  return <UserDetailManager user={user} favorites={favorites} reviews={reviews} />;
 }

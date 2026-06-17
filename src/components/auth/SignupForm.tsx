@@ -12,6 +12,7 @@ import {
   SIGNUP_PASSWORD_PLACEHOLDER,
   SIGNUP_PASSWORD_RULE_MESSAGE,
 } from '@/lib/password';
+import { validateNickname } from '@/lib/nickname';
 import { createClient } from '@/lib/supabase/client';
 import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
 
@@ -31,6 +32,7 @@ function getErrorMessage(message: string): string {
 export function SignupForm() {
   const { locale } = useLocale();
   const [email, setEmail] = useState('');
+  const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,6 +47,12 @@ export function SignupForm() {
       return;
     }
 
+    const nicknameError = validateNickname(nickname);
+    if (nicknameError) {
+      setError(nicknameError);
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -52,7 +60,7 @@ export function SignupForm() {
       email: email.trim(),
       password,
       options: {
-        data: { locale },
+        data: { locale, nickname: nickname.trim() },
         emailRedirectTo: buildAuthCallbackUrl('/'),
       },
     });
@@ -99,6 +107,19 @@ export function SignupForm() {
           placeholder="이메일"
           required
           autoComplete="email"
+          className={UI_INPUT_CLASS}
+        />
+
+        <input
+          id="signup-nickname"
+          type="text"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          placeholder="닉네임 (2~20자)"
+          required
+          minLength={2}
+          maxLength={20}
+          autoComplete="nickname"
           className={UI_INPUT_CLASS}
         />
 

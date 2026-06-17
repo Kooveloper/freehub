@@ -33,6 +33,21 @@ export async function GET(request: Request) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        const { ensureUserProfile } = await import('@/lib/supabase/profiles');
+        const { needsNickname } = await ensureUserProfile(supabase, user);
+
+        if (needsNickname) {
+          const completeUrl = new URL('/signup/complete', appOrigin);
+          completeUrl.searchParams.set('next', next.startsWith('/') ? next : '/');
+          return NextResponse.redirect(completeUrl);
+        }
+      }
+
       const redirectPath = next.startsWith('/') ? next : '/';
       return NextResponse.redirect(`${appOrigin}${redirectPath}`);
     }

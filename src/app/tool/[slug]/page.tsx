@@ -336,7 +336,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               </section>
             )}
 
-            <ToolReviews />
+            <ToolReviews toolId={tool.id} />
           </div>
 
           {/* 우측 사이드바 (1/3) */}
