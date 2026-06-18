@@ -184,8 +184,9 @@ export function ToolsManager({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="space-y-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative max-w-md flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
@@ -258,15 +259,6 @@ export function ToolsManager({
             <Upload className="h-4 w-4" />
             {importing ? '업로드 중…' : '엑셀 업로드'}
           </button>
-          <p className="w-full text-xs text-gray-500">
-            여러 카테고리는 주 분류(대/서브) + 맨 끝 열{' '}
-            <span className="font-medium text-gray-600">추가 분류 (대/서브)</span>
-            에{' '}
-            <span className="font-mono text-gray-600">
-              이미지/이미지 편집; 디자인/UI/UX
-            </span>{' '}
-            형식으로 입력하세요.
-          </p>
 
           <Link
             href="/admin/tools/new"
@@ -276,6 +268,17 @@ export function ToolsManager({
             서비스 추가
           </Link>
         </div>
+        </div>
+
+        <p className="text-xs text-gray-500 sm:text-right">
+          여러 카테고리는 주 분류(대/서브) + 맨 끝 열{' '}
+          <span className="font-medium text-gray-600">추가 분류 (대/서브)</span>
+          에{' '}
+          <span className="font-mono text-gray-600">
+            이미지/이미지 편집; 디자인/UI/UX
+          </span>{' '}
+          형식으로 입력하세요.
+        </p>
       </div>
 
       {(importResult || importError) && (
