@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { headers } from 'next/headers';
 import Script from 'next/script';
 
-import { PublicLayoutChrome } from '@/components/layout/PublicLayoutChrome';
 import { SiteBodyTopCode, SiteHeadCode } from '@/components/site/SiteCustomCode';
 import { LoginPromptProvider } from '@/contexts/LoginPromptContext';
 import { FavoritesProvider } from '@/contexts/FavoritesContext';
@@ -46,9 +44,6 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const settings = await getSiteSettings();
-  const headersList = await headers();
-  const pathname = headersList.get('x-pathname') ?? '';
-  const isAdminRoute = pathname.startsWith('/admin');
 
   return (
     <html
@@ -63,11 +58,7 @@ export default async function RootLayout({
         <SiteSettingsProvider settings={settings}>
           <LocaleProvider initialLocale={locale}>
             <LoginPromptProvider>
-              <FavoritesProvider>
-                <PublicLayoutChrome isAdminRoute={isAdminRoute}>
-                  {children}
-                </PublicLayoutChrome>
-              </FavoritesProvider>
+              <FavoritesProvider>{children}</FavoritesProvider>
             </LoginPromptProvider>
           </LocaleProvider>
         </SiteSettingsProvider>

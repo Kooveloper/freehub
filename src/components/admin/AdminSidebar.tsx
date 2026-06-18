@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -97,14 +97,6 @@ export function AdminSidebar() {
   const blogActive = pathname.startsWith('/admin/blog');
   const [analyticsOpen, setAnalyticsOpen] = useState(analyticsActive);
   const [blogOpen, setBlogOpen] = useState(blogActive);
-
-  useEffect(() => {
-    if (analyticsActive) setAnalyticsOpen(true);
-  }, [analyticsActive]);
-
-  useEffect(() => {
-    if (blogActive) setBlogOpen(true);
-  }, [blogActive]);
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col bg-slate-900 lg:flex">
