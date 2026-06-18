@@ -20,6 +20,7 @@ import {
   type ReviewListFilter,
 } from '@/components/admin/ReviewListModal';
 import type { ToolExcelImportResult } from '@/lib/admin/tool-excel';
+import { FREE_LIMIT_TYPE_LABELS } from '@/lib/admin/tools';
 import {
   buildAdminToolsListUrl,
   consumeAdminToolToast,
@@ -28,7 +29,7 @@ import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
 import { toolMatchesAdminFilters } from '@/lib/tool-categories';
 import type { AdminCategory, AdminSubCategory } from '@/lib/supabase/admin-queries';
-import { cn, formatFreeLimit } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
@@ -349,7 +350,9 @@ export function ToolsManager({
           <span className="font-mono text-gray-600">
             이미지/이미지 편집; 디자인/UI/UX
           </span>{' '}
-          형식으로 입력하세요.
+          형식으로 입력하세요. 한도 유형은 기능별로 여러 가지일 수 있으니{' '}
+          <span className="font-medium text-gray-600">상세페이지</span>를
+          참고하세요.
         </p>
       </div>
 
@@ -395,7 +398,7 @@ export function ToolsManager({
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>로고</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>서비스명</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>카테고리 / 서브</th>
-                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>무료 한도</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>한도 유형</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>조회수 (누적 / 30일)</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>검증</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>수정일</th>
@@ -418,11 +421,7 @@ export function ToolsManager({
                 paginatedTools.map((tool) => {
                   const isPending = pendingId === tool.id;
                   const freeLimitLabel = tool.free_plan_exists
-                    ? formatFreeLimit(
-                        tool.free_limit_type,
-                        tool.free_limit_amount,
-                        tool.free_limit_unit,
-                      )
+                    ? FREE_LIMIT_TYPE_LABELS[tool.free_limit_type]
                     : '무료 플랜 없음';
 
                   return (
@@ -466,7 +465,14 @@ export function ToolsManager({
                         </div>
                       </td>
                       <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'text-gray-700')}>
-                        {freeLimitLabel}
+                        <div className="leading-snug">
+                          <div>{freeLimitLabel}</div>
+                          {tool.free_plan_exists && (
+                            <div className="mt-0.5 text-xs text-gray-500">
+                              상세페이지 참고
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
                         <ViewStatsCell
