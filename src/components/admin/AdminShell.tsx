@@ -8,6 +8,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/admin/dashboard': '대시보드',
   '/admin/analytics': '조회 통계',
   '/admin/analytics/reviews': '리뷰 통계',
+  '/admin/analytics/favorites': '즐겨찾기 통계',
   '/admin/tools': '서비스 관리',
   '/admin/tools/new': '서비스 등록',
   '/admin/categories': '카테고리',

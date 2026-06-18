@@ -53,22 +53,29 @@ function formatUpdatedAt(date: string) {
   });
 }
 
-function formatAssignmentLabel(
-  assignment: { category_slug: string; sub_category: string | null },
-  categoryMap: Map<string, string>,
-  subCategoryMap: Map<string, string>,
-): string {
+function CategoryAssignmentDisplay({
+  assignment,
+  categoryMap,
+  subCategoryMap,
+}: {
+  assignment: { category_slug: string; sub_category: string | null };
+  categoryMap: Map<string, string>;
+  subCategoryMap: Map<string, string>;
+}) {
   const categoryName =
     categoryMap.get(assignment.category_slug) ?? assignment.category_slug;
+  const subCategoryName = assignment.sub_category
+    ? subCategoryMap.get(assignment.sub_category) ?? assignment.sub_category
+    : null;
 
-  if (!assignment.sub_category) {
-    return categoryName;
-  }
-
-  const subCategoryName =
-    subCategoryMap.get(assignment.sub_category) ?? assignment.sub_category;
-
-  return `${categoryName} - ${subCategoryName}`;
+  return (
+    <div className="leading-snug">
+      <div className="text-gray-700">{categoryName}</div>
+      <div className="text-xs text-gray-500">
+        {subCategoryName ?? '—'}
+      </div>
+    </div>
+  );
 }
 
 export function ToolsManager({
@@ -343,41 +350,17 @@ export function ToolsManager({
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className={cn(ADMIN_TABLE_CLASS, 'min-w-[980px]')}>
+          <table className={cn(ADMIN_TABLE_CLASS, 'min-w-[960px]')}>
             <thead>
               <tr className={ADMIN_TABLE_HEAD_ROW_CLASS}>
-                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-16 px-2')}>
-                  로고
-                </th>
-                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'min-w-[132px]')}>
-                  서비스명
-                </th>
-                <th
-                  className={cn(
-                    ADMIN_TABLE_HEAD_CELL_CLASS,
-                    'min-w-[240px] whitespace-nowrap',
-                  )}
-                >
-                  카테고리 - 서브카테고리
-                </th>
-                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-24 px-2')}>
-                  무료 한도
-                </th>
-                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-28 px-2')}>
-                  조회수
-                  <span className="mt-0.5 block text-[11px] font-normal text-gray-400">
-                    누적 / 30일
-                  </span>
-                </th>
-                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-20 px-2')}>
-                  검증
-                </th>
-                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-24 px-2')}>
-                  수정일
-                </th>
-                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-24 px-2')}>
-                  액션
-                </th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>로고</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>서비스명</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>카테고리 / 서브</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>무료 한도</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>조회수 (누적 / 30일)</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>검증</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>수정일</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>액션</th>
               </tr>
             </thead>
             <tbody>
@@ -405,64 +388,62 @@ export function ToolsManager({
 
                   return (
                     <tr key={tool.id} className={ADMIN_TABLE_BODY_ROW_CLASS}>
-                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
+                      <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
                         <div className="flex justify-center">
                           <ToolLogo name={tool.name} logoUrl={tool.logo_url} size={40} />
                         </div>
                       </td>
                       <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
-                        <div className="font-medium text-gray-900">{tool.name}</div>
-                        <div className="mt-0.5 font-mono text-xs text-gray-500">
-                          {tool.slug}
+                        <div className="mx-auto max-w-[9rem]">
+                          <div className="truncate font-medium text-gray-900">
+                            {tool.name}
+                          </div>
+                          <div className="mt-0.5 truncate font-mono text-xs text-gray-500">
+                            {tool.slug}
+                          </div>
                         </div>
                       </td>
-                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'text-gray-700')}>
-                        <div className="space-y-1">
+                      <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
+                        <div className="mx-auto max-w-[10rem] space-y-1">
                           {(tool.category_assignments ?? []).length > 0 ? (
                             tool.category_assignments!.map((assignment) => (
-                              <div
+                              <CategoryAssignmentDisplay
                                 key={`${assignment.category_slug}-${assignment.sub_category ?? 'none'}`}
-                                className="text-sm leading-snug"
-                              >
-                                {formatAssignmentLabel(
-                                  assignment,
-                                  categoryMap,
-                                  subCategoryMap,
-                                )}
-                              </div>
+                                assignment={assignment}
+                                categoryMap={categoryMap}
+                                subCategoryMap={subCategoryMap}
+                              />
                             ))
                           ) : (
-                            <div className="text-sm leading-snug">
-                              {formatAssignmentLabel(
-                                {
-                                  category_slug: tool.category_slug,
-                                  sub_category: tool.sub_category ?? null,
-                                },
-                                categoryMap,
-                                subCategoryMap,
-                              )}
-                            </div>
+                            <CategoryAssignmentDisplay
+                              assignment={{
+                                category_slug: tool.category_slug,
+                                sub_category: tool.sub_category ?? null,
+                              }}
+                              categoryMap={categoryMap}
+                              subCategoryMap={subCategoryMap}
+                            />
                           )}
                         </div>
                       </td>
-                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2 text-gray-700')}>
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'text-gray-700')}>
                         {freeLimitLabel}
                       </td>
-                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
+                      <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
                         <ViewStatsCell
                           lifetime={tool.view_count}
                           period={periodViewsByTool[tool.id] ?? 0}
                         />
                       </td>
-                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
+                      <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
                         <Badge variant={tool.is_verified ? 'green' : 'gray'}>
                           {tool.is_verified ? '검증됨' : '미검증'}
                         </Badge>
                       </td>
-                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2 text-gray-600')}>
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'text-gray-600')}>
                         {formatUpdatedAt(tool.updated_at)}
                       </td>
-                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
+                      <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
                         <div className={ADMIN_TABLE_ACTIONS_CLASS}>
                           <button
                             type="button"

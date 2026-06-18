@@ -37,6 +37,7 @@ const NAV_ITEMS = [
 const ANALYTICS_ITEMS = [
   { href: '/admin/analytics', label: '조회 통계' },
   { href: '/admin/analytics/reviews', label: '리뷰 통계' },
+  { href: '/admin/analytics/favorites', label: '즐겨찾기 통계' },
 ] as const;
 
 const BLOG_ITEMS = [
