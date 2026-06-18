@@ -12,6 +12,7 @@ export const FREE_LIMIT_TYPE_LABELS: Record<FreeLimitType, string> = {
   monthly: '월별',
   total: '총량',
   unlimited: '무제한',
+  other: '기타',
 };
 
 export interface ToolFormInput {
@@ -167,6 +168,7 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
     'monthly',
     'total',
     'unlimited',
+    'other',
   ];
   if (!validLimitTypes.includes(freeLimitType)) return null;
 
@@ -177,8 +179,8 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
 
   if (!freePlanExists) {
     resolvedLimitType = 'unlimited';
-  } else if (freeLimitType === 'unlimited') {
-    resolvedLimitType = 'unlimited';
+  } else if (freeLimitType === 'unlimited' || freeLimitType === 'other') {
+    resolvedLimitType = freeLimitType;
   } else {
     const amount = Number(input.free_limit_amount);
     const unit = String(input.free_limit_unit ?? '').trim();

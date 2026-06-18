@@ -405,6 +405,7 @@ export function ToolForm({
     if (
       values.free_plan_exists &&
       values.free_limit_type !== 'unlimited' &&
+      values.free_limit_type !== 'other' &&
       (values.free_limit_amount == null ||
         !values.free_limit_unit?.trim())
     ) {
@@ -425,15 +426,21 @@ export function ToolForm({
         tip: values.tip || null,
         tip_en: values.tip_en || null,
         free_limit_unit:
-          values.free_plan_exists && values.free_limit_type !== 'unlimited'
+          values.free_plan_exists &&
+          values.free_limit_type !== 'unlimited' &&
+          values.free_limit_type !== 'other'
             ? values.free_limit_unit
             : null,
         free_limit_unit_en:
-          values.free_plan_exists && values.free_limit_type !== 'unlimited'
+          values.free_plan_exists &&
+          values.free_limit_type !== 'unlimited' &&
+          values.free_limit_type !== 'other'
             ? values.free_limit_unit_en || null
             : null,
         free_limit_amount:
-          values.free_plan_exists && values.free_limit_type !== 'unlimited'
+          values.free_plan_exists &&
+          values.free_limit_type !== 'unlimited' &&
+          values.free_limit_type !== 'other'
             ? values.free_limit_amount
             : null,
       };
@@ -617,7 +624,8 @@ export function ToolForm({
                 </select>
               </div>
 
-              {values.free_limit_type !== 'unlimited' && (
+              {values.free_limit_type !== 'unlimited' &&
+                values.free_limit_type !== 'other' && (
                 <>
                   <div>
                     <label htmlFor="free_limit_amount" className={LABEL_CLASS}>

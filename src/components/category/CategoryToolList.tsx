@@ -14,7 +14,7 @@ import type { FreeLimitType, Tool } from '@/types/tool';
 
 const PAGE_SIZE = 20;
 
-const LIMIT_KEYS = new Set(['daily', 'monthly', 'unlimited']);
+const LIMIT_KEYS = new Set(['daily', 'monthly', 'unlimited', 'other']);
 
 function parseFilters(param: string | null): Set<string> {
   if (!param) return new Set();

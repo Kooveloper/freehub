@@ -1,7 +1,7 @@
 import type { SortOption } from '@/components/tools/tool-filter-options';
 import type { FreeLimitType, Tool } from '@/types/tool';
 
-const LIMIT_KEYS = new Set(['daily', 'monthly', 'unlimited']);
+const LIMIT_KEYS = new Set(['daily', 'monthly', 'unlimited', 'other']);
 
 export function parseFilters(param: string | null): Set<string> {
   if (!param) return new Set();

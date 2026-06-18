@@ -57,7 +57,7 @@ export const TOOL_EXCEL_HEADERS: string[] = [
   '설명 (한국어)',
   '설명 (English)',
   '무료 플랜 존재\n(Y/N)*',
-  '한도 유형\n(일별/월별/총량/무제한)',
+  '한도 유형\n(일별/월별/총량/무제한/기타)',
   '한도 수량',
   '단위 (한국어)',
   '단위 (English)',
@@ -87,6 +87,7 @@ const LIMIT_TYPE_TO_KO: Record<FreeLimitType, string> = {
   monthly: '월별',
   total: '총량',
   unlimited: '무제한',
+  other: '기타',
 };
 
 const LIMIT_TYPE_FROM_KO: Record<string, FreeLimitType> = {
@@ -95,6 +96,7 @@ const LIMIT_TYPE_FROM_KO: Record<string, FreeLimitType> = {
   월별: 'monthly',
   총량: 'total',
   무제한: 'unlimited',
+  기타: 'other',
 };
 
 export interface ToolExcelImportFailure {
@@ -517,7 +519,7 @@ export function excelRowToToolInput(
 
   let limitType = parseLimitType(row[9]);
   if (!limitType) {
-    return { error: '한도 유형이 올바르지 않습니다. (일별/월별/총량/무제한)' };
+    return { error: '한도 유형이 올바르지 않습니다. (일별/월별/총량/무제한/기타)' };
   }
 
   let freeLimitAmount = parseAmount(row[10]);
@@ -527,6 +529,7 @@ export function excelRowToToolInput(
   if (
     freePlanExists &&
     limitType !== 'unlimited' &&
+    limitType !== 'other' &&
     (freeLimitAmount === null || !freeLimitUnit)
   ) {
     limitType = 'unlimited';

@@ -45,6 +45,8 @@ export function formatFreeLimit(
       return t('freeLimit.monthly', { amount: formattedAmount, unit: unitStr });
     case 'total':
       return t('freeLimit.total', { amount: formattedAmount, unit: unitStr });
+    case 'other':
+      return t('freeLimit.other');
     default:
       return t('freeLimit.unlimited');
   }

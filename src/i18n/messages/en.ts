@@ -60,6 +60,7 @@ export const en: Messages = {
     daily: '{amount}{unit} daily',
     monthly: '{amount}{unit} monthly',
     total: '{amount}{unit} total',
+    other: 'Other',
   },
   common: {
     loading: 'Loading…',

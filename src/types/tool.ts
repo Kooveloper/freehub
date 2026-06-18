@@ -1,5 +1,5 @@
 /** 무료 플랜 한도 유형 */
-export type FreeLimitType = 'daily' | 'monthly' | 'total' | 'unlimited';
+export type FreeLimitType = 'daily' | 'monthly' | 'total' | 'unlimited' | 'other';
 
 /** AI·SaaS 도구 정보 */
 export interface Tool {

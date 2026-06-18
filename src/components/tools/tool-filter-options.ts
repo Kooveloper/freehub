@@ -2,6 +2,7 @@ export const LIMIT_FILTER_OPTIONS = [
   { key: 'daily', labelKo: '일별 한도', labelEn: 'Daily limit' },
   { key: 'monthly', labelKo: '월별 한도', labelEn: 'Monthly limit' },
   { key: 'unlimited', labelKo: '무제한', labelEn: 'Unlimited' },
+  { key: 'other', labelKo: '기타', labelEn: 'Other' },
 ] as const;
 
 export const SORT_OPTIONS = [

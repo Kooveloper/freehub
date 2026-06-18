@@ -58,6 +58,7 @@ export const ko = {
     daily: '매일 {amount}{unit}',
     monthly: '매월 {amount}{unit}',
     total: '총 {amount}{unit}',
+    other: '기타',
   },
   common: {
     loading: '로딩 중…',

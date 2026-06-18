@@ -350,9 +350,9 @@ export function ToolsManager({
           <span className="font-mono text-gray-600">
             이미지/이미지 편집; 디자인/UI/UX
           </span>{' '}
-          형식으로 입력하세요. 한도 유형은 기능별로 여러 가지일 수 있으니{' '}
-          <span className="font-medium text-gray-600">상세페이지</span>를
-          참고하세요.
+          형식으로 입력하세요. 기능별 한도가 여러 가지인 경우 한도 유형을{' '}
+          <span className="font-medium text-gray-600">기타</span>로
+          등록하세요.
         </p>
       </div>
 
@@ -465,14 +465,7 @@ export function ToolsManager({
                         </div>
                       </td>
                       <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'text-gray-700')}>
-                        <div className="leading-snug">
-                          <div>{freeLimitLabel}</div>
-                          {tool.free_plan_exists && (
-                            <div className="mt-0.5 text-xs text-gray-500">
-                              상세페이지 참고
-                            </div>
-                          )}
-                        </div>
+                        {freeLimitLabel}
                       </td>
                       <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
                         <ViewStatsCell

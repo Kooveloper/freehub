@@ -38,6 +38,7 @@ const LIMIT_TYPE_LABELS: Record<FreeLimitType, string> = {
   monthly: '월별',
   total: '총량',
   unlimited: '무제한',
+  other: '기타',
 };
 
 function getCategoryName(slug: string, dbName?: string | null) {
@@ -147,6 +148,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
           monthly: 'Monthly',
           total: 'Total',
           unlimited: 'Unlimited',
+          other: 'Other',
         }
       : LIMIT_TYPE_LABELS;
 
@@ -255,7 +257,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
                     {locale === 'en' ? 'Reset cycle' : '리셋 주기'}
                   </dt>
                   <dd className="font-medium text-gray-900">
-                    {tool.free_limit_type === 'unlimited'
+                    {tool.free_limit_type === 'unlimited' ||
+                    tool.free_limit_type === 'other'
                       ? '-'
                       : limitTypeLabels[tool.free_limit_type]}
                   </dd>
