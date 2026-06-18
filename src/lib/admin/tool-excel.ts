@@ -7,8 +7,10 @@ import {
   type ToolFormInput,
 } from '@/lib/admin/tools';
 import {
+  getToolAssignments,
   normalizeCategoryAssignments,
   replaceToolCategoryAssignments,
+  type ToolCategoryAssignmentInput,
 } from '@/lib/tool-categories';
 import type { Category, FreeLimitType, SubCategory, Tool } from '@/types/tool';
 
@@ -42,6 +44,7 @@ const SECTION_ROW: string[] = [
   '관리',
   '',
   '',
+  '',
 ];
 
 export const TOOL_EXCEL_HEADERS: string[] = [
@@ -73,7 +76,11 @@ export const TOOL_EXCEL_HEADERS: string[] = [
   '검증 완료 (Y/N)',
   '한국 서비스 (Y/N)',
   '로고 URL',
+  '추가 분류 (대/서브)',
 ];
+
+/** 엑셀 열 인덱스 — 기존 열 번호 유지, 추가 분류는 맨 끝(28) */
+export const EXCEL_COL_ADDITIONAL_ASSIGNMENTS = 28;
 
 const LIMIT_TYPE_TO_KO: Record<FreeLimitType, string> = {
   daily: '일별',
@@ -265,6 +272,112 @@ function getSubCategoryName(
   return subCategories.find((sub) => sub.slug === slug)?.name ?? slug;
 }
 
+function splitAssignmentPairs(value: unknown): string[] {
+  const raw = String(value ?? '').trim();
+  if (!raw) return [];
+  return raw
+    .split(/[;\n]/)
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+export function parseCategoryAssignmentPair(
+  pair: string,
+  categories: Category[],
+  subCategories: SubCategory[],
+): { assignment: ToolCategoryAssignmentInput } | { error: string } {
+  const trimmed = pair.trim();
+  if (!trimmed) {
+    return { error: '빈 분류 항목입니다.' };
+  }
+
+  const separator = trimmed.includes('/')
+    ? '/'
+    : trimmed.includes('|')
+      ? '|'
+      : trimmed.includes('>')
+        ? '>'
+        : null;
+
+  if (!separator) {
+    const categorySlug = resolveCategorySlug(trimmed, categories);
+    if (!categorySlug) {
+      return { error: `대카테고리를 찾을 수 없습니다: "${trimmed}"` };
+    }
+    return {
+      assignment: { category_slug: categorySlug, sub_category: null },
+    };
+  }
+
+  const [categoryPart, ...subParts] = trimmed.split(separator);
+  const categoryName = categoryPart.trim();
+  const subCategoryName = subParts.join(separator).trim();
+
+  const categorySlug = resolveCategorySlug(categoryName, categories);
+  if (!categorySlug) {
+    return { error: `대카테고리를 찾을 수 없습니다: "${categoryName}"` };
+  }
+
+  if (!subCategoryName) {
+    return {
+      assignment: { category_slug: categorySlug, sub_category: null },
+    };
+  }
+
+  const subCategorySlug = resolveSubCategorySlug(
+    subCategoryName,
+    categorySlug,
+    subCategories,
+  );
+  if (!subCategorySlug) {
+    return {
+      error: `서브카테고리를 찾을 수 없습니다: "${subCategoryName}" (${categoryName})`,
+    };
+  }
+
+  return {
+    assignment: {
+      category_slug: categorySlug,
+      sub_category: subCategorySlug,
+    },
+  };
+}
+
+export function parseAdditionalCategoryAssignments(
+  value: unknown,
+  categories: Category[],
+  subCategories: SubCategory[],
+): { assignments: ToolCategoryAssignmentInput[] } | { error: string } {
+  const assignments: ToolCategoryAssignmentInput[] = [];
+
+  for (const pair of splitAssignmentPairs(value)) {
+    const parsed = parseCategoryAssignmentPair(pair, categories, subCategories);
+    if ('error' in parsed) return parsed;
+    assignments.push(parsed.assignment);
+  }
+
+  return { assignments };
+}
+
+function formatAdditionalAssignmentsForExcel(
+  tool: Tool,
+  categories: Category[],
+  subCategories: SubCategory[],
+): string {
+  const extras = getToolAssignments(tool).slice(1);
+  if (extras.length === 0) return '';
+
+  return extras
+    .map((row) => {
+      const categoryName = getCategoryName(row.category_slug, categories);
+      const subCategoryName = getSubCategoryName(row.sub_category, subCategories);
+      return subCategoryName
+        ? `${categoryName}/${subCategoryName}`
+        : categoryName;
+    })
+    .join('; ');
+}
+
 export function toolToExcelRow(
   tool: Tool,
   categories: Category[],
@@ -301,6 +414,7 @@ export function toolToExcelRow(
     formatYn(tool.is_verified),
     formatYn(tool.is_sponsored),
     tool.logo_url ?? '',
+    formatAdditionalAssignmentsForExcel(tool, categories, subCategories),
   ];
 }
 
@@ -382,6 +496,20 @@ export function excelRowToToolInput(
     }
   }
 
+  const additionalResult = parseAdditionalCategoryAssignments(
+    row[EXCEL_COL_ADDITIONAL_ASSIGNMENTS],
+    categories,
+    subCategories,
+  );
+  if ('error' in additionalResult) {
+    return { error: additionalResult.error };
+  }
+
+  const category_assignments = normalizeCategoryAssignments([
+    { category_slug: categorySlug, sub_category: subCategorySlug },
+    ...additionalResult.assignments,
+  ]);
+
   const freePlanExists = parseYn(row[8], true);
   if (freePlanExists === null) {
     return { error: '무료 플랜 존재(Y/N) 값이 올바르지 않습니다.' };
@@ -429,6 +557,7 @@ export function excelRowToToolInput(
     name_en: String(row[1] ?? '').trim(),
     category_slug: categorySlug,
     sub_category: subCategorySlug,
+    category_assignments,
     logo_url: logoUrlRaw || null,
     homepage_url: String(row[5] ?? '').trim(),
     description: String(row[6] ?? '').trim(),
