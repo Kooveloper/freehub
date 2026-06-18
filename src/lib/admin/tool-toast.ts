@@ -36,11 +36,19 @@ export function buildAdminToolsListUrl(filters: {
   q?: string;
   category?: string;
   sub?: string;
+  page?: number;
+  size?: number;
 }): string {
   const params = new URLSearchParams();
   if (filters.q?.trim()) params.set('q', filters.q.trim());
   if (filters.category) params.set('category', filters.category);
   if (filters.sub) params.set('sub', filters.sub);
+  if (filters.page && filters.page > 1) {
+    params.set('page', String(filters.page));
+  }
+  if (filters.size && filters.size !== 10) {
+    params.set('size', String(filters.size));
+  }
 
   const query = params.toString();
   return query ? `/admin/tools?${query}` : '/admin/tools';

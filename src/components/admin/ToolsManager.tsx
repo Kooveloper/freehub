@@ -31,6 +31,16 @@ import type { AdminCategory, AdminSubCategory } from '@/lib/supabase/admin-queri
 import { cn, formatFreeLimit } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
+type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
+
+function parsePageSize(value: string | null): PageSize {
+  const parsed = Number(value);
+  return PAGE_SIZE_OPTIONS.includes(parsed as PageSize)
+    ? (parsed as PageSize)
+    : 10;
+}
+
 interface ToolsManagerProps {
   tools: Tool[];
   categories: AdminCategory[];
@@ -104,12 +114,20 @@ export function ToolsManager({
   const [importError, setImportError] = useState<string | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<ReviewListFilter | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(10);
 
   useEffect(() => {
     setSearch(searchParams.get('q') ?? '');
     setCategoryFilter(searchParams.get('category') ?? '');
     setSubCategoryFilter(searchParams.get('sub') ?? '');
+    setPage(Math.max(1, Number(searchParams.get('page')) || 1));
+    setPageSize(parsePageSize(searchParams.get('size')));
   }, [searchParams]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter, subCategoryFilter]);
 
   useEffect(() => {
     const queued = consumeAdminToolToast();
@@ -124,8 +142,10 @@ export function ToolsManager({
         q: search,
         category: categoryFilter,
         sub: subCategoryFilter,
+        page,
+        size: pageSize,
       }),
-    [search, categoryFilter, subCategoryFilter],
+    [search, categoryFilter, subCategoryFilter, page, pageSize],
   );
 
   const categoryMap = useMemo(
@@ -162,6 +182,20 @@ export function ToolsManager({
       return matchesSearch && matchesCategory;
     });
   }, [tools, search, categoryFilter, subCategoryFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredTools.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+
+  const paginatedTools = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredTools.slice(start, start + pageSize);
+  }, [filteredTools, currentPage, pageSize]);
+
+  useEffect(() => {
+    if (page !== currentPage) {
+      setPage(currentPage);
+    }
+  }, [page, currentPage]);
 
   const handleImport = async (file: File) => {
     setImporting(true);
@@ -381,7 +415,7 @@ export function ToolsManager({
                   </td>
                 </tr>
               ) : (
-                filteredTools.map((tool) => {
+                paginatedTools.map((tool) => {
                   const isPending = pendingId === tool.id;
                   const freeLimitLabel = tool.free_plan_exists
                     ? formatFreeLimit(
@@ -492,6 +526,63 @@ export function ToolsManager({
             </tbody>
           </table>
         </div>
+
+        {filteredTools.length > 0 && (
+          <div className="flex flex-col gap-3 border-t border-gray-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+              <span>
+                총 {filteredTools.length.toLocaleString('ko-KR')}건
+              </span>
+              <label className="flex items-center gap-2">
+                <span className="text-gray-500">보기</span>
+                <select
+                  value={pageSize}
+                  onChange={(event) => {
+                    setPageSize(parsePageSize(event.target.value));
+                    setPage(1);
+                  }}
+                  className="rounded-lg border border-gray-300 px-2 py-1 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                >
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <option key={size} value={size}>
+                      {size}개
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                className={cn(
+                  'rounded-lg border px-3 py-1.5 text-sm',
+                  currentPage <= 1 ? 'opacity-40' : 'hover:bg-gray-50',
+                )}
+              >
+                이전
+              </button>
+              <span className="text-sm text-gray-600">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() =>
+                  setPage((current) => Math.min(totalPages, current + 1))
+                }
+                className={cn(
+                  'rounded-lg border px-3 py-1.5 text-sm',
+                  currentPage >= totalPages ? 'opacity-40' : 'hover:bg-gray-50',
+                )}
+              >
+                다음
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Toast toast={toast} onClose={hideToast} />

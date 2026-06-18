@@ -72,7 +72,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const title = getPageTitle(pathname);
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50">
       <AdminSidebar />
 
       <div className="flex min-w-0 flex-1 flex-col">

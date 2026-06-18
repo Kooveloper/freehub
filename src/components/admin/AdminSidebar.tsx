@@ -2,6 +2,7 @@
 
 import {
   BarChart3,
+  ChevronDown,
   ExternalLink,
   FileText,
   Folder,
@@ -17,6 +18,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { cn } from '@/lib/utils';
 
@@ -49,10 +51,60 @@ function isActivePath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function CollapsibleNavSection({
+  title,
+  icon: Icon,
+  open,
+  onToggle,
+  active,
+  children,
+}: {
+  title: string;
+  icon: typeof BarChart3;
+  open: boolean;
+  onToggle: () => void;
+  active: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="pt-3">
+      <button
+        type="button"
+        onClick={onToggle}
+        className={cn(
+          'mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors',
+          active ? 'text-slate-300' : 'text-slate-500 hover:text-slate-300',
+        )}
+        aria-expanded={open}
+      >
+        <Icon className="h-3.5 w-3.5 shrink-0" />
+        <span className="flex-1">{title}</span>
+        <ChevronDown
+          className={cn(
+            'h-3.5 w-3.5 shrink-0 transition-transform',
+            open ? 'rotate-0' : '-rotate-90',
+          )}
+        />
+      </button>
+      {open && children}
+    </div>
+  );
+}
+
 export function AdminSidebar() {
   const pathname = usePathname();
   const analyticsActive = pathname.startsWith('/admin/analytics');
   const blogActive = pathname.startsWith('/admin/blog');
+  const [analyticsOpen, setAnalyticsOpen] = useState(analyticsActive);
+  const [blogOpen, setBlogOpen] = useState(blogActive);
+
+  useEffect(() => {
+    if (analyticsActive) setAnalyticsOpen(true);
+  }, [analyticsActive]);
+
+  useEffect(() => {
+    if (blogActive) setBlogOpen(true);
+  }, [blogActive]);
 
   return (
     <aside className="hidden w-60 shrink-0 flex-col bg-slate-900 lg:flex">
@@ -89,11 +141,13 @@ export function AdminSidebar() {
           );
         })}
 
-        <div className="pt-3">
-          <p className="mb-1 flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <BarChart3 className="h-3.5 w-3.5" />
-            통계
-          </p>
+        <CollapsibleNavSection
+          title="통계"
+          icon={BarChart3}
+          open={analyticsOpen}
+          onToggle={() => setAnalyticsOpen((current) => !current)}
+          active={analyticsActive}
+        >
           {ANALYTICS_ITEMS.map(({ href, label }) => {
             const active =
               href === '/admin/analytics'
@@ -116,13 +170,15 @@ export function AdminSidebar() {
               </Link>
             );
           })}
-        </div>
+        </CollapsibleNavSection>
 
-        <div className="pt-3">
-          <p className="mb-1 flex items-center gap-2 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
-            <NotebookPen className="h-3.5 w-3.5" />
-            블로그
-          </p>
+        <CollapsibleNavSection
+          title="블로그"
+          icon={NotebookPen}
+          open={blogOpen}
+          onToggle={() => setBlogOpen((current) => !current)}
+          active={blogActive}
+        >
           {BLOG_ITEMS.map(({ href, label }) => {
             const active =
               href === '/admin/blog'
@@ -147,7 +203,7 @@ export function AdminSidebar() {
               </Link>
             );
           })}
-        </div>
+        </CollapsibleNavSection>
       </nav>
 
       <div className="space-y-1 border-t border-slate-800 px-3 py-4">
