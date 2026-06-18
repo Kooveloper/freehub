@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { Toast, useToast } from '@/components/admin/Toast';
+import {
+  ADMIN_TABLE_ACTIONS_CLASS,
+  ADMIN_TABLE_CLASS,
+  ADMIN_TABLE_HEAD_ROW_CLASS,
+} from '@/components/admin/admin-table';
 import { Badge } from '@/components/ui/Badge';
 import type { AdminUser } from '@/lib/supabase/admin-users';
 import { cn } from '@/lib/utils';
@@ -101,9 +106,9 @@ export function UsersManager({ users }: UsersManagerProps) {
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1020px] text-sm">
+          <table className={cn(ADMIN_TABLE_CLASS, 'min-w-[1020px]')}>
             <thead>
-              <tr className="border-b border-gray-100 text-left text-gray-500">
+              <tr className={ADMIN_TABLE_HEAD_ROW_CLASS}>
                 <th className="w-14 px-4 py-3 font-medium">No.</th>
                 <th className="px-4 py-3 font-medium">가입일/시간</th>
                 <th className="px-4 py-3 font-medium">닉네임</th>
@@ -144,7 +149,7 @@ export function UsersManager({ users }: UsersManagerProps) {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
+                      <div className="admin-table-actions-wrap">
                         <Badge variant={user.email_verified ? 'green' : 'yellow'}>
                           {user.email_verified ? '인증됨' : '미인증'}
                         </Badge>

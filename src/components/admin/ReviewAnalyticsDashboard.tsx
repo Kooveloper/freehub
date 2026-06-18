@@ -9,6 +9,7 @@ import {
 } from '@/components/admin/ReviewListModal';
 import type { AdminReviewAnalyticsData } from '@/lib/admin/review-analytics';
 import type { AnalyticsPeriod } from '@/lib/admin/analytics';
+import { ADMIN_DASHBOARD_TABLE_CLASS } from '@/components/admin/admin-table';
 import { cn } from '@/lib/utils';
 
 const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
@@ -280,11 +281,11 @@ export function ReviewAnalyticsDashboard() {
 
             <div className="overflow-x-auto">
               {activeTab === 'categories' && (
-                <table className="w-full min-w-[640px] text-sm">
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[640px]')}>
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-gray-500">
+                    <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">카테고리</th>
-                      <th className="px-5 py-3 text-right font-medium">리뷰 수</th>
+                      <th className="px-5 py-3 font-medium">리뷰 수</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -305,7 +306,7 @@ export function ReviewAnalyticsDashboard() {
                             {row.category_slug}
                           </span>
                         </td>
-                        <td className="px-5 py-3 text-right tabular-nums text-gray-900">
+                        <td className="px-5 py-3 tabular-nums text-gray-900">
                           {row.review_count.toLocaleString('ko-KR')}
                         </td>
                       </tr>
@@ -315,12 +316,12 @@ export function ReviewAnalyticsDashboard() {
               )}
 
               {activeTab === 'subCategories' && (
-                <table className="w-full min-w-[720px] text-sm">
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[720px]')}>
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-gray-500">
+                    <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">서브카테고리</th>
                       <th className="px-5 py-3 font-medium">카테고리</th>
-                      <th className="px-5 py-3 text-right font-medium">리뷰 수</th>
+                      <th className="px-5 py-3 font-medium">리뷰 수</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -339,7 +340,7 @@ export function ReviewAnalyticsDashboard() {
                           {row.sub_category_name}
                         </td>
                         <td className="px-5 py-3 text-gray-600">{row.category_name}</td>
-                        <td className="px-5 py-3 text-right tabular-nums text-gray-900">
+                        <td className="px-5 py-3 tabular-nums text-gray-900">
                           {row.review_count.toLocaleString('ko-KR')}
                         </td>
                       </tr>
@@ -349,13 +350,12 @@ export function ReviewAnalyticsDashboard() {
               )}
 
               {activeTab === 'tools' && (
-                <table className="w-full min-w-[900px] text-sm">
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[900px]')}>
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-gray-500">
+                    <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">서비스</th>
-                      <th className="px-5 py-3 font-medium">카테고리</th>
-                      <th className="px-5 py-3 font-medium">서브카테고리</th>
-                      <th className="px-5 py-3 text-right font-medium">리뷰 수</th>
+                      <th className="px-5 py-3 font-medium">카테고리 - 서브카테고리</th>
+                      <th className="px-5 py-3 font-medium">리뷰 수</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -376,11 +376,12 @@ export function ReviewAnalyticsDashboard() {
                             {row.tool_slug}
                           </div>
                         </td>
-                        <td className="px-5 py-3 text-gray-600">{row.category_name}</td>
                         <td className="px-5 py-3 text-gray-600">
-                          {row.sub_category_name ?? '—'}
+                          {row.sub_category_name
+                            ? `${row.category_name} - ${row.sub_category_name}`
+                            : row.category_name}
                         </td>
-                        <td className="px-5 py-3 text-right tabular-nums text-gray-900">
+                        <td className="px-5 py-3 tabular-nums text-gray-900">
                           {row.review_count.toLocaleString('ko-KR')}
                         </td>
                       </tr>

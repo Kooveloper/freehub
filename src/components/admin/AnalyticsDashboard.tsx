@@ -8,6 +8,7 @@ import type {
   AdminAnalyticsData,
   AnalyticsPeriod,
 } from '@/lib/admin/analytics';
+import { ADMIN_DASHBOARD_TABLE_CLASS } from '@/components/admin/admin-table';
 import { cn } from '@/lib/utils';
 
 const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
@@ -267,16 +268,12 @@ export function AnalyticsDashboard() {
 
             <div className="overflow-x-auto">
               {activeTab === 'categories' && (
-                <table className="w-full min-w-[640px] text-sm">
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[640px]')}>
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-gray-500">
+                    <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">카테고리</th>
-                      <th className="px-5 py-3 text-right font-medium">
-                        기간 조회수
-                      </th>
-                      <th className="px-5 py-3 text-right font-medium">
-                        누적 조회수
-                      </th>
+                      <th className="px-5 py-3 font-medium">기간 조회수</th>
+                      <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -301,10 +298,10 @@ export function AnalyticsDashboard() {
                               {row.category_slug}
                             </span>
                           </td>
-                          <td className="px-5 py-3 text-right tabular-nums text-gray-900">
+                          <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
-                          <td className="px-5 py-3 text-right tabular-nums text-gray-500">
+                          <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>
                         </tr>
@@ -315,17 +312,13 @@ export function AnalyticsDashboard() {
               )}
 
               {activeTab === 'subCategories' && (
-                <table className="w-full min-w-[720px] text-sm">
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[720px]')}>
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-gray-500">
+                    <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">서브카테고리</th>
                       <th className="px-5 py-3 font-medium">카테고리</th>
-                      <th className="px-5 py-3 text-right font-medium">
-                        기간 조회수
-                      </th>
-                      <th className="px-5 py-3 text-right font-medium">
-                        누적 조회수
-                      </th>
+                      <th className="px-5 py-3 font-medium">기간 조회수</th>
+                      <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -353,10 +346,10 @@ export function AnalyticsDashboard() {
                           <td className="px-5 py-3 text-gray-600">
                             {row.category_name}
                           </td>
-                          <td className="px-5 py-3 text-right tabular-nums text-gray-900">
+                          <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
-                          <td className="px-5 py-3 text-right tabular-nums text-gray-500">
+                          <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>
                         </tr>
@@ -367,25 +360,20 @@ export function AnalyticsDashboard() {
               )}
 
               {activeTab === 'tools' && (
-                <table className="w-full min-w-[900px] text-sm">
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[900px]')}>
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-gray-500">
+                    <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">서비스</th>
-                      <th className="px-5 py-3 font-medium">카테고리</th>
-                      <th className="px-5 py-3 font-medium">서브카테고리</th>
-                      <th className="px-5 py-3 text-right font-medium">
-                        기간 조회수
-                      </th>
-                      <th className="px-5 py-3 text-right font-medium">
-                        누적 조회수
-                      </th>
+                      <th className="px-5 py-3 font-medium">카테고리 - 서브카테고리</th>
+                      <th className="px-5 py-3 font-medium">기간 조회수</th>
+                      <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredTools.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={5}
+                          colSpan={4}
                           className="px-5 py-10 text-center text-gray-400"
                         >
                           데이터가 없습니다.
@@ -409,15 +397,14 @@ export function AnalyticsDashboard() {
                             </div>
                           </td>
                           <td className="px-5 py-3 text-gray-600">
-                            {row.category_name}
+                            {row.sub_category_name
+                              ? `${row.category_name} - ${row.sub_category_name}`
+                              : row.category_name}
                           </td>
-                          <td className="px-5 py-3 text-gray-600">
-                            {row.sub_category_name ?? '—'}
-                          </td>
-                          <td className="px-5 py-3 text-right tabular-nums text-gray-900">
+                          <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
-                          <td className="px-5 py-3 text-right tabular-nums text-gray-500">
+                          <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>
                         </tr>

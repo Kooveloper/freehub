@@ -5,6 +5,10 @@ import { useMemo, useState } from 'react';
 
 import { Badge, type BadgeVariant } from '@/components/ui/Badge';
 import {
+  ADMIN_TABLE_CLASS,
+  ADMIN_TABLE_HEAD_ROW_CLASS,
+} from '@/components/admin/admin-table';
+import {
   ADMIN_ITEM_STATUSES,
   ADMIN_STATUS_LABELS,
   type AdminItemStatus,
@@ -142,9 +146,9 @@ export function RequestsManager({ requests }: RequestsManagerProps) {
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1080px] text-sm">
+          <table className={cn(ADMIN_TABLE_CLASS, 'min-w-[1080px]')}>
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
+              <tr className={ADMIN_TABLE_HEAD_ROW_CLASS}>
                 <th className="px-4 py-3 font-medium">제목</th>
                 <th className="px-4 py-3 font-medium">내용</th>
                 <th className="px-4 py-3 font-medium">이메일</th>

@@ -10,6 +10,10 @@ import Link from 'next/link';
 import type { ComponentType } from 'react';
 
 import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
+import {
+  ADMIN_DASHBOARD_TABLE_CLASS,
+  ADMIN_DASHBOARD_HEAD_ROW_CLASS,
+} from '@/components/admin/admin-table';
 import { Badge } from '@/components/ui/Badge';
 import { ADMIN_STATUS_LABELS, isAdminItemStatus } from '@/constants/admin-status';
 import { CATEGORIES } from '@/constants/categories';
@@ -157,9 +161,9 @@ export default async function AdminDashboardPage() {
           </Link>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={ADMIN_DASHBOARD_TABLE_CLASS}>
             <thead>
-              <tr className="border-b border-gray-100 text-left text-gray-500">
+              <tr className={ADMIN_DASHBOARD_HEAD_ROW_CLASS}>
                 <th className="px-5 py-3 font-medium">카테고리</th>
                 <th className="px-5 py-3 font-medium">서비스 수</th>
                 <th className="px-5 py-3 font-medium">조회수 (누적 / 30일)</th>
@@ -218,9 +222,9 @@ export default async function AdminDashboardPage() {
           <h2 className="font-semibold text-gray-900">최근 추가 서비스</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={ADMIN_DASHBOARD_TABLE_CLASS}>
             <thead>
-              <tr className="border-b border-gray-100 text-left text-gray-500">
+              <tr className={ADMIN_DASHBOARD_HEAD_ROW_CLASS}>
                 <th className="px-5 py-3 font-medium">서비스명</th>
                 <th className="px-5 py-3 font-medium">카테고리</th>
                 <th className="px-5 py-3 font-medium">조회수 (누적 / 30일)</th>

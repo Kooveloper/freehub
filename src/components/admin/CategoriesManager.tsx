@@ -17,6 +17,11 @@ import {
 } from '@/components/admin/CategoryModal';
 import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import {
+  ADMIN_TABLE_ACTIONS_CLASS,
+  ADMIN_TABLE_CLASS,
+  ADMIN_TABLE_HEAD_ROW_CLASS,
+} from '@/components/admin/admin-table';
+import {
   SubCategoryModal,
   type SubCategoryFormValues,
 } from '@/components/admin/SubCategoryModal';
@@ -282,9 +287,9 @@ export function CategoriesManager({
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-sm">
+          <table className={cn(ADMIN_TABLE_CLASS, 'min-w-[960px]')}>
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
+              <tr className={ADMIN_TABLE_HEAD_ROW_CLASS}>
                 <th className="px-4 py-3 font-medium" />
                 <th className="px-4 py-3 font-medium">아이콘</th>
                 <th className="px-4 py-3 font-medium">이름</th>
@@ -391,7 +396,7 @@ export function CategoriesManager({
                           </button>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1">
+                          <div className={ADMIN_TABLE_ACTIONS_CLASS}>
                             <span className="w-6 text-center text-gray-700">
                               {category.sort_order}
                             </span>
@@ -426,7 +431,7 @@ export function CategoriesManager({
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-1">
+                          <div className={ADMIN_TABLE_ACTIONS_CLASS}>
                             <button
                               type="button"
                               disabled={isPending}
@@ -472,9 +477,9 @@ export function CategoriesManager({
                                   등록된 서브카테고리가 없습니다.
                                 </p>
                               ) : (
-                                <table className="w-full text-sm">
+                                <table className={ADMIN_TABLE_CLASS}>
                                   <thead>
-                                    <tr className="border-b border-gray-100 text-left text-xs text-gray-500">
+                                    <tr className="border-b border-gray-100 text-xs text-gray-500">
                                       <th className="px-4 py-2 font-medium">이름</th>
                                       <th className="px-4 py-2 font-medium">슬러그</th>
                                       <th className="px-4 py-2 font-medium">서비스 수</th>
@@ -525,7 +530,7 @@ export function CategoriesManager({
                                             </Badge>
                                           </td>
                                           <td className="px-4 py-2">
-                                            <div className="flex items-center gap-1">
+                                            <div className={ADMIN_TABLE_ACTIONS_CLASS}>
                                               <button
                                                 type="button"
                                                 disabled={subPending}

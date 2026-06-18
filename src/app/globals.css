@@ -45,3 +45,24 @@ body {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.admin-data-table th,
+.admin-data-table td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.admin-data-table .admin-table-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.admin-data-table .admin-table-actions-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}

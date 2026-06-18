@@ -10,7 +10,7 @@ export function ViewStatsCell({
   periodLabel = '30일',
 }: ViewStatsCellProps) {
   return (
-    <div className="tabular-nums text-gray-700">
+    <div className="inline-flex flex-col items-center tabular-nums text-gray-700">
       <div className="font-medium">{lifetime.toLocaleString('ko-KR')}</div>
       {period !== undefined && (
         <div className="mt-0.5 text-xs text-gray-500">

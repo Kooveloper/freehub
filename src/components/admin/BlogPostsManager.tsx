@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { Toast, useToast } from '@/components/admin/Toast';
+import {
+  ADMIN_TABLE_ACTIONS_CLASS,
+  ADMIN_TABLE_CLASS,
+  ADMIN_TABLE_HEAD_ROW_CLASS,
+} from '@/components/admin/admin-table';
 import { Badge } from '@/components/ui/Badge';
 import { CATEGORIES } from '@/constants/categories';
 import {
@@ -234,8 +239,8 @@ export function BlogPostsManager({ posts: initialPosts }: BlogPostsManagerProps)
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 text-gray-600">
+          <table className={cn(ADMIN_TABLE_CLASS, 'min-w-[800px]')}>
+            <thead className={ADMIN_TABLE_HEAD_ROW_CLASS}>
               <tr>
                 <th className="px-4 py-3">
                   <input
@@ -299,7 +304,7 @@ export function BlogPostsManager({ posts: initialPosts }: BlogPostsManagerProps)
                       {formatBlogDateTime(post.created_at)}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
+                      <div className={ADMIN_TABLE_ACTIONS_CLASS}>
                         <Link
                           href={`/admin/blog/${post.id}`}
                           className="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-blue-600"

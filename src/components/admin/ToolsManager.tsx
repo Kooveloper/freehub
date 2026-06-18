@@ -8,6 +8,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ViewStatsCell } from '@/components/admin/ViewStatsCell';
 import { Toast, useToast } from '@/components/admin/Toast';
 import {
+  ADMIN_TABLE_ACTIONS_CLASS,
+  ADMIN_TABLE_BODY_CELL_CLASS,
+  ADMIN_TABLE_BODY_ROW_CLASS,
+  ADMIN_TABLE_CLASS,
+  ADMIN_TABLE_HEAD_CELL_CLASS,
+  ADMIN_TABLE_HEAD_ROW_CLASS,
+} from '@/components/admin/admin-table';
+import {
   ReviewListModal,
   type ReviewListFilter,
 } from '@/components/admin/ReviewListModal';
@@ -18,7 +26,7 @@ import {
 } from '@/lib/admin/tool-toast';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
-import { toolInSubCategory, toolMatchesAdminFilters } from '@/lib/tool-categories';
+import { toolMatchesAdminFilters } from '@/lib/tool-categories';
 import type { AdminCategory, AdminSubCategory } from '@/lib/supabase/admin-queries';
 import { cn, formatFreeLimit } from '@/lib/utils';
 import type { Tool } from '@/types/tool';
@@ -43,6 +51,24 @@ function formatUpdatedAt(date: string) {
     month: '2-digit',
     day: '2-digit',
   });
+}
+
+function formatAssignmentLabel(
+  assignment: { category_slug: string; sub_category: string | null },
+  categoryMap: Map<string, string>,
+  subCategoryMap: Map<string, string>,
+): string {
+  const categoryName =
+    categoryMap.get(assignment.category_slug) ?? assignment.category_slug;
+
+  if (!assignment.sub_category) {
+    return categoryName;
+  }
+
+  const subCategoryName =
+    subCategoryMap.get(assignment.sub_category) ?? assignment.sub_category;
+
+  return `${categoryName} - ${subCategoryName}`;
 }
 
 export function ToolsManager({
@@ -317,17 +343,41 @@ export function ToolsManager({
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] text-sm">
+          <table className={cn(ADMIN_TABLE_CLASS, 'min-w-[980px]')}>
             <thead>
-              <tr className="border-b border-gray-200 bg-gray-50 text-left text-gray-500">
-                <th className="px-4 py-3 font-medium">로고</th>
-                <th className="px-4 py-3 font-medium">서비스명</th>
-                <th className="px-4 py-3 font-medium">카테고리 / 서브</th>
-                <th className="px-4 py-3 font-medium">무료 한도</th>
-                <th className="px-4 py-3 font-medium">조회수 (누적 / 30일)</th>
-                <th className="px-4 py-3 font-medium">검증</th>
-                <th className="px-4 py-3 font-medium">수정일</th>
-                <th className="px-4 py-3 font-medium">액션</th>
+              <tr className={ADMIN_TABLE_HEAD_ROW_CLASS}>
+                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-16 px-2')}>
+                  로고
+                </th>
+                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'min-w-[132px]')}>
+                  서비스명
+                </th>
+                <th
+                  className={cn(
+                    ADMIN_TABLE_HEAD_CELL_CLASS,
+                    'min-w-[240px] whitespace-nowrap',
+                  )}
+                >
+                  카테고리 - 서브카테고리
+                </th>
+                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-24 px-2')}>
+                  무료 한도
+                </th>
+                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-28 px-2')}>
+                  조회수
+                  <span className="mt-0.5 block text-[11px] font-normal text-gray-400">
+                    누적 / 30일
+                  </span>
+                </th>
+                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-20 px-2')}>
+                  검증
+                </th>
+                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-24 px-2')}>
+                  수정일
+                </th>
+                <th className={cn(ADMIN_TABLE_HEAD_CELL_CLASS, 'w-24 px-2')}>
+                  액션
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -354,75 +404,66 @@ export function ToolsManager({
                     : '무료 플랜 없음';
 
                   return (
-                    <tr
-                      key={tool.id}
-                      className="border-b border-gray-100 last:border-0"
-                    >
-                      <td className="px-4 py-3">
-                        <ToolLogo name={tool.name} logoUrl={tool.logo_url} size={40} />
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">
-                          {tool.name}
+                    <tr key={tool.id} className={ADMIN_TABLE_BODY_ROW_CLASS}>
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
+                        <div className="flex justify-center">
+                          <ToolLogo name={tool.name} logoUrl={tool.logo_url} size={40} />
                         </div>
+                      </td>
+                      <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
+                        <div className="font-medium text-gray-900">{tool.name}</div>
                         <div className="mt-0.5 font-mono text-xs text-gray-500">
                           {tool.slug}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'text-gray-700')}>
                         <div className="space-y-1">
                           {(tool.category_assignments ?? []).length > 0 ? (
                             tool.category_assignments!.map((assignment) => (
                               <div
                                 key={`${assignment.category_slug}-${assignment.sub_category ?? 'none'}`}
+                                className="text-sm leading-snug"
                               >
-                                <div>
-                                  {categoryMap.get(assignment.category_slug) ??
-                                    assignment.category_slug}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {assignment.sub_category
-                                    ? subCategoryMap.get(assignment.sub_category) ??
-                                      assignment.sub_category
-                                    : '—'}
-                                </div>
+                                {formatAssignmentLabel(
+                                  assignment,
+                                  categoryMap,
+                                  subCategoryMap,
+                                )}
                               </div>
                             ))
                           ) : (
-                            <>
-                              <div>
-                                {categoryMap.get(tool.category_slug) ??
-                                  tool.category_slug}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {tool.sub_category
-                                  ? subCategoryMap.get(tool.sub_category) ??
-                                    tool.sub_category
-                                  : '—'}
-                              </div>
-                            </>
+                            <div className="text-sm leading-snug">
+                              {formatAssignmentLabel(
+                                {
+                                  category_slug: tool.category_slug,
+                                  sub_category: tool.sub_category ?? null,
+                                },
+                                categoryMap,
+                                subCategoryMap,
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-gray-700">
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2 text-gray-700')}>
                         {freeLimitLabel}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
                         <ViewStatsCell
                           lifetime={tool.view_count}
                           period={periodViewsByTool[tool.id] ?? 0}
                         />
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
                         <Badge variant={tool.is_verified ? 'green' : 'gray'}>
                           {tool.is_verified ? '검증됨' : '미검증'}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-gray-600">
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2 text-gray-600')}>
                         {formatUpdatedAt(tool.updated_at)}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
+                      <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'px-2')}>
+                        <div className={ADMIN_TABLE_ACTIONS_CLASS}>
                           <button
                             type="button"
                             onClick={() => {
