@@ -1,5 +1,6 @@
 export const ADMIN_COOKIE_NAME = 'admin_token';
-export const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 24;
+/** 브라우저 세션 토큰 유효 시간 (쿠키는 세션 쿠키로만 저장) */
+export const ADMIN_COOKIE_MAX_AGE = 60 * 60 * 8;
 
 async function signPayload(payload: string, secret: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -21,7 +22,7 @@ async function signPayload(payload: string, secret: string): Promise<string> {
     .join('');
 }
 
-/** 24시간 유효 admin_token 생성 */
+/** admin_token 생성 (브라우저를 닫으면 세션 쿠키와 함께 로그아웃) */
 export async function createAdminToken(): Promise<string> {
   const secret = process.env.ADMIN_SESSION_SECRET;
   if (!secret) {

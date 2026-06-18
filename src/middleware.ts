@@ -11,7 +11,13 @@ const OAUTH_ERROR_CODES = new Set([
 ]);
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const { pathname } = request.nextUrl;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-pathname', pathname);
+
+  let response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -25,7 +31,9 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
-          response = NextResponse.next({ request });
+          response = NextResponse.next({
+            request: { headers: requestHeaders },
+          });
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
           });
@@ -36,7 +44,6 @@ export async function middleware(request: NextRequest) {
 
   await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
   const oauthErrorCode = request.nextUrl.searchParams.get('error_code');
 
   if (
@@ -51,6 +58,11 @@ export async function middleware(request: NextRequest) {
   }
 
   if (pathname.startsWith('/admin')) {
+    response.headers.set(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, private',
+    );
+
     if (pathname === '/admin/login') {
       return response;
     }
@@ -58,7 +70,20 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
 
     if (!token || !(await verifyAdminToken(token))) {
-      return NextResponse.redirect(new URL('/admin/login', request.url));
+      const loginUrl = new URL('/admin/login', request.url);
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      redirectResponse.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, private',
+      );
+      redirectResponse.cookies.set(ADMIN_COOKIE_NAME, '', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 0,
+        path: '/',
+      });
+      return redirectResponse;
     }
   }
 

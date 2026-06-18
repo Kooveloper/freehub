@@ -6,20 +6,28 @@ import { Footer } from '@/components/layout/Footer';
 import { HeaderWrapper } from '@/components/layout/HeaderWrapper';
 import { LoginPromptModalHost } from '@/components/ui/LoginPromptModalHost';
 
+interface PublicLayoutChromeProps {
+  children: React.ReactNode;
+  isAdminRoute: boolean;
+}
+
 export function PublicLayoutChrome({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  isAdminRoute,
+}: PublicLayoutChromeProps) {
   const pathname = usePathname();
-  const isAdmin = pathname.startsWith('/admin');
+  const isAdmin = isAdminRoute || pathname.startsWith('/admin');
+
+  if (isAdmin) {
+    return <main className="flex-1">{children}</main>;
+  }
 
   return (
     <>
-      {!isAdmin && <HeaderWrapper />}
+      <HeaderWrapper />
       <main className="flex-1">{children}</main>
-      {!isAdmin && <Footer />}
-      {!isAdmin && <LoginPromptModalHost />}
+      <Footer />
+      <LoginPromptModalHost />
     </>
   );
 }

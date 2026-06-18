@@ -2,7 +2,6 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 import {
-  ADMIN_COOKIE_MAX_AGE,
   ADMIN_COOKIE_NAME,
   createAdminToken,
 } from '@/lib/admin-auth';
@@ -37,7 +36,6 @@ export async function POST(request: Request) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: ADMIN_COOKIE_MAX_AGE,
     path: '/',
   });
 
