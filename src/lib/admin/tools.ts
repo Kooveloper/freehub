@@ -6,6 +6,7 @@ import {
 import type { FreeLimitType, ToolCategoryAssignment } from '@/types/tool';
 
 export const SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
+const FREE_LIMIT_UNIT_MAX_LENGTH = 80;
 
 export const FREE_LIMIT_TYPE_LABELS: Record<FreeLimitType, string> = {
   daily: '일별',
@@ -187,8 +188,8 @@ export function validateToolInput(body: unknown): ToolFormInput | null {
     const unitEn = String(input.free_limit_unit_en ?? '').trim();
 
     if (!Number.isFinite(amount) || amount < 0) return null;
-    if (!unit || unit.length > 20) return null;
-    if (unitEn.length > 20) return null;
+    if (!unit || unit.length > FREE_LIMIT_UNIT_MAX_LENGTH) return null;
+    if (unitEn.length > FREE_LIMIT_UNIT_MAX_LENGTH) return null;
 
     freeLimitAmount = amount;
     freeLimitUnit = unit;
