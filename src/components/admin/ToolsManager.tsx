@@ -69,11 +69,16 @@ function CategoryAssignmentDisplay({
     : null;
 
   return (
-    <div className="leading-snug">
-      <div className="text-gray-700">{categoryName}</div>
-      <div className="text-xs text-gray-500">
-        {subCategoryName ?? '—'}
-      </div>
+    <div className="flex items-baseline gap-1 truncate leading-snug">
+      <span className="truncate text-gray-700">{categoryName}</span>
+      {subCategoryName ? (
+        <>
+          <span className="shrink-0 text-gray-400">-</span>
+          <span className="truncate text-xs text-gray-500">{subCategoryName}</span>
+        </>
+      ) : (
+        <span className="shrink-0 text-xs text-gray-500">—</span>
+      )}
     </div>
   );
 }
