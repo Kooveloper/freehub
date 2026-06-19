@@ -204,6 +204,7 @@ export function HomeCategoryExplorer({
             subEdgeBleed="card"
             viewAllHref={`/category/${activeCategory.slug}`}
             viewAllLabel={t('home.viewAll')}
+            totalCount={displayedTools.length}
           />
 
           {loadingSlug === activeSlug ? (

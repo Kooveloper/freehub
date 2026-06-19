@@ -24,15 +24,16 @@ interface CategoryBrowseToolbarProps {
   filterDisabled?: boolean;
   className?: string;
   subEdgeBleed?: 'page' | 'card' | 'none';
-  /** 모바일에서 타이틀 옆에 필터/정렬 또는 전체보기 배치 */
+  /** 모바일에서 타이틀 옆에 필터/정렬 배치 */
   titleSlot?: React.ReactNode;
   /** 타이틀 아래 설명·메타 (모바일) */
   titleMeta?: React.ReactNode;
   /** 모바일 타이틀 행 왼쪽 (카테고리 아이콘 등) */
   leadingSlot?: React.ReactNode;
-  /** 설정 시 전체보기 버튼 표시 + 필터/정렬을 한 행 아래로 */
+  /** 홈 탐색: 하단 전체보기 + 총 개수 행 */
   viewAllHref?: string;
   viewAllLabel?: string;
+  totalCount?: number;
 }
 
 function ViewAllButton({
@@ -57,6 +58,11 @@ function ViewAllButton({
   );
 }
 
+function formatTotalCount(count: number, locale: 'ko' | 'en') {
+  const formatted = count.toLocaleString(locale === 'en' ? 'en-US' : 'ko-KR');
+  return locale === 'en' ? `Total ${formatted}` : `총 ${formatted}개`;
+}
+
 /** 서브카테고리 + 필터/정렬 — PC: 한 줄, 모바일: 타이틀 옆 필터 + 서브 스크롤 */
 export function CategoryBrowseToolbar({
   subCategories,
@@ -79,6 +85,7 @@ export function CategoryBrowseToolbar({
   leadingSlot,
   viewAllHref,
   viewAllLabel = '전체보기',
+  totalCount,
 }: CategoryBrowseToolbarProps) {
   const hasSubs = subCategories.length > 0;
   const useViewAllLayout = Boolean(viewAllHref);
@@ -102,46 +109,14 @@ export function CategoryBrowseToolbar({
           <div className="flex items-start gap-3">
             {leadingSlot}
             <div className="min-w-0 flex-1">
-              <div className="flex items-start justify-between gap-1.5">
-                <div className="min-w-0 flex-1 pt-0.5">{titleSlot}</div>
-                {useViewAllLayout && viewAllHref ? (
-                  <ViewAllButton href={viewAllHref} label={viewAllLabel} />
-                ) : (
-                  <ToolFilterBar
-                    {...filterBarProps}
-                    dense
-                    className="shrink-0"
-                  />
-                )}
-              </div>
+              <div className="pt-0.5">{titleSlot}</div>
               {titleMeta && <div className="mt-1">{titleMeta}</div>}
             </div>
           </div>
         </div>
       )}
 
-      {useViewAllLayout && viewAllHref && (
-        <>
-          <div
-            className={cn(
-              'mb-3 flex justify-end',
-              titleSlot ? 'hidden lg:flex' : 'flex',
-            )}
-          >
-            <ViewAllButton href={viewAllHref} label={viewAllLabel} />
-          </div>
-          <div className="mb-3 flex justify-end">
-            <ToolFilterBar {...filterBarProps} className="shrink-0" />
-          </div>
-        </>
-      )}
-
-      <div
-        className={cn(
-          'flex flex-col gap-3',
-          !useViewAllLayout && 'lg:flex-row lg:items-center lg:gap-4',
-        )}
-      >
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
         {hasSubs && (
           <div className="min-w-0 lg:flex-1">
             <SubCategoryToggleGroup
@@ -156,17 +131,29 @@ export function CategoryBrowseToolbar({
           </div>
         )}
 
-        {!useViewAllLayout && (
-          <ToolFilterBar
-            {...filterBarProps}
-            className={cn(
-              'shrink-0',
-              titleSlot ? 'hidden lg:flex' : 'flex',
-              hasSubs ? 'lg:ml-auto' : 'ml-auto',
-            )}
-          />
-        )}
+        <ToolFilterBar
+          {...filterBarProps}
+          className={cn(
+            'shrink-0',
+            useViewAllLayout
+              ? 'flex'
+              : cn(
+                  titleSlot ? 'hidden lg:flex' : 'flex',
+                  hasSubs ? 'lg:ml-auto' : 'ml-auto',
+                ),
+            !hasSubs && useViewAllLayout && 'ml-auto',
+          )}
+        />
       </div>
+
+      {useViewAllLayout && viewAllHref && (
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <p className="text-sm font-medium text-gray-600">
+            {formatTotalCount(totalCount ?? 0, locale)}
+          </p>
+          <ViewAllButton href={viewAllHref} label={viewAllLabel} />
+        </div>
+      )}
     </div>
   );
 }

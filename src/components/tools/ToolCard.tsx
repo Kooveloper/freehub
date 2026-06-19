@@ -46,7 +46,7 @@ export function ToolCard({
     <Link
       href={`/tool/${tool.slug}`}
       className={cn(
-        'group relative flex flex-col rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition-all duration-200',
+        'group relative flex h-full flex-col rounded-xl border border-neutral-200 bg-white p-4 shadow-sm transition-all duration-200',
         'hover:-translate-y-0.5 hover:border-neutral-400 hover:shadow-md',
         isFavorited ? 'border-yellow-400 ring-1 ring-yellow-400' : 'border-gray-200',
       )}
@@ -83,21 +83,21 @@ export function ToolCard({
         </div>
       </div>
 
-      {tool.free_plan_exists && (
-        <div className="mb-2">
+      <div className="mb-2 min-h-[1.375rem]">
+        {tool.free_plan_exists && (
           <FreeLimitBadge
             type={tool.free_limit_type}
             amount={tool.free_limit_amount}
             unit={tool.free_limit_unit}
           />
-        </div>
-      )}
+        )}
+      </div>
 
-      <p className="mb-4 line-clamp-2 flex-1 text-sm leading-relaxed text-gray-500">
-        {tool.description}
+      <p className="mb-4 line-clamp-2 min-h-[2.875rem] flex-1 text-sm leading-relaxed text-gray-500">
+        {tool.description || '\u00A0'}
       </p>
 
-      <div className="flex items-center justify-end border-t border-gray-100 pt-3">
+      <div className="mt-auto flex items-center justify-end border-t border-gray-100 pt-3">
         <span className="flex items-center gap-1 text-sm font-medium text-neutral-700 transition-colors group-hover:text-black">
           {t('tool.viewDetails')}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
