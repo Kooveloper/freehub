@@ -1,7 +1,15 @@
 User-agent: *
 Allow: /
-Disallow: /dashboard
-Disallow: /api
 Disallow: /admin
+Disallow: /api
+Disallow: /dashboard
+Disallow: /login
+Disallow: /signup
+Disallow: /request
+Disallow: /submit
+Disallow: /inquiry
+Disallow: /search
+Disallow: /privacy
+Disallow: /terms
 
 Sitemap: https://freehub.kr/sitemap.xml

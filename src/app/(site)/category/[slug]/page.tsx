@@ -1,14 +1,17 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 
 import { AdSlot } from '@/components/ads/AdSlot';
+import { CategoryIconNav } from '@/components/category/CategoryIconNav';
 import { CategoryIcon } from '@/components/category/CategoryIcon';
 import { CategoryPageToolbar } from '@/components/category/CategoryPageToolbar';
 import { CategoryToolsSection } from '@/components/category/CategoryToolsSection';
 import { SkeletonCardGrid } from '@/components/ui/SkeletonCard';
 import { getCategoryColorHex } from '@/constants/category-colors';
-import { localizeCategory, localizeSubCategories } from '@/lib/i18n/content';
+import { localizeCategories, localizeCategory, localizeSubCategories } from '@/lib/i18n/content';
 import { getLocale, getTranslations } from '@/lib/locale';
+import { buildCategoryMetadata } from '@/lib/seo/metadata';
 import {
   getAllCategories,
   getCategoryBySlug,
@@ -21,6 +24,21 @@ export const revalidate = 3600;
 
 interface CategoryPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: CategoryPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const locale = await getLocale();
+  const category = await getCategoryBySlug(slug);
+
+  if (!category) {
+    return {};
+  }
+
+  const localized = localizeCategory(category, locale);
+  return buildCategoryMetadata(localized.name, locale);
 }
 
 export async function generateStaticParams() {
@@ -40,9 +58,13 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
   const localizedCategory = localizeCategory(category, locale);
   const t = await getTranslations();
 
-  const categoryToolCounts = await getCategoryToolCounts();
+  const [allCategories, categoryToolCounts, subCategories] = await Promise.all([
+    getAllCategories(),
+    getCategoryToolCounts(),
+    getSubCategoriesByCategory(slug),
+  ]);
+  const localizedCategories = localizeCategories(allCategories, locale);
   const toolCount = categoryToolCounts[slug] ?? 0;
-  const subCategories = await getSubCategoriesByCategory(slug);
   const localizedSubCategories = localizeSubCategories(subCategories, locale);
   const categoryColorHex = getCategoryColorHex(localizedCategory.color);
 
@@ -60,6 +82,11 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <CategoryIconNav
+        categories={localizedCategories}
+        activeSlug={slug}
+      />
+
       <div className="mb-6 hidden items-start gap-4 sm:mb-8 lg:flex">
         {categoryIconBox}
         <div>

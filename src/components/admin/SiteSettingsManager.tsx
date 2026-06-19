@@ -149,6 +149,8 @@ export function SiteSettingsManager() {
           </h2>
           <p className="mb-4 text-sm text-gray-500">
             검색엔진 인증, GA, OG 등 필요한 코드를 HTML 그대로 붙여넣으세요.
+            사이트 전체(공개·어드민·로그인 등 모든 페이지)의 head/body에
+            삽입됩니다.
           </p>
           <div className="space-y-4">
             <div>

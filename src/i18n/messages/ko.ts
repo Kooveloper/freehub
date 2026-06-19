@@ -29,6 +29,7 @@ export const ko = {
     heroSubtitle: 'FREEHUB에서 필요한 서비스를 찾아보세요!',
     searchPlaceholder: 'ChatGPT, Notion, Midjourney...',
     categoriesTitle: '카테고리별 탐색',
+    viewAll: '전체보기',
     mostPopular: '가장 많이 찾은 서비스',
     stats: '{categoryCount}개 카테고리 · {toolCount}개 서비스',
     statsPrefix: '현재',
@@ -144,9 +145,9 @@ export const ko = {
     successDescription: '검토 후 답변드릴게요. 감사합니다!',
   },
   metadata: {
-    defaultTitle: '{appName} - 무료 AI·SaaS 서비스 큐레이션',
+    defaultTitle: '모든 무료 서비스를 한곳에서',
     defaultDescription:
-      '돈 내기 전에 무료로 써봐. AI·SaaS 서비스의 무료 플랜, 한도, 기능을 한곳에서 비교하고 찾아보세요.',
+      'Chat GPT, Notion부터 다양한 무료 서비스를 한곳에서, 무료플랜 한도 기능을 비교하고 필요한 서비스를 찾아보세요.',
   },
 };
 

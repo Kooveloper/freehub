@@ -30,10 +30,6 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon: '/Freehub_Fabicon.ico',
     },
-    robots: {
-      index: true,
-      follow: true,
-    },
   };
 }
 

@@ -31,6 +31,7 @@ export const en: Messages = {
     heroSubtitle: 'Find the services you need on FREEHUB!',
     searchPlaceholder: 'ChatGPT, Notion, Midjourney...',
     categoriesTitle: 'Browse by category',
+    viewAll: 'View all',
     mostPopular: 'Most searched services',
     stats: '{categoryCount} categories · {toolCount} services',
     statsPrefix: 'Currently',
@@ -145,8 +146,8 @@ export const en: Messages = {
     successDescription: 'We will review it and get back to you. Thank you!',
   },
   metadata: {
-    defaultTitle: '{appName} - Free AI & SaaS Service Directory',
+    defaultTitle: 'All free services in one place',
     defaultDescription:
-      'Try before you pay. Compare free plans, limits, and features for AI and SaaS services in one place.',
+      'From ChatGPT and Notion to many free services in one place — compare free plan limits and features, and find what you need.',
   },
 };

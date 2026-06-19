@@ -202,6 +202,8 @@ export function HomeCategoryExplorer({
             onSetSort={setSort}
             locale={locale}
             subEdgeBleed="card"
+            viewAllHref={`/category/${activeCategory.slug}`}
+            viewAllLabel={t('home.viewAll')}
           />
 
           {loadingSlug === activeSlug ? (

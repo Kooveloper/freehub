@@ -1,6 +1,9 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { BlogPostDetailView } from '@/components/blog/BlogPostDetailView';
+import { getLocale } from '@/lib/locale';
+import { buildBlogPostMetadata } from '@/lib/seo/metadata';
 import {
   getAllBlogSlugs,
   getBlogPostBySlug,
@@ -10,6 +13,25 @@ export const revalidate = 3600;
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({
+  params,
+}: BlogPostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const locale = await getLocale();
+  const post = await getBlogPostBySlug(slug);
+
+  if (!post) {
+    return {};
+  }
+
+  return buildBlogPostMetadata(
+    post.title,
+    post.meta_description,
+    post.tags,
+    locale,
+  );
 }
 
 export async function generateStaticParams() {

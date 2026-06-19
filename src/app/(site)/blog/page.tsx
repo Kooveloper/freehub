@@ -1,12 +1,20 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { AdSlot } from '@/components/ads/AdSlot';
 import { BlogPostCard } from '@/components/blog/BlogPostCard';
 import { CATEGORIES } from '@/constants/categories';
+import { getLocale } from '@/lib/locale';
+import { buildBlogListMetadata } from '@/lib/seo/metadata';
 import { getAllBlogPosts } from '@/lib/supabase/queries';
 import { cn } from '@/lib/utils';
 
 export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return buildBlogListMetadata(locale);
+}
 
 const PAGE_SIZE = 12;
 

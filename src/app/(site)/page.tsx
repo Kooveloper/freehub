@@ -1,3 +1,5 @@
+import type { Metadata } from 'next';
+
 import { AdSlot } from '@/components/ads/AdSlot';
 import { HomeBlogSection } from '@/components/home/HomeBlogSection';
 import { HomeCategoryExplorer } from '@/components/home/HomeCategoryExplorer';
@@ -9,6 +11,7 @@ import { SearchBar } from '@/components/ui/SearchBar';
 import { getPopularToolsByCategory } from '@/lib/featured-tools';
 import { localizeCategories } from '@/lib/i18n/content';
 import { getLocale, getTranslations } from '@/lib/locale';
+import { buildHomeMetadata } from '@/lib/seo/metadata';
 import { groupSubCategoriesByCategory } from '@/lib/sub-categories';
 import {
   getAllCategories,
@@ -18,6 +21,11 @@ import {
 
 /** ISR — 1시간마다 재생성 */
 export const revalidate = 3600;
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return buildHomeMetadata(locale);
+}
 
 export default async function HomePage() {
   const locale = await getLocale();
