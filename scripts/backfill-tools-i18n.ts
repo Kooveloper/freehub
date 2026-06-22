@@ -7,6 +7,7 @@ import {
   excelRowToToolInput,
   parseToolExcelRows,
 } from '../src/lib/admin/tool-excel';
+import { translateFeatureList } from '../src/lib/i18n/tool-feature-translations';
 import type { Category, SubCategory } from '../src/types/tool';
 
 config({ path: resolve(process.cwd(), '.env.local') });
@@ -21,49 +22,6 @@ if (!supabaseUrl || !serviceKey) {
 
 const fileArg = process.argv[2] ?? 'public/FreeHub_Admin_입력데이터.xlsx';
 const filePath = resolve(process.cwd(), fileArg);
-
-const FEATURE_PHRASES: Array<[RegExp, string]> = [
-  [/배경\s*제거/g, 'Background removal'],
-  [/이미지\s*편집/g, 'Image editing'],
-  [/이미지\s*생성/g, 'Image generation'],
-  [/텍스트→이미지/g, 'Text-to-image'],
-  [/생성형\s*채우기/g, 'Generative fill'],
-  [/텍스트\s*효과/g, 'Text effects'],
-  [/노이즈\s*제거/g, 'Noise removal'],
-  [/음성\s*품질\s*향상/g, 'Voice enhancement'],
-  [/음성\s*전사/g, 'Speech transcription'],
-  [/프리미엄\s*템플릿/g, 'Premium templates'],
-  [/브랜드\s*키트/g, 'Brand kit'],
-  [/크레딧\s*추가\s*구매/g, 'Additional credits'],
-  [/상업적\s*사용/g, 'Commercial use'],
-  [/고급\s*분석/g, 'Advanced analytics'],
-  [/팀\s*협업/g, 'Team collaboration'],
-  [/팀\s*기능/g, 'Team features'],
-  [/이벤트\s*무제한/g, 'Unlimited event types'],
-  [/예약\s*무제한/g, 'Unlimited bookings'],
-  [/이메일\s*알림/g, 'Email notifications'],
-  [/기본\s*분석/g, 'Basic analytics'],
-  [/더\s*많은\s*채널/g, 'More channels'],
-  [/수천\s*개\s*템플릿/g, 'Thousands of templates'],
-  [/간단한\s*영상\s*편집/g, 'Simple video editing'],
-  [/베타\s*종료\s*후\s*정책\s*변경\s*예정/g, 'Policy may change after beta'],
-];
-
-function translateFeaturePhrase(text: string): string {
-  let result = text.trim();
-  if (!result) return result;
-  if (!/[가-힣]/.test(result)) return result;
-
-  for (const [pattern, replacement] of FEATURE_PHRASES) {
-    result = result.replace(pattern, replacement);
-  }
-
-  return result;
-}
-
-function translateFeatureList(items: string[]): string[] {
-  return items.map(translateFeaturePhrase).filter(Boolean);
-}
 
 async function main() {
   const supabase = createClient(supabaseUrl!, serviceKey!);
