@@ -5,6 +5,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { SearchResultsSection } from '@/components/search/SearchResultsSection';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SkeletonCardGrid } from '@/components/ui/SkeletonCard';
+import { getTranslations } from '@/lib/locale';
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string }>;
@@ -13,6 +14,7 @@ interface SearchPageProps {
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const { q } = await searchParams;
   const query = q?.trim() ?? '';
+  const t = await getTranslations();
 
   if (!query) {
     redirect('/');
@@ -25,7 +27,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-        &quot;{query}&quot; 검색 결과
+        {t('search.resultsTitle', { query })}
       </h1>
 
       <AdSlot slotKey="HOME_TOP" variant="banner" className="mt-6 w-full" />

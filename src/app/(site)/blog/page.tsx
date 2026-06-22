@@ -3,10 +3,10 @@ import Link from 'next/link';
 
 import { AdSlot } from '@/components/ads/AdSlot';
 import { BlogPostCard } from '@/components/blog/BlogPostCard';
-import { CATEGORIES } from '@/constants/categories';
-import { getLocale } from '@/lib/locale';
+import { localizeCategories } from '@/lib/i18n/content';
+import { getLocale, getTranslations } from '@/lib/locale';
 import { buildBlogListMetadata } from '@/lib/seo/metadata';
-import { getAllBlogPosts } from '@/lib/supabase/queries';
+import { getAllBlogPosts, getAllCategories } from '@/lib/supabase/queries';
 import { cn } from '@/lib/utils';
 
 export const revalidate = 3600;
@@ -23,14 +23,21 @@ interface BlogListPageProps {
 }
 
 export default async function BlogListPage({ searchParams }: BlogListPageProps) {
+  const locale = await getLocale();
+  const t = await getTranslations();
   const { category, page: pageParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
 
   let allPosts: Awaited<ReturnType<typeof getAllBlogPosts>> = [];
+  let categories: Awaited<ReturnType<typeof getAllCategories>> = [];
   try {
-    allPosts = await getAllBlogPosts();
+    [allPosts, categories] = await Promise.all([
+      getAllBlogPosts(),
+      getAllCategories(),
+    ]);
   } catch {
     allPosts = [];
+    categories = [];
   }
 
   const filtered = category
@@ -44,17 +51,20 @@ export default async function BlogListPage({ searchParams }: BlogListPageProps) 
     currentPage * PAGE_SIZE,
   );
 
-  const filterCategories = CATEGORIES.slice(0, 8);
+  const localizedFilterCategories = localizeCategories(
+    categories.slice(0, 8),
+    locale,
+  );
 
   return (
     <div className="min-h-screen bg-neutral-50">
       <section className="bg-gradient-to-b from-blue-50 to-white px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl text-center">
           <h1 className="text-3xl font-bold text-neutral-900 sm:text-4xl">
-            FreeHub 블로그
+            {t('blog.title')}
           </h1>
           <p className="mt-3 text-base text-neutral-600 sm:text-lg">
-            무료 AI 툴 활용법과 최신 정보를 전달합니다
+            {t('blog.subtitle')}
           </p>
         </div>
       </section>
@@ -77,9 +87,9 @@ export default async function BlogListPage({ searchParams }: BlogListPageProps) 
                 : 'bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50',
             )}
           >
-            전체
+            {t('blog.all')}
           </Link>
-          {filterCategories.map((cat) => (
+          {localizedFilterCategories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/blog?category=${cat.slug}`}
@@ -97,7 +107,7 @@ export default async function BlogListPage({ searchParams }: BlogListPageProps) 
 
         {posts.length === 0 ? (
           <p className="py-20 text-center text-neutral-500">
-            아직 발행된 글이 없습니다.
+            {t('blog.empty')}
           </p>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

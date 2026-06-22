@@ -21,8 +21,8 @@ import { createClient } from '@/lib/supabase/client';
 import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
 import { cn } from '@/lib/utils';
 
-function getErrorMessage(message: string): string {
-  const map: Record<string, string> = {
+function getErrorMessage(message: string, locale: 'ko' | 'en'): string {
+  const mapKo: Record<string, string> = {
     'User already registered': '이미 가입된 이메일입니다.',
     'Password should be at least 6 characters': SIGNUP_PASSWORD_RULE_MESSAGE,
     'Error sending confirmation email':
@@ -30,12 +30,21 @@ function getErrorMessage(message: string): string {
     'Email rate limit exceeded':
       '이메일 발송 한도를 초과했습니다. 잠시 후 다시 시도해주세요.',
   };
+  const mapEn: Record<string, string> = {
+    'User already registered': 'This email is already registered.',
+    'Password should be at least 6 characters':
+      'Password must be at least 6 characters with letters and numbers.',
+    'Error sending confirmation email':
+      'Could not send confirmation email. Try again later or use Google sign-in.',
+    'Email rate limit exceeded': 'Email rate limit exceeded. Please try again later.',
+  };
+  const map = locale === 'en' ? mapEn : mapKo;
   return map[message] ?? message;
 }
 
 /** 이메일·비밀번호 회원가입 폼 */
 export function SignupForm() {
-  const { locale } = useLocale();
+  const { locale, t } = useLocale();
   const [email, setEmail] = useState('');
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
@@ -48,7 +57,11 @@ export function SignupForm() {
     setError('');
 
     if (!isValidSignupPassword(password)) {
-      setError(SIGNUP_PASSWORD_RULE_MESSAGE);
+      setError(
+        locale === 'en'
+          ? 'Password must be at least 6 characters with letters and numbers.'
+          : SIGNUP_PASSWORD_RULE_MESSAGE,
+      );
       return;
     }
 
@@ -73,7 +86,7 @@ export function SignupForm() {
     setLoading(false);
 
     if (signUpError) {
-      setError(getErrorMessage(signUpError.message));
+      setError(getErrorMessage(signUpError.message, locale));
       return;
     }
 
@@ -82,19 +95,19 @@ export function SignupForm() {
 
   if (emailSent) {
     return (
-      <AuthCard title="회원가입">
+      <AuthCard title={t('auth.signupTitle')}>
         <div className="text-center">
           <p className="text-lg font-medium text-gray-900">
-            가입 확인 이메일을 보냈어요 📧
+            {t('auth.emailSentTitle')}
           </p>
           <p className="mt-2 text-sm text-gray-500">
-            {email}로 발송된 링크를 클릭하면 가입이 완료됩니다.
+            {t('auth.emailSentDescription', { email })}
           </p>
           <Link
             href="/login"
             className="mt-6 inline-block text-sm font-medium text-brand-600 hover:text-brand-700"
           >
-            로그인으로 돌아가기
+            {t('auth.backToLogin')}
           </Link>
         </div>
       </AuthCard>
@@ -102,14 +115,14 @@ export function SignupForm() {
   }
 
   return (
-    <AuthCard title="회원가입">
+    <AuthCard title={t('auth.signupTitle')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           id="signup-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="이메일"
+          placeholder={t('auth.email')}
           required
           autoComplete="email"
           className={UI_INPUT_CLASS}
@@ -120,7 +133,7 @@ export function SignupForm() {
           type="text"
           value={nickname}
           onChange={(e) => setNickname(e.target.value)}
-          placeholder="닉네임 (2~20자)"
+          placeholder={t('auth.nickname')}
           required
           minLength={2}
           maxLength={20}
@@ -151,26 +164,26 @@ export function SignupForm() {
           disabled={loading}
           className={cn(uiButtonPrimaryClass(loading), TRACK_SIGNUP_EMAIL)}
         >
-          {loading ? '가입 중...' : '회원가입'}
+          {loading ? t('auth.signupLoading') : t('auth.signupButton')}
         </button>
       </form>
 
       <div className="my-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs text-gray-400">또는</span>
+        <span className="text-xs text-gray-400">{t('auth.or')}</span>
         <div className="h-px flex-1 bg-gray-200" />
       </div>
 
       <GoogleAuthButton
-        label="Google로 가입하기"
+        label={t('auth.googleSignup')}
         trackingClass={TRACK_SIGNUP_GOOGLE}
-        onError={(msg) => setError(getErrorMessage(msg))}
+        onError={(msg) => setError(getErrorMessage(msg, locale))}
       />
 
       <p className="mt-6 text-center text-sm text-gray-500">
-        이미 계정이 있으신가요?{' '}
+        {t('auth.hasAccount')}{' '}
         <Link href="/login" className="font-bold text-brand-600 hover:text-brand-700">
-          로그인
+          {t('auth.loginLink')}
         </Link>
       </p>
     </AuthCard>

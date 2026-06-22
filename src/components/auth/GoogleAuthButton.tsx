@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/client';
 import { buildAuthCallbackUrl } from '@/lib/auth-redirect';
 import { UI_BUTTON_OUTLINE_CLASS } from '@/lib/ui/form';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
 
 function GoogleIcon() {
   return (
@@ -40,11 +41,13 @@ interface GoogleAuthButtonProps {
 /** Google OAuth 로그인/가입 버튼 */
 export function GoogleAuthButton({
   next = '/',
-  label = 'Google로 계속하기',
+  label,
   className,
   trackingClass,
   onError,
 }: GoogleAuthButtonProps) {
+  const { t } = useLocale();
+  const buttonLabel = label ?? t('auth.googleContinue');
   const handleGoogleAuth = async () => {
     const supabase = createClient();
 
@@ -65,7 +68,7 @@ export function GoogleAuthButton({
       className={cn(UI_BUTTON_OUTLINE_CLASS, trackingClass, className)}
     >
       <GoogleIcon />
-      {label}
+      {buttonLabel}
     </button>
   );
 }

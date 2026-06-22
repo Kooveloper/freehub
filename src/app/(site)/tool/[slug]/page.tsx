@@ -13,7 +13,6 @@ import { ViewCountTracker } from '@/components/tool/ViewCountTracker';
 import { Badge } from '@/components/ui/Badge';
 import { FavoriteButton } from '@/components/ui/FavoriteButton';
 import { ToolLogo } from '@/components/ui/ToolLogo';
-import { CATEGORIES } from '@/constants/categories';
 import { getToolAssignments } from '@/lib/tool-categories';
 import {
   getAllCategories,
@@ -34,20 +33,13 @@ interface ToolPageProps {
   params: Promise<{ slug: string }>;
 }
 
-const LIMIT_TYPE_LABELS: Record<FreeLimitType, string> = {
-  daily: '일별',
-  monthly: '월별',
-  total: '총량',
-  unlimited: '무제한',
-  other: '기타',
-};
-
-function getCategoryName(slug: string, dbName?: string | null) {
-  if (dbName) return dbName;
-  return CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;
-}
-
-function FeatureComparisonTable({ tool }: { tool: Tool }) {
+function FeatureComparisonTable({
+  tool,
+  t,
+}: {
+  tool: Tool;
+  t: Awaited<ReturnType<typeof getTranslations>>;
+}) {
   const freeSet = new Set(tool.free_features);
   const allFeatures = [
     ...new Set([...tool.free_features, ...tool.paid_only_features]),
@@ -57,17 +49,21 @@ function FeatureComparisonTable({ tool }: { tool: Tool }) {
 
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-6">
-      <h2 className="text-xl font-bold text-gray-900">무료 vs 유료 기능</h2>
+      <h2 className="text-xl font-bold text-gray-900">
+        {t('toolDetail.featureComparisonTitle')}
+      </h2>
       <div className="mt-4 overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-gray-200 text-left">
-              <th className="pb-3 pr-4 font-medium text-gray-500">기능</th>
+              <th className="pb-3 pr-4 font-medium text-gray-500">
+                {t('toolDetail.featureColumn')}
+              </th>
               <th className="pb-3 px-4 text-center font-medium text-gray-500">
-                무료
+                {t('toolDetail.freeColumn')}
               </th>
               <th className="pb-3 pl-4 text-center font-medium text-gray-500">
-                유료
+                {t('toolDetail.paidColumn')}
               </th>
             </tr>
           </thead>
@@ -129,9 +125,6 @@ export default async function ToolPage({ params }: ToolPageProps) {
     localizedCategories.map((item) => [item.slug, item.name]),
   );
   const subNameMap = buildSubCategoryNameMap(subCategories, locale);
-  const localizedCategory = localizedCategories.find(
-    (item) => item.slug === tool.category_slug,
-  );
   const categoryName =
     categoryNameMap[tool.category_slug] ?? tool.category_slug;
   const relatedTools = localizeTools(relatedToolsRaw, locale);
@@ -142,16 +135,13 @@ export default async function ToolPage({ params }: ToolPageProps) {
     tool.free_limit_unit,
     locale,
   );
-  const limitTypeLabels: Record<FreeLimitType, string> =
-    locale === 'en'
-      ? {
-          daily: 'Daily',
-          monthly: 'Monthly',
-          total: 'Total',
-          unlimited: 'Unlimited',
-          other: 'Other',
-        }
-      : LIMIT_TYPE_LABELS;
+  const limitTypeLabels: Record<FreeLimitType, string> = {
+    daily: t('toolDetail.limitTypeDaily'),
+    monthly: t('toolDetail.limitTypeMonthly'),
+    total: t('toolDetail.limitTypeTotal'),
+    unlimited: t('toolDetail.limitTypeUnlimited'),
+    other: t('toolDetail.limitTypeOther'),
+  };
 
   return (
     <>
@@ -222,7 +212,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
                       href={tool.homepage_url}
                       className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
                     >
-                      공식 사이트
+                      {t('toolDetail.officialSite')}
                       <ExternalLink className="h-3.5 w-3.5" />
                     </ExternalToolLink>
                   </div>
@@ -239,24 +229,20 @@ export default async function ToolPage({ params }: ToolPageProps) {
             {/* 무료 한도 카드 */}
             <div className="rounded-xl border-2 border-green-500 bg-green-50/50 p-6">
               <p className="text-sm font-medium text-green-700">
-                {locale === 'en' ? 'Free limit' : '무료 한도'}
+                {t('toolDetail.freeLimit')}
               </p>
               <p className="mt-1 text-3xl font-bold text-green-800">
                 {freeLimitText}
               </p>
               <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
                 <div>
-                  <dt className="text-gray-500">
-                    {locale === 'en' ? 'Limit type' : '한도 유형'}
-                  </dt>
+                  <dt className="text-gray-500">{t('toolDetail.limitType')}</dt>
                   <dd className="font-medium text-gray-900">
                     {limitTypeLabels[tool.free_limit_type]}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-gray-500">
-                    {locale === 'en' ? 'Reset cycle' : '리셋 주기'}
-                  </dt>
+                  <dt className="text-gray-500">{t('toolDetail.resetCycle')}</dt>
                   <dd className="font-medium text-gray-900">
                     {tool.free_limit_type === 'unlimited' ||
                     tool.free_limit_type === 'other'
@@ -267,7 +253,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               </dl>
               {tool.verified_date && (
                 <p className="mt-4 text-xs text-gray-500">
-                  {locale === 'en' ? 'Verified: ' : '검증일: '}
+                  {t('toolDetail.verifiedDate')}
                   {formatDate(tool.verified_date, locale)}
                 </p>
               )}
@@ -277,7 +263,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
             {tool.free_description && (
               <section className="rounded-xl border border-gray-200 bg-white p-6">
                 <h2 className="text-xl font-bold text-gray-900">
-                  무료 플랜 상세
+                  {t('toolDetail.freePlanDetail')}
                 </h2>
                 <p className="mt-3 whitespace-pre-line leading-relaxed text-gray-700">
                   {tool.free_description}
@@ -287,7 +273,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
             <AdSlot slotKey="DETAIL_BTM" variant="banner" />
 
-            <FeatureComparisonTable tool={tool} />
+            <FeatureComparisonTable tool={tool} t={t} />
 
             {tool.tip && (
               <section>
@@ -295,7 +281,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
                   <Info className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
                   <div>
                     <p className="font-medium text-brand-900">
-                      {locale === 'en' ? 'Tip' : '팁'}
+                      {t('toolDetail.tip')}
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-brand-800">
                       {tool.tip}
@@ -317,7 +303,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
                 trackingClass={TRACK_CTA_START_FREE}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
               >
-                지금 무료로 시작하기
+                {t('toolDetail.startFreeCta')}
                 <ExternalLink className="h-4 w-4" />
               </ExternalToolLink>
 
@@ -325,7 +311,9 @@ export default async function ToolPage({ params }: ToolPageProps) {
 
               {relatedTools.length > 0 && (
                 <div className="rounded-xl border border-gray-200 bg-white p-4">
-                  <h3 className="font-semibold text-gray-900">관련 서비스</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    {t('toolDetail.relatedServices')}
+                  </h3>
                   <div className="mt-3 space-y-2">
                     {relatedTools.map((related) => (
                       <RelatedToolItem key={related.id} tool={related} />

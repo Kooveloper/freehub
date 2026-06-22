@@ -10,17 +10,22 @@ import {
   TRACK_LOGIN_EMAIL,
   TRACK_LOGIN_GOOGLE,
 } from '@/constants/tracking-classes';
+import { useLocale } from '@/contexts/LocaleContext';
 import { getOAuthCallbackErrorMessage } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/client';
 import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
 import { cn } from '@/lib/utils';
 
-function getErrorMessage(message: string): string {
-  const map: Record<string, string> = {
-    'Invalid login credentials':
-      '이메일 또는 비밀번호가 올바르지 않습니다.',
+function getErrorMessage(message: string, locale: 'ko' | 'en'): string {
+  const mapKo: Record<string, string> = {
+    'Invalid login credentials': '이메일 또는 비밀번호가 올바르지 않습니다.',
     'Email not confirmed': '이메일 인증을 완료해주세요.',
   };
+  const mapEn: Record<string, string> = {
+    'Invalid login credentials': 'Incorrect email or password.',
+    'Email not confirmed': 'Please confirm your email first.',
+  };
+  const map = locale === 'en' ? mapEn : mapKo;
   return map[message] ?? message;
 }
 
@@ -28,6 +33,7 @@ function getErrorMessage(message: string): string {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { locale, t } = useLocale();
   const next = searchParams.get('next') ?? '/';
 
   const callbackError = getOAuthCallbackErrorMessage(
@@ -56,7 +62,7 @@ export function LoginForm() {
     setLoading(false);
 
     if (signInError) {
-      setError(getErrorMessage(signInError.message));
+      setError(getErrorMessage(signInError.message, locale));
       return;
     }
 
@@ -65,14 +71,14 @@ export function LoginForm() {
   };
 
   return (
-    <AuthCard title="로그인">
+    <AuthCard title={t('auth.loginTitle')}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           id="login-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="이메일"
+          placeholder={t('auth.email')}
           required
           autoComplete="email"
           className={UI_INPUT_CLASS}
@@ -83,7 +89,7 @@ export function LoginForm() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="비밀번호"
+          placeholder={t('auth.password')}
           required
           minLength={6}
           autoComplete="current-password"
@@ -101,26 +107,26 @@ export function LoginForm() {
           disabled={loading}
           className={cn(uiButtonPrimaryClass(loading), TRACK_LOGIN_EMAIL)}
         >
-          {loading ? '로그인 중...' : '로그인'}
+          {loading ? t('auth.loginLoading') : t('auth.loginButton')}
         </button>
       </form>
 
       <div className="my-6 flex items-center gap-3">
         <div className="h-px flex-1 bg-gray-200" />
-        <span className="text-xs text-gray-400">또는</span>
+        <span className="text-xs text-gray-400">{t('auth.or')}</span>
         <div className="h-px flex-1 bg-gray-200" />
       </div>
 
       <GoogleAuthButton
         next={next}
         trackingClass={TRACK_LOGIN_GOOGLE}
-        onError={(msg) => setError(getErrorMessage(msg))}
+        onError={(msg) => setError(getErrorMessage(msg, locale))}
       />
 
       <p className="mt-6 text-center text-sm text-gray-500">
-        계정이 없으신가요?{' '}
+        {t('auth.noAccount')}{' '}
         <Link href="/signup" className="font-bold text-brand-600 hover:text-brand-700">
-          회원가입
+          {t('auth.signupLink')}
         </Link>
       </p>
     </AuthCard>

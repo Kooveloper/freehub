@@ -9,6 +9,7 @@ import {
   TRACK_LOGIN_MODAL,
   TRACK_SIGNUP_MODAL,
 } from '@/constants/tracking-classes';
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 
 interface LoginPromptModalProps {
@@ -18,6 +19,7 @@ interface LoginPromptModalProps {
 
 /** 비로그인 사용자에게 로그인을 유도하는 모달 */
 export function LoginPromptModal({ isOpen, onClose }: LoginPromptModalProps) {
+  const { t } = useLocale();
   useEffect(() => {
     if (!isOpen) return;
 
@@ -52,7 +54,7 @@ export function LoginPromptModal({ isOpen, onClose }: LoginPromptModalProps) {
           type="button"
           onClick={onClose}
           className="absolute right-4 top-4 rounded-lg p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-          aria-label="닫기"
+          aria-label={t('loginPrompt.close')}
         >
           <X className="h-5 w-5" />
         </button>
@@ -66,11 +68,10 @@ export function LoginPromptModal({ isOpen, onClose }: LoginPromptModalProps) {
             id="login-prompt-title"
             className="text-lg font-bold text-gray-900"
           >
-            즐겨찾기 기능을 사용해보세요
+            {t('loginPrompt.title')}
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-gray-500">
-            로그인하면 자주 쓰는 서비스를 즐겨찾기하고 목록 맨 위에서 바로 찾을 수
-            있어요.
+            {t('loginPrompt.description')}
           </p>
 
           <div className="mt-6 flex w-full flex-col gap-3">
@@ -79,14 +80,14 @@ export function LoginPromptModal({ isOpen, onClose }: LoginPromptModalProps) {
               onClick={onClose}
               className={cn(uiButtonPrimaryClass(false), TRACK_LOGIN_MODAL)}
             >
-              로그인하기
+              {t('loginPrompt.loginButton')}
             </Link>
             <Link
               href="/signup"
               onClick={onClose}
               className={cn(UI_BUTTON_OUTLINE_CLASS, TRACK_SIGNUP_MODAL)}
             >
-              회원가입
+              {t('loginPrompt.signupButton')}
             </Link>
           </div>
         </div>
