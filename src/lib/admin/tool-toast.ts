@@ -32,10 +32,15 @@ export function consumeAdminToolToast(): AdminToolToast | null {
   }
 }
 
+export type AdminToolsVerifiedFilter = '' | 'verified' | 'unverified';
+export type AdminToolsSponsoredFilter = '' | 'sponsored' | 'not-sponsored';
+
 export function buildAdminToolsListUrl(filters: {
   q?: string;
   category?: string;
   sub?: string;
+  verified?: AdminToolsVerifiedFilter;
+  sponsored?: AdminToolsSponsoredFilter;
   page?: number;
   size?: number;
 }): string {
@@ -43,6 +48,8 @@ export function buildAdminToolsListUrl(filters: {
   if (filters.q?.trim()) params.set('q', filters.q.trim());
   if (filters.category) params.set('category', filters.category);
   if (filters.sub) params.set('sub', filters.sub);
+  if (filters.verified) params.set('verified', filters.verified);
+  if (filters.sponsored) params.set('sponsored', filters.sponsored);
   if (filters.page && filters.page > 1) {
     params.set('page', String(filters.page));
   }

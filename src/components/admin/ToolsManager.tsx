@@ -24,6 +24,8 @@ import { FREE_LIMIT_TYPE_LABELS } from '@/lib/admin/tools';
 import {
   buildAdminToolsListUrl,
   consumeAdminToolToast,
+  type AdminToolsSponsoredFilter,
+  type AdminToolsVerifiedFilter,
 } from '@/lib/admin/tool-toast';
 import { Badge } from '@/components/ui/Badge';
 import { ToolLogo } from '@/components/ui/ToolLogo';
@@ -40,6 +42,16 @@ function parsePageSize(value: string | null): PageSize {
   return PAGE_SIZE_OPTIONS.includes(parsed as PageSize)
     ? (parsed as PageSize)
     : 10;
+}
+
+function parseVerifiedFilter(value: string | null): AdminToolsVerifiedFilter {
+  if (value === 'verified' || value === 'unverified') return value;
+  return '';
+}
+
+function parseSponsoredFilter(value: string | null): AdminToolsSponsoredFilter {
+  if (value === 'sponsored' || value === 'not-sponsored') return value;
+  return '';
 }
 
 interface ToolsManagerProps {
@@ -107,6 +119,9 @@ export function ToolsManager({
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
+  const [verifiedFilter, setVerifiedFilter] = useState<AdminToolsVerifiedFilter>('');
+  const [sponsoredFilter, setSponsoredFilter] =
+    useState<AdminToolsSponsoredFilter>('');
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ToolExcelImportResult | null>(
@@ -122,13 +137,15 @@ export function ToolsManager({
     setSearch(searchParams.get('q') ?? '');
     setCategoryFilter(searchParams.get('category') ?? '');
     setSubCategoryFilter(searchParams.get('sub') ?? '');
+    setVerifiedFilter(parseVerifiedFilter(searchParams.get('verified')));
+    setSponsoredFilter(parseSponsoredFilter(searchParams.get('sponsored')));
     setPage(Math.max(1, Number(searchParams.get('page')) || 1));
     setPageSize(parsePageSize(searchParams.get('size')));
   }, [searchParams]);
 
   useEffect(() => {
     setPage(1);
-  }, [search, categoryFilter, subCategoryFilter]);
+  }, [search, categoryFilter, subCategoryFilter, verifiedFilter, sponsoredFilter]);
 
   useEffect(() => {
     const queued = consumeAdminToolToast();
@@ -143,10 +160,20 @@ export function ToolsManager({
         q: search,
         category: categoryFilter,
         sub: subCategoryFilter,
+        verified: verifiedFilter,
+        sponsored: sponsoredFilter,
         page,
         size: pageSize,
       }),
-    [search, categoryFilter, subCategoryFilter, page, pageSize],
+    [
+      search,
+      categoryFilter,
+      subCategoryFilter,
+      verifiedFilter,
+      sponsoredFilter,
+      page,
+      pageSize,
+    ],
   );
 
   const categoryMap = useMemo(
@@ -179,10 +206,27 @@ export function ToolsManager({
         categoryFilter || undefined,
         subCategoryFilter || undefined,
       );
+      const matchesVerified =
+        !verifiedFilter ||
+        (verifiedFilter === 'verified' ? tool.is_verified : !tool.is_verified);
+      const matchesSponsored =
+        !sponsoredFilter ||
+        (sponsoredFilter === 'sponsored'
+          ? tool.is_sponsored
+          : !tool.is_sponsored);
 
-      return matchesSearch && matchesCategory;
+      return (
+        matchesSearch && matchesCategory && matchesVerified && matchesSponsored
+      );
     });
-  }, [tools, search, categoryFilter, subCategoryFilter]);
+  }, [
+    tools,
+    search,
+    categoryFilter,
+    subCategoryFilter,
+    verifiedFilter,
+    sponsoredFilter,
+  ]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTools.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -302,6 +346,30 @@ export function ToolsManager({
               </option>
             ))}
           </select>
+
+          <select
+            value={verifiedFilter}
+            onChange={(event) =>
+              setVerifiedFilter(parseVerifiedFilter(event.target.value))
+            }
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="">전체 검증</option>
+            <option value="verified">검증 완료</option>
+            <option value="unverified">미검증</option>
+          </select>
+
+          <select
+            value={sponsoredFilter}
+            onChange={(event) =>
+              setSponsoredFilter(parseSponsoredFilter(event.target.value))
+            }
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          >
+            <option value="">전체 스폰서</option>
+            <option value="sponsored">스폰서</option>
+            <option value="not-sponsored">일반</option>
+          </select>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -401,6 +469,7 @@ export function ToolsManager({
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>한도 유형</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>조회수 (누적 / 30일)</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>검증</th>
+                <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>스폰서</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>수정일</th>
                 <th className={ADMIN_TABLE_HEAD_CELL_CLASS}>액션</th>
               </tr>
@@ -409,7 +478,7 @@ export function ToolsManager({
               {filteredTools.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-4 py-10 text-center text-gray-400"
                   >
                     {tools.length === 0
@@ -476,6 +545,11 @@ export function ToolsManager({
                       <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
                         <Badge variant={tool.is_verified ? 'green' : 'gray'}>
                           {tool.is_verified ? '검증됨' : '미검증'}
+                        </Badge>
+                      </td>
+                      <td className={ADMIN_TABLE_BODY_CELL_CLASS}>
+                        <Badge variant={tool.is_sponsored ? 'orange' : 'gray'}>
+                          {tool.is_sponsored ? '스폰서' : '일반'}
                         </Badge>
                       </td>
                       <td className={cn(ADMIN_TABLE_BODY_CELL_CLASS, 'text-gray-600')}>
