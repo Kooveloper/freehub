@@ -6,6 +6,7 @@ import { AdSlot } from '@/components/ads/AdSlot';
 import { AdSidebar } from '@/components/ads/AdSidebar';
 import { SoftwareApplicationJsonLd } from '@/components/seo/JsonLd';
 import { ExternalToolLink } from '@/components/tool/ExternalToolLink';
+import { TRACK_CTA_START_FREE } from '@/constants/tracking-classes';
 import { RelatedToolItem } from '@/components/tool/RelatedToolItem';
 import { ToolReviews } from '@/components/tool/ToolReviews';
 import { ViewCountTracker } from '@/components/tool/ViewCountTracker';
@@ -313,6 +314,7 @@ export default async function ToolPage({ params }: ToolPageProps) {
               <ExternalToolLink
                 toolName={tool.name}
                 href={ctaUrl}
+                trackingClass={TRACK_CTA_START_FREE}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
               >
                 지금 무료로 시작하기

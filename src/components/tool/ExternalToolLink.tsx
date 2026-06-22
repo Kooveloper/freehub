@@ -1,11 +1,14 @@
 'use client';
 
 import { trackToolClickExternal } from '@/lib/analytics';
+import { cn } from '@/lib/utils';
 
 interface ExternalToolLinkProps {
   toolName: string;
   href: string;
   className?: string;
+  /** GTM · Google Ads 클릭 트리거용 class */
+  trackingClass?: string;
   children: React.ReactNode;
 }
 
@@ -16,6 +19,7 @@ export function ExternalToolLink({
   toolName,
   href,
   className,
+  trackingClass,
   children,
 }: ExternalToolLinkProps) {
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -32,7 +36,7 @@ export function ExternalToolLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={className}
+      className={cn(className, trackingClass)}
       onClick={handleClick}
     >
       {children}

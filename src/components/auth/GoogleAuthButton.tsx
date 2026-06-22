@@ -32,6 +32,8 @@ interface GoogleAuthButtonProps {
   next?: string;
   label?: string;
   className?: string;
+  /** GTM · Google Ads 클릭 트리거용 class */
+  trackingClass?: string;
   onError?: (message: string) => void;
 }
 
@@ -40,6 +42,7 @@ export function GoogleAuthButton({
   next = '/',
   label = 'Google로 계속하기',
   className,
+  trackingClass,
   onError,
 }: GoogleAuthButtonProps) {
   const handleGoogleAuth = async () => {
@@ -59,7 +62,7 @@ export function GoogleAuthButton({
     <button
       type="button"
       onClick={handleGoogleAuth}
-      className={cn(UI_BUTTON_OUTLINE_CLASS, className)}
+      className={cn(UI_BUTTON_OUTLINE_CLASS, trackingClass, className)}
     >
       <GoogleIcon />
       {label}

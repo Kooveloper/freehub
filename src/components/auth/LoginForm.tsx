@@ -6,9 +6,14 @@ import { useState } from 'react';
 
 import { AuthCard } from '@/components/auth/AuthCard';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import {
+  TRACK_LOGIN_EMAIL,
+  TRACK_LOGIN_GOOGLE,
+} from '@/constants/tracking-classes';
 import { getOAuthCallbackErrorMessage } from '@/lib/auth-redirect';
 import { createClient } from '@/lib/supabase/client';
 import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
+import { cn } from '@/lib/utils';
 
 function getErrorMessage(message: string): string {
   const map: Record<string, string> = {
@@ -94,7 +99,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className={uiButtonPrimaryClass(loading)}
+          className={cn(uiButtonPrimaryClass(loading), TRACK_LOGIN_EMAIL)}
         >
           {loading ? '로그인 중...' : '로그인'}
         </button>
@@ -106,7 +111,11 @@ export function LoginForm() {
         <div className="h-px flex-1 bg-gray-200" />
       </div>
 
-      <GoogleAuthButton next={next} onError={(msg) => setError(getErrorMessage(msg))} />
+      <GoogleAuthButton
+        next={next}
+        trackingClass={TRACK_LOGIN_GOOGLE}
+        onError={(msg) => setError(getErrorMessage(msg))}
+      />
 
       <p className="mt-6 text-center text-sm text-gray-500">
         계정이 없으신가요?{' '}

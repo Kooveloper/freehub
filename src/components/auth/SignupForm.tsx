@@ -5,6 +5,10 @@ import { useState } from 'react';
 
 import { AuthCard } from '@/components/auth/AuthCard';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
+import {
+  TRACK_SIGNUP_EMAIL,
+  TRACK_SIGNUP_GOOGLE,
+} from '@/constants/tracking-classes';
 import { useLocale } from '@/contexts/LocaleContext';
 import { buildAuthCallbackUrl } from '@/lib/auth-redirect';
 import {
@@ -15,6 +19,7 @@ import {
 import { validateNickname } from '@/lib/nickname';
 import { createClient } from '@/lib/supabase/client';
 import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
+import { cn } from '@/lib/utils';
 
 function getErrorMessage(message: string): string {
   const map: Record<string, string> = {
@@ -144,7 +149,7 @@ export function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className={uiButtonPrimaryClass(loading)}
+          className={cn(uiButtonPrimaryClass(loading), TRACK_SIGNUP_EMAIL)}
         >
           {loading ? '가입 중...' : '회원가입'}
         </button>
@@ -158,6 +163,7 @@ export function SignupForm() {
 
       <GoogleAuthButton
         label="Google로 가입하기"
+        trackingClass={TRACK_SIGNUP_GOOGLE}
         onError={(msg) => setError(getErrorMessage(msg))}
       />
 

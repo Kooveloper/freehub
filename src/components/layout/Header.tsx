@@ -12,6 +12,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 import { LanguageToggle } from '@/components/layout/LanguageToggle';
 import { BrandLogo } from '@/components/ui/BrandLogo';
+import { TRACK_LOGIN_HEADER } from '@/constants/tracking-classes';
 import { useLocale } from '@/contexts/LocaleContext';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -134,7 +135,10 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+              className={cn(
+                'rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-neutral-800',
+                TRACK_LOGIN_HEADER,
+              )}
             >
               {t('nav.login')}
             </Link>
@@ -213,7 +217,10 @@ export function Header() {
               ) : (
                 <Link
                   href="/login"
-                  className="block rounded-lg bg-black px-4 py-2.5 text-center text-base font-semibold text-white hover:bg-neutral-800"
+                  className={cn(
+                    'block rounded-lg bg-black px-4 py-2.5 text-center text-base font-semibold text-white hover:bg-neutral-800',
+                    TRACK_LOGIN_HEADER,
+                  )}
                   onClick={() => setMobileOpen(false)}
                 >
                   {t('nav.login')}

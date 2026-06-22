@@ -5,6 +5,11 @@ import Link from 'next/link';
 import { useEffect } from 'react';
 
 import { UI_BUTTON_OUTLINE_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
+import {
+  TRACK_LOGIN_MODAL,
+  TRACK_SIGNUP_MODAL,
+} from '@/constants/tracking-classes';
+import { cn } from '@/lib/utils';
 
 interface LoginPromptModalProps {
   isOpen: boolean;
@@ -72,14 +77,14 @@ export function LoginPromptModal({ isOpen, onClose }: LoginPromptModalProps) {
             <Link
               href="/login"
               onClick={onClose}
-              className={uiButtonPrimaryClass(false)}
+              className={cn(uiButtonPrimaryClass(false), TRACK_LOGIN_MODAL)}
             >
               로그인하기
             </Link>
             <Link
               href="/signup"
               onClick={onClose}
-              className={UI_BUTTON_OUTLINE_CLASS}
+              className={cn(UI_BUTTON_OUTLINE_CLASS, TRACK_SIGNUP_MODAL)}
             >
               회원가입
             </Link>
