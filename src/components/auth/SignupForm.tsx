@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { AuthCard } from '@/components/auth/AuthCard';
+import { SignupConsentFields } from '@/components/auth/SignupConsentFields';
 import { GoogleAuthButton } from '@/components/auth/GoogleAuthButton';
 import {
   TRACK_SIGNUP_EMAIL,
@@ -17,6 +18,13 @@ import {
   SIGNUP_PASSWORD_RULE_MESSAGE,
 } from '@/lib/password';
 import { validateNickname } from '@/lib/nickname';
+import {
+  buildConsentUserMetadata,
+  EMPTY_SIGNUP_CONSENT,
+  isRequiredConsentComplete,
+  saveSignupConsentSession,
+  type SignupConsentState,
+} from '@/lib/signup-consent';
 import { createClient } from '@/lib/supabase/client';
 import { UI_INPUT_CLASS, uiButtonPrimaryClass } from '@/lib/ui/form';
 import { cn } from '@/lib/utils';
@@ -48,6 +56,7 @@ export function SignupForm() {
   const [email, setEmail] = useState('');
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
+  const [consent, setConsent] = useState<SignupConsentState>(EMPTY_SIGNUP_CONSENT);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -71,6 +80,11 @@ export function SignupForm() {
       return;
     }
 
+    if (!isRequiredConsentComplete(consent)) {
+      setError(t('auth.consentRequiredError'));
+      return;
+    }
+
     setLoading(true);
 
     const supabase = createClient();
@@ -78,7 +92,11 @@ export function SignupForm() {
       email: email.trim(),
       password,
       options: {
-        data: { locale, nickname: nickname.trim() },
+        data: {
+          locale,
+          nickname: nickname.trim(),
+          ...buildConsentUserMetadata(consent),
+        },
         emailRedirectTo: buildAuthCallbackUrl('/'),
       },
     });
@@ -153,6 +171,8 @@ export function SignupForm() {
           className={UI_INPUT_CLASS}
         />
 
+        <SignupConsentFields value={consent} onChange={setConsent} />
+
         {error && (
           <p className="text-sm text-red-600" role="alert">
             {error}
@@ -161,7 +181,7 @@ export function SignupForm() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !isRequiredConsentComplete(consent)}
           className={cn(uiButtonPrimaryClass(loading), TRACK_SIGNUP_EMAIL)}
         >
           {loading ? t('auth.signupLoading') : t('auth.signupButton')}
@@ -177,6 +197,15 @@ export function SignupForm() {
       <GoogleAuthButton
         label={t('auth.googleSignup')}
         trackingClass={TRACK_SIGNUP_GOOGLE}
+        onBeforeAuth={() => {
+          if (!isRequiredConsentComplete(consent)) {
+            setError(t('auth.consentRequiredError'));
+            return false;
+          }
+          saveSignupConsentSession(consent);
+          setError('');
+          return true;
+        }}
         onError={(msg) => setError(getErrorMessage(msg, locale))}
       />
 

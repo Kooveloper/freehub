@@ -35,6 +35,7 @@ interface GoogleAuthButtonProps {
   className?: string;
   /** GTM · Google Ads 클릭 트리거용 class */
   trackingClass?: string;
+  onBeforeAuth?: () => boolean;
   onError?: (message: string) => void;
 }
 
@@ -44,11 +45,16 @@ export function GoogleAuthButton({
   label,
   className,
   trackingClass,
+  onBeforeAuth,
   onError,
 }: GoogleAuthButtonProps) {
   const { t } = useLocale();
   const buttonLabel = label ?? t('auth.googleContinue');
   const handleGoogleAuth = async () => {
+    if (onBeforeAuth && !onBeforeAuth()) {
+      return;
+    }
+
     const supabase = createClient();
 
     const { error } = await supabase.auth.signInWithOAuth({

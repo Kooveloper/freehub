@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { createUserProfile, getProfileByUserId, updateUserNickname } from '@/lib/supabase/profiles';
+import type { ProfileConsentInput } from '@/lib/supabase/profiles';
 import { isValidSignupPassword } from '@/lib/password';
 import { createClient } from '@/lib/supabase/server';
 
@@ -45,9 +46,25 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const nickname = body?.nickname as string | undefined;
+  const consent: ProfileConsentInput | null =
+    body?.terms_agreed_at && body?.privacy_agreed_at
+      ? {
+          terms_agreed_at: String(body.terms_agreed_at),
+          privacy_agreed_at: String(body.privacy_agreed_at),
+          marketing_opt_in: Boolean(body.marketing_opt_in),
+          marketing_opt_in_at:
+            typeof body.marketing_opt_in_at === 'string'
+              ? body.marketing_opt_in_at
+              : null,
+        }
+      : null;
 
   if (!nickname) {
     return NextResponse.json({ error: '닉네임을 입력해 주세요.' }, { status: 400 });
+  }
+
+  if (!consent?.terms_agreed_at || !consent.privacy_agreed_at) {
+    return NextResponse.json({ error: '필수 약관에 동의해 주세요.' }, { status: 400 });
   }
 
   const existing = await getProfileByUserId(auth.supabase, auth.user.id);
@@ -59,6 +76,7 @@ export async function POST(request: Request) {
     auth.supabase,
     auth.user.id,
     nickname,
+    consent,
   );
 
   if (error || !profile) {
