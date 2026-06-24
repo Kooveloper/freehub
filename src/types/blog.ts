@@ -42,6 +42,7 @@ export interface CtaLink {
   label: string;
   url: string;
   color: CtaColor;
+  category_slug?: BlogTargetCategory | null;
 }
 
 export interface BlogPost {

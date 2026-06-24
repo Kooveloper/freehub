@@ -68,17 +68,42 @@ export const CTA_COLOR_BADGE_CLASS: Record<CtaColor, string> = {
   teal: 'bg-teal-100 text-teal-800',
 };
 
+export const CTA_COLOR_OPTIONS: CtaColor[] = [
+  'blue',
+  'green',
+  'orange',
+  'purple',
+  'red',
+  'pink',
+  'amber',
+  'teal',
+];
+
+export function getDefaultCtaForCategory(slug: BlogTargetCategory) {
+  return CATEGORY_CTA_MAP[slug];
+}
+
 export function syncCtaLinksFromCategories(
   targetCategories: BlogTargetCategory[],
   existingLinks?: CtaLink[] | null,
 ): CtaLink[] {
   return targetCategories.map((slug) => {
     const template = CATEGORY_CTA_MAP[slug];
-    const existing = existingLinks?.find((link) => link.url === template.url);
+    const existing =
+      existingLinks?.find((link) => link.category_slug === slug) ??
+      existingLinks?.find((link) => link.url === template.url);
+
+    if (existing) {
+      return {
+        ...existing,
+        category_slug: slug,
+      };
+    }
 
     return {
-      id: existing?.id ?? crypto.randomUUID(),
-      label: existing?.label?.trim() ? existing.label : template.label,
+      id: crypto.randomUUID(),
+      category_slug: slug,
+      label: template.label,
       url: template.url,
       color: template.color,
     };

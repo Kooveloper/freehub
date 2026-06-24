@@ -1,12 +1,14 @@
 'use client';
 
-import { Loader2, Pencil } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Toast, useToast } from '@/components/admin/Toast';
 import {
   CATEGORY_EMOJI,
   CTA_COLOR_BADGE_CLASS,
+  CTA_COLOR_OPTIONS,
+  getDefaultCtaForCategory,
   syncCtaLinksFromCategories,
 } from '@/constants/categoryCta';
 import { cn } from '@/lib/utils';
@@ -14,6 +16,8 @@ import type { Category } from '@/types/tool';
 import type {
   BlogAutomationSettings,
   BlogTargetCategory,
+  CtaColor,
+  CtaLink,
   PostLength,
   PublishSchedule,
 } from '@/types/blog';
@@ -42,7 +46,6 @@ export function BlogAutomationSettingsForm({
   const [testResult, setTestResult] = useState<string | null>(null);
   const [settings, setSettings] = useState<BlogAutomationSettings | null>(null);
   const [keywordInput, setKeywordInput] = useState('');
-  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
 
   const orderedCategories = useMemo(
     () =>
@@ -177,6 +180,23 @@ export function BlogAutomationSettingsForm({
   const keywords = settings.main_keywords ?? [];
   const targetCategories = normalizeTargetCategories(settings.target_categories);
 
+  const updateCta = (id: string, patch: Partial<CtaLink>) => {
+    update(
+      'cta_links',
+      ctaLinks.map((item) => (item.id === id ? { ...item, ...patch } : item)),
+    );
+  };
+
+  const resetCtaToDefault = (id: string, slug: BlogTargetCategory) => {
+    const defaults = getDefaultCtaForCategory(slug);
+    updateCta(id, {
+      label: defaults.label,
+      url: defaults.url,
+      color: defaults.color,
+      category_slug: slug,
+    });
+  };
+
   return (
     <>
       <div className="mx-auto max-w-3xl space-y-6">
@@ -309,7 +329,8 @@ export function BlogAutomationSettingsForm({
 
         <Card title="CTA 링크 (타겟 카테고리에 따라 자동 생성됨)">
           <p className="mb-3 text-xs text-gray-500">
-            타겟 카테고리를 선택하면 아래 CTA 버튼이 자동으로 블로그 글에 삽입됩니다.
+            타겟 카테고리를 선택하면 기본 CTA가 자동으로 채워집니다. 필요하면 라벨,
+            URL, 색상을 수정할 수 있습니다.
           </p>
           {ctaLinks.length === 0 ? (
             <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
@@ -318,68 +339,89 @@ export function BlogAutomationSettingsForm({
           ) : (
             <div className="space-y-3">
               {ctaLinks.map((cta, index) => {
-                const categorySlug = targetCategories[index];
-                const isEditing = editingLabelId === cta.id;
+                const categorySlug =
+                  cta.category_slug ?? targetCategories[index] ?? null;
 
                 return (
                   <div
                     key={cta.id}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-4"
+                    className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3"
                   >
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        {categorySlug && (
-                          <p className="mb-1 text-xs font-medium text-gray-500">
-                            {CATEGORY_EMOJI[categorySlug]}{' '}
-                            {orderedCategories.find((c) => c.slug === categorySlug)
-                              ?.name ?? categorySlug}
-                          </p>
-                        )}
-                        {isEditing ? (
-                          <input
-                            type="text"
-                            value={cta.label}
-                            autoFocus
-                            onChange={(e) => {
-                              const next = ctaLinks.map((item) =>
-                                item.id === cta.id
-                                  ? { ...item, label: e.target.value }
-                                  : item,
-                              );
-                              update('cta_links', next);
-                            }}
-                            onBlur={() => setEditingLabelId(null)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === 'Escape') {
-                                setEditingLabelId(null);
-                              }
-                            }}
-                            className={INPUT_CLASS}
-                          />
-                        ) : (
-                          <p className="text-sm font-medium text-gray-900">
-                            {cta.label || '라벨 없음'}
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setEditingLabelId(cta.id)}
-                        className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                        라벨 수정
-                      </button>
-                    </div>
-                    <p className="truncate text-xs text-gray-500">{cta.url}</p>
-                    <span
-                      className={cn(
-                        'mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                        CTA_COLOR_BADGE_CLASS[cta.color],
+                    <div className="flex items-start justify-between gap-3">
+                      {categorySlug ? (
+                        <p className="text-xs font-medium text-gray-500">
+                          {CATEGORY_EMOJI[categorySlug]}{' '}
+                          {orderedCategories.find((c) => c.slug === categorySlug)
+                            ?.name ?? categorySlug}
+                        </p>
+                      ) : (
+                        <p className="text-xs font-medium text-gray-500">CTA</p>
                       )}
-                    >
-                      {cta.color}
-                    </span>
+                      {categorySlug && (
+                        <button
+                          type="button"
+                          onClick={() => resetCtaToDefault(cta.id, categorySlug)}
+                          className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700"
+                        >
+                          기본값 복원
+                        </button>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">
+                        라벨
+                      </label>
+                      <input
+                        type="text"
+                        value={cta.label}
+                        onChange={(e) => updateCta(cta.id, { label: e.target.value })}
+                        placeholder="CTA 버튼 텍스트"
+                        className={INPUT_CLASS}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">
+                        URL
+                      </label>
+                      <input
+                        type="url"
+                        value={cta.url}
+                        onChange={(e) => updateCta(cta.id, { url: e.target.value })}
+                        placeholder="https://www.freehub.kr/category/..."
+                        className={INPUT_CLASS}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-gray-600">
+                        색상
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={cta.color}
+                          onChange={(e) =>
+                            updateCta(cta.id, { color: e.target.value as CtaColor })
+                          }
+                          className={INPUT_CLASS}
+                        >
+                          {CTA_COLOR_OPTIONS.map((color) => (
+                            <option key={color} value={color}>
+                              {color}
+                            </option>
+                          ))}
+                        </select>
+                        <span
+                          className={cn(
+                            'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                            CTA_COLOR_BADGE_CLASS[cta.color],
+                          )}
+                        >
+                          {cta.color}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
