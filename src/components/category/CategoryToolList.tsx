@@ -9,60 +9,16 @@ import { ToolCard } from '@/components/tools/ToolCard';
 import type { SortOption } from '@/components/tools/tool-filter-options';
 import { useFavorites } from '@/hooks/useFavorites';
 import { toolInSubCategory } from '@/lib/tool-categories';
+import {
+  applyToolFilters,
+  orderWithFavorites,
+  parseFilters,
+  sortTools,
+} from '@/lib/tool-filters';
 import { cn, formatFreeLimit } from '@/lib/utils';
-import type { FreeLimitType, Tool } from '@/types/tool';
+import type { Tool } from '@/types/tool';
 
 const PAGE_SIZE = 20;
-
-const LIMIT_KEYS = new Set(['daily', 'monthly', 'unlimited', 'other']);
-
-function parseFilters(param: string | null): Set<string> {
-  if (!param) return new Set();
-  return new Set(param.split(',').filter(Boolean));
-}
-
-function applyFilters(tools: Tool[], filters: Set<string>): Tool[] {
-  const limitFilters = [...filters].filter((f) => LIMIT_KEYS.has(f));
-
-  return tools.filter((tool) => {
-    if (limitFilters.length > 0) {
-      if (!limitFilters.includes(tool.free_limit_type as FreeLimitType)) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-}
-
-function sortTools(tools: Tool[], sort: SortOption): Tool[] {
-  const copy = [...tools];
-
-  switch (sort) {
-    case 'updated':
-      return copy.sort(
-        (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-      );
-    case 'name':
-      return copy.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-    default:
-      return copy.sort((a, b) => b.view_count - a.view_count);
-  }
-}
-
-/** 즐겨찾기를 맨 앞으로, 나머지는 정렬 순서 유지 */
-function orderWithFavorites(tools: Tool[], favoriteIds: string[]): Tool[] {
-  const favoriteSet = new Set(favoriteIds);
-  const toolMap = new Map(tools.map((t) => [t.id, t]));
-
-  const favorites = favoriteIds
-    .map((id) => toolMap.get(id))
-    .filter((t): t is Tool => t != null);
-
-  const others = tools.filter((t) => !favoriteSet.has(t.id));
-  return [...favorites, ...others];
-}
 
 interface CategoryToolListProps {
   tools: Tool[];
@@ -82,21 +38,22 @@ export function CategoryToolList({
   const searchParams = useSearchParams();
   const { favorites } = useFavorites();
 
-  const filters = parseFilters(searchParams.get('filter'));
+  const filterParam = searchParams.get('filter');
   const sort = (searchParams.get('sort') as SortOption) || 'popular';
   const page = Math.max(1, Number(searchParams.get('page')) || 1);
   const activeSub = searchParams.get('sub');
 
   const processedTools = useMemo(() => {
+    const filters = parseFilters(filterParam);
     const subFiltered = activeSub
       ? tools.filter((tool) =>
           toolInSubCategory(tool, categorySlug, activeSub),
         )
       : tools;
-    const filtered = applyFilters(subFiltered, filters);
+    const filtered = applyToolFilters(subFiltered, filters);
     const sorted = sortTools(filtered, sort);
     return orderWithFavorites(sorted, favorites);
-  }, [tools, activeSub, filters, sort, favorites]);
+  }, [tools, activeSub, filterParam, sort, favorites, categorySlug]);
 
   const totalPages = Math.max(1, Math.ceil(processedTools.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);

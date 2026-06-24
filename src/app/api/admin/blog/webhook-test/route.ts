@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-api';
-import { normalizeMainKeywords } from '@/lib/blog/keyword-items';
+import { buildBlogWebhookPayload } from '@/lib/blog/webhook-payload';
 import { getAutomationSettings } from '@/lib/supabase/blog-queries';
 
 export async function POST() {
@@ -19,15 +19,7 @@ export async function POST() {
       );
     }
 
-    const mainKeywords = normalizeMainKeywords(settings.main_keywords);
-    const payload = {
-      main_keywords: mainKeywords,
-      target_categories: settings.target_categories ?? [],
-      cta_links: settings.cta_links ?? [],
-      tone: settings.tone,
-      post_length: settings.post_length,
-      auto_publish: settings.auto_publish,
-    };
+    const payload = buildBlogWebhookPayload(settings);
 
     const response = await fetch(webhookUrl, {
       method: 'POST',

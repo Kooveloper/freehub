@@ -5,6 +5,7 @@ import {
   matchesPublishSchedule,
   matchesPublishTime,
 } from '@/lib/blog/cron-schedule';
+import { buildBlogWebhookPayload } from '@/lib/blog/webhook-payload';
 import { getAutomationSettings } from '@/lib/supabase/blog-queries';
 
 export const dynamic = 'force-dynamic';
@@ -74,14 +75,7 @@ export async function GET(request: Request) {
       `[cron/blog-trigger] firing webhook (kst=${getKstTimeLabel()}, publish_time=${settings.publish_time})`,
     );
 
-    const payload = {
-      main_keywords: settings.main_keywords,
-      cta_links: settings.cta_links,
-      tone: settings.tone,
-      post_length: settings.post_length,
-      auto_publish: settings.auto_publish,
-      target_categories: settings.target_categories,
-    };
+    const payload = buildBlogWebhookPayload(settings);
 
     const response = await fetch(webhookUrl, {
       method: 'POST',
@@ -105,7 +99,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       success: true,
       status: response.status,
-      payload,
+      kst_time: getKstTimeLabel(),
       response: responseText.slice(0, 500) || null,
     });
   } catch (error) {

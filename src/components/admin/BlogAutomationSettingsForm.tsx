@@ -12,7 +12,7 @@ import {
   getDefaultCtaForCategory,
   syncCtaLinksFromCategories,
 } from '@/constants/categoryCta';
-import { normalizeMainKeywords } from '@/lib/blog/keyword-items';
+import { normalizeAutomationSettings } from '@/lib/blog/automation-normalize';
 import { normalizePublishHour } from '@/lib/blog/cron-schedule';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types/tool';
@@ -35,10 +35,10 @@ interface BlogAutomationSettingsFormProps {
   categories: Category[];
 }
 
-function normalizeTargetCategories(
-  values: string[] | null | undefined,
-): BlogTargetCategory[] {
-  return (values ?? []).filter(isBlogTargetCategory);
+function applyLoadedSettings(
+  raw: BlogAutomationSettings,
+): BlogAutomationSettings {
+  return normalizeAutomationSettings(raw as unknown as Record<string, unknown>);
 }
 
 export function BlogAutomationSettingsForm({
@@ -50,6 +50,7 @@ export function BlogAutomationSettingsForm({
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [settings, setSettings] = useState<BlogAutomationSettings | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [expandedCtaIds, setExpandedCtaIds] = useState<Set<string>>(new Set());
 
   const orderedCategories = useMemo(
@@ -61,29 +62,39 @@ export function BlogAutomationSettingsForm({
   );
 
   useEffect(() => {
-    fetch('/api/admin/blog/automation')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.settings) return;
+    let cancelled = false;
 
-        const targetCategories = normalizeTargetCategories(
-          data.settings.target_categories,
-        );
-        const mainKeywords = normalizeMainKeywords(data.settings.main_keywords);
-        const ctaLinks = syncCtaLinksFromCategories(
-          targetCategories,
-          data.settings.cta_links,
-        );
+    void (async () => {
+      try {
+        const res = await fetch('/api/admin/blog/automation');
+        const data = await res.json();
 
-        setSettings({
-          ...data.settings,
-          main_keywords: mainKeywords,
-          target_categories: targetCategories,
-          cta_links: ctaLinks,
-          publish_time: normalizePublishHour(data.settings.publish_time),
-        });
-      })
-      .finally(() => setLoading(false));
+        if (!res.ok) {
+          throw new Error(data.error ?? '설정 조회 실패');
+        }
+        if (!data.settings) {
+          throw new Error('설정을 찾을 수 없습니다');
+        }
+
+        if (!cancelled) {
+          setSettings(applyLoadedSettings(data.settings));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setLoadError(
+            error instanceof Error ? error.message : '설정을 불러오지 못했습니다',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const update = <K extends keyof BlogAutomationSettings>(
@@ -94,40 +105,36 @@ export function BlogAutomationSettingsForm({
   };
 
   const toggleTargetCategory = (slug: BlogTargetCategory, checked: boolean) => {
-    if (!settings) return;
+    setSettings((prev) => {
+      if (!prev) return prev;
 
-    const current = normalizeTargetCategories(settings.target_categories);
-    const nextSet = new Set(current);
+      const current = prev.target_categories ?? [];
+      const nextSet = new Set(current);
 
-    if (checked) {
-      nextSet.add(slug);
-    } else {
-      nextSet.delete(slug);
-    }
+      if (checked) {
+        nextSet.add(slug);
+      } else {
+        nextSet.delete(slug);
+      }
 
-    const nextCategories = orderedCategories
-      .map((category) => category.slug)
-      .filter((categorySlug): categorySlug is BlogTargetCategory =>
-        nextSet.has(categorySlug as BlogTargetCategory),
-      );
+      const nextCategories = orderedCategories
+        .map((category) => category.slug)
+        .filter((categorySlug): categorySlug is BlogTargetCategory =>
+          nextSet.has(categorySlug as BlogTargetCategory),
+        );
 
-    update('target_categories', nextCategories);
-    update(
-      'cta_links',
-      syncCtaLinksFromCategories(nextCategories, settings.cta_links),
-    );
+      return {
+        ...prev,
+        target_categories: nextCategories,
+        cta_links: syncCtaLinksFromCategories(nextCategories, prev.cta_links),
+      };
+    });
   };
 
   const handleSave = async () => {
     if (!settings) return;
 
-    const targetCategories = normalizeTargetCategories(settings.target_categories);
-    const mainKeywords = normalizeMainKeywords(settings.main_keywords);
-    const ctaLinks = syncCtaLinksFromCategories(
-      targetCategories,
-      settings.cta_links,
-    );
-    const publishTime = normalizePublishHour(settings.publish_time);
+    const normalized = applyLoadedSettings(settings);
 
     setSaving(true);
     try {
@@ -135,21 +142,21 @@ export function BlogAutomationSettingsForm({
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          is_enabled: settings.is_enabled,
-          publish_schedule: settings.publish_schedule,
-          publish_time: publishTime,
-          main_keywords: mainKeywords,
-          cta_links: ctaLinks,
-          target_categories: targetCategories,
-          tone: settings.tone,
-          post_length: settings.post_length,
-          auto_publish: settings.auto_publish,
-          webhook_url: settings.webhook_url,
+          is_enabled: normalized.is_enabled,
+          publish_schedule: normalized.publish_schedule,
+          publish_time: normalized.publish_time,
+          main_keywords: normalized.main_keywords,
+          cta_links: normalized.cta_links,
+          target_categories: normalized.target_categories,
+          tone: normalized.tone,
+          post_length: normalized.post_length,
+          auto_publish: normalized.auto_publish,
+          webhook_url: normalized.webhook_url,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? '저장 실패');
-      setSettings(data.settings);
+      setSettings(applyLoadedSettings(data.settings));
       showToast('자동화 설정이 저장되었습니다 ✅', 'success');
     } catch (error) {
       showToast(error instanceof Error ? error.message : '저장 실패', 'error');
@@ -173,13 +180,22 @@ export function BlogAutomationSettingsForm({
     }
   };
 
-  if (loading || !settings) {
+  if (loading) {
     return <p className="text-sm text-gray-500">설정을 불러오는 중…</p>;
+  }
+
+  if (loadError) {
+    return <p className="text-sm text-red-600">{loadError}</p>;
+  }
+
+  if (!settings) {
+    return null;
   }
 
   const ctaLinks = settings.cta_links ?? [];
   const keywords = settings.main_keywords ?? [];
-  const targetCategories = normalizeTargetCategories(settings.target_categories);
+  const targetCategories = settings.target_categories ?? [];
+  const publishHour = normalizePublishHour(settings.publish_time).split(':')[0];
 
   const updateCta = (id: string, patch: Partial<CtaLink>) => {
     update(
@@ -261,7 +277,7 @@ export function BlogAutomationSettingsForm({
             발행 시각 (KST, 정각)
           </label>
           <select
-            value={normalizePublishHour(settings.publish_time).split(':')[0]}
+            value={publishHour}
             onChange={(e) =>
               update('publish_time', `${e.target.value.padStart(2, '0')}:00`)
             }

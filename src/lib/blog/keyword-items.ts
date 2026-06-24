@@ -7,6 +7,8 @@ function createKeywordItemId(): string {
   return `kw-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+export { createKeywordItemId };
+
 export function normalizeMainKeywords(raw: unknown): KeywordItem[] {
   if (!Array.isArray(raw)) return [];
 

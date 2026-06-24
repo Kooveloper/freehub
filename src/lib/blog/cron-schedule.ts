@@ -13,7 +13,8 @@ function getKstDateParts(now = new Date()) {
 
   const parts = formatter.formatToParts(now);
   const weekday = parts.find((part) => part.type === 'weekday')?.value ?? 'Sun';
-  const hour = Number(parts.find((part) => part.type === 'hour')?.value ?? '0');
+  const hourPart = parts.find((part) => part.type === 'hour')?.value ?? '0';
+  const hour = Number(hourPart === '24' ? '0' : hourPart);
   const minute = Number(parts.find((part) => part.type === 'minute')?.value ?? '0');
 
   const weekdayMap: Record<string, number> = {

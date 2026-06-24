@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-api';
+import { pickAutomationPatch } from '@/lib/blog/automation-normalize';
 import {
   getAutomationSettings,
   updateAutomationSettings,
 } from '@/lib/supabase/blog-queries';
-import type { BlogAutomationSettings } from '@/types/blog';
 
 export async function GET() {
   const authError = await requireAdmin();
@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
   const authError = await requireAdmin();
   if (authError) return authError;
 
-  let body: Partial<BlogAutomationSettings>;
+  let body: Record<string, unknown>;
   try {
     body = await request.json();
   } catch {
@@ -32,8 +32,8 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    await updateAutomationSettings(body);
-    const settings = await getAutomationSettings();
+    const patch = pickAutomationPatch(body);
+    const settings = await updateAutomationSettings(patch);
     return NextResponse.json({ settings });
   } catch (error) {
     const message = error instanceof Error ? error.message : '저장 실패';

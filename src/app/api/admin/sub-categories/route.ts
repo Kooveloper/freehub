@@ -21,12 +21,23 @@ export async function GET(request: Request) {
   const categorySlug = searchParams.get('category_slug')?.trim();
 
   try {
-    const subCategories = await getAdminSubCategories();
-    const filtered = categorySlug
-      ? subCategories.filter((sub) => sub.category_slug === categorySlug)
-      : subCategories;
+    if (categorySlug) {
+      const supabase = createServiceClient();
+      const { data, error } = await supabase
+        .from('sub_categories')
+        .select('*')
+        .eq('category_slug', categorySlug)
+        .order('sort_order', { ascending: true });
 
-    return NextResponse.json({ subCategories: filtered });
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return NextResponse.json({ subCategories: data ?? [] });
+    }
+
+    const subCategories = await getAdminSubCategories();
+    return NextResponse.json({ subCategories });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : '서브카테고리 조회 실패';

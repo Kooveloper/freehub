@@ -3,11 +3,10 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import type {
   BlogAutomationSettings,
   BlogPost,
-  CtaLink,
   KeywordItem,
 } from '@/types/blog';
 
-import { normalizeMainKeywords } from '@/lib/blog/keyword-items';
+import { normalizeAutomationSettings } from '@/lib/blog/automation-normalize';
 
 import { createClient, createStaticClient } from './server';
 
@@ -23,12 +22,7 @@ function mapPost(row: Record<string, unknown>): BlogPost {
 }
 
 function mapSettings(row: Record<string, unknown>): BlogAutomationSettings {
-  const cta = row.cta_links;
-  return {
-    ...(row as unknown as BlogAutomationSettings),
-    main_keywords: normalizeMainKeywords(row.main_keywords),
-    cta_links: Array.isArray(cta) ? (cta as CtaLink[]) : [],
-  };
+  return normalizeAutomationSettings(row);
 }
 
 export async function getAllBlogPosts(): Promise<BlogPost[]> {
@@ -190,17 +184,23 @@ export async function updateAutomationSettings(
   data: Partial<Omit<BlogAutomationSettings, 'main_keywords'>> & {
     main_keywords?: KeywordItem[] | null;
   },
-): Promise<void> {
+): Promise<BlogAutomationSettings> {
   const supabase = createServiceClient();
   const current = await getAutomationSettings();
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('blog_automation_settings')
     .update({
       ...data,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', current.id);
+    .eq('id', current.id)
+    .select('*')
+    .single();
 
-  if (error) throw new Error(`자동화 설정 저장 실패: ${error.message}`);
+  if (error || !updated) {
+    throw new Error(`자동화 설정 저장 실패: ${error?.message ?? 'unknown'}`);
+  }
+
+  return mapSettings(updated);
 }

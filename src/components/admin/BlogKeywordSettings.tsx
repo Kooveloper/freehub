@@ -1,9 +1,10 @@
 'use client';
 
 import { Pencil, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { CATEGORY_EMOJI } from '@/constants/categoryCta';
+import { createKeywordItemId } from '@/lib/blog/keyword-items';
 import { cn } from '@/lib/utils';
 import { isBlogTargetCategory } from '@/types/blog';
 import type { KeywordItem } from '@/types/blog';
@@ -32,10 +33,6 @@ const EMPTY_DRAFT: KeywordDraft = {
   sub_category: '',
 };
 
-function createKeywordItemId(): string {
-  return crypto.randomUUID();
-}
-
 export function BlogKeywordSettings({
   categories,
   keywords,
@@ -43,29 +40,49 @@ export function BlogKeywordSettings({
 }: BlogKeywordSettingsProps) {
   const [draft, setDraft] = useState<KeywordDraft>(EMPTY_DRAFT);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
+  const [subCategoryBySlug, setSubCategoryBySlug] = useState<
+    Record<string, SubCategory[]>
+  >({});
+  const fetchedSlugsRef = useRef<Set<string>>(new Set());
 
   const orderedCategories = useMemo(
     () => [...categories].sort((a, b) => a.sort_order - b.sort_order),
     [categories],
   );
 
-  const subCategories = useMemo(
-    () =>
-      allSubCategories.filter((sub) => sub.category_slug === draft.category),
-    [allSubCategories, draft.category],
+  const subCategories = subCategoryBySlug[draft.category] ?? [];
+
+  const allSubCategories = useMemo(
+    () => Object.values(subCategoryBySlug).flat(),
+    [subCategoryBySlug],
   );
 
   useEffect(() => {
-    void fetch('/api/admin/sub-categories')
-      .then((res) => res.json())
-      .then((data) => {
-        setAllSubCategories((data.subCategories ?? []) as SubCategory[]);
-      })
-      .catch(() => {
-        setAllSubCategories([]);
-      });
-  }, []);
+    const slugs = new Set<string>();
+    if (draft.category) slugs.add(draft.category);
+    keywords.forEach((item) => {
+      if (item.category) slugs.add(item.category);
+    });
+
+    slugs.forEach((slug) => {
+      if (fetchedSlugsRef.current.has(slug)) return;
+      fetchedSlugsRef.current.add(slug);
+
+      void fetch(
+        `/api/admin/sub-categories?category_slug=${encodeURIComponent(slug)}`,
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          setSubCategoryBySlug((prev) => ({
+            ...prev,
+            [slug]: (data.subCategories ?? []) as SubCategory[],
+          }));
+        })
+        .catch(() => {
+          fetchedSlugsRef.current.delete(slug);
+        });
+    });
+  }, [draft.category, keywords]);
 
   const canSubmit =
     draft.keyword.trim().length > 0 && Boolean(draft.category) && Boolean(draft.sub_category);
