@@ -77,32 +77,34 @@ export default async function BlogListPage({ searchParams }: BlogListPageProps) 
       />
 
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="scrollbar-hide -mx-4 mb-8 flex gap-2 overflow-x-auto px-4">
-          <Link
-            href="/blog"
-            className={cn(
-              'shrink-0 rounded-full px-4 py-2 text-sm font-medium transition',
-              !category
-                ? 'bg-neutral-900 text-white'
-                : 'bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50',
-            )}
-          >
-            {t('blog.all')}
-          </Link>
-          {localizedFilterCategories.map((cat) => (
+        <div className="scrollbar-hide -mx-4 mb-8 overflow-x-auto px-4 py-2">
+          <div className="flex gap-2">
             <Link
-              key={cat.slug}
-              href={`/blog?category=${cat.slug}`}
+              href="/blog"
               className={cn(
                 'shrink-0 rounded-full px-4 py-2 text-sm font-medium transition',
-                category === cat.slug
+                !category
                   ? 'bg-neutral-900 text-white'
                   : 'bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50',
               )}
             >
-              {cat.name}
+              {t('blog.all')}
             </Link>
-          ))}
+            {localizedFilterCategories.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/blog?category=${cat.slug}`}
+                className={cn(
+                  'shrink-0 rounded-full px-4 py-2 text-sm font-medium transition',
+                  category === cat.slug
+                    ? 'bg-neutral-900 text-white'
+                    : 'bg-white text-neutral-700 ring-1 ring-neutral-200 hover:bg-neutral-50',
+                )}
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
         </div>
 
         {posts.length === 0 ? (

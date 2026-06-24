@@ -2,7 +2,40 @@ export type BlogPostStatus = 'draft' | 'published';
 export type BlogPostSource = 'manual' | 'auto';
 export type PublishSchedule = 'daily' | 'weekdays' | 'weekly';
 export type PostLength = 'short' | 'medium' | 'long';
-export type CtaColor = 'blue' | 'green' | 'orange' | 'purple';
+export type CtaColor =
+  | 'blue'
+  | 'green'
+  | 'orange'
+  | 'purple'
+  | 'red'
+  | 'pink'
+  | 'amber'
+  | 'teal';
+
+export type BlogTargetCategory =
+  | 'image'
+  | 'text'
+  | 'video'
+  | 'audio'
+  | 'code'
+  | 'design'
+  | 'marketing'
+  | 'productivity';
+
+export const BLOG_TARGET_CATEGORY_SLUGS: BlogTargetCategory[] = [
+  'image',
+  'text',
+  'video',
+  'audio',
+  'code',
+  'design',
+  'marketing',
+  'productivity',
+];
+
+export function isBlogTargetCategory(slug: string): slug is BlogTargetCategory {
+  return (BLOG_TARGET_CATEGORY_SLUGS as string[]).includes(slug);
+}
 
 export interface CtaLink {
   id: string;
@@ -34,7 +67,7 @@ export interface BlogAutomationSettings {
   publish_time: string;
   main_keywords: string[] | null;
   cta_links: CtaLink[] | null;
-  target_categories: string[] | null;
+  target_categories: BlogTargetCategory[] | null;
   tone: string;
   post_length: PostLength;
   auto_publish: boolean;

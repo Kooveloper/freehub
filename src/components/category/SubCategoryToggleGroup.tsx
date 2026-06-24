@@ -55,13 +55,13 @@ export function SubCategoryToggleGroup({
   return (
     <div
       className={cn(
-        'scrollbar-hide min-w-0 overflow-x-auto overscroll-x-contain',
+        'scrollbar-hide min-w-0 overflow-x-auto overscroll-x-contain py-2',
         '[-webkit-overflow-scrolling:touch]',
         edgeBleedClass(edgeBleed),
         className,
       )}
     >
-      <div className="flex w-max flex-nowrap items-center gap-2 pb-0.5">
+      <div className="flex w-max flex-nowrap items-center gap-2">
         <TogglePill
           active={!activeSub}
           accentHex={accentHex}

@@ -1,34 +1,40 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Loader2, Pencil } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { Toast, useToast } from '@/components/admin/Toast';
-import { CATEGORIES } from '@/constants/categories';
+import {
+  CATEGORY_EMOJI,
+  CTA_COLOR_BADGE_CLASS,
+  syncCtaLinksFromCategories,
+} from '@/constants/categoryCta';
 import { cn } from '@/lib/utils';
+import type { Category } from '@/types/tool';
 import type {
   BlogAutomationSettings,
-  CtaColor,
-  CtaLink,
+  BlogTargetCategory,
   PostLength,
   PublishSchedule,
 } from '@/types/blog';
+import { isBlogTargetCategory } from '@/types/blog';
 
 const INPUT_CLASS =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
 
-const CTA_COLORS: CtaColor[] = ['blue', 'green', 'orange', 'purple'];
-
-function newCta(): CtaLink {
-  return {
-    id: crypto.randomUUID(),
-    label: '',
-    url: '',
-    color: 'blue',
-  };
+interface BlogAutomationSettingsFormProps {
+  categories: Category[];
 }
 
-export function BlogAutomationSettingsForm() {
+function normalizeTargetCategories(
+  values: string[] | null | undefined,
+): BlogTargetCategory[] {
+  return (values ?? []).filter(isBlogTargetCategory);
+}
+
+export function BlogAutomationSettingsForm({
+  categories,
+}: BlogAutomationSettingsFormProps) {
   const { toast, showToast, hideToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,12 +42,35 @@ export function BlogAutomationSettingsForm() {
   const [testResult, setTestResult] = useState<string | null>(null);
   const [settings, setSettings] = useState<BlogAutomationSettings | null>(null);
   const [keywordInput, setKeywordInput] = useState('');
+  const [editingLabelId, setEditingLabelId] = useState<string | null>(null);
+
+  const orderedCategories = useMemo(
+    () =>
+      categories
+        .filter((category) => isBlogTargetCategory(category.slug))
+        .sort((a, b) => a.sort_order - b.sort_order),
+    [categories],
+  );
 
   useEffect(() => {
     fetch('/api/admin/blog/automation')
       .then((res) => res.json())
       .then((data) => {
-        if (data.settings) setSettings(data.settings);
+        if (!data.settings) return;
+
+        const targetCategories = normalizeTargetCategories(
+          data.settings.target_categories,
+        );
+        const ctaLinks = syncCtaLinksFromCategories(
+          targetCategories,
+          data.settings.cta_links,
+        );
+
+        setSettings({
+          ...data.settings,
+          target_categories: targetCategories,
+          cta_links: ctaLinks,
+        });
       })
       .finally(() => setLoading(false));
   }, []);
@@ -51,6 +80,31 @@ export function BlogAutomationSettingsForm() {
     value: BlogAutomationSettings[K],
   ) => {
     setSettings((prev) => (prev ? { ...prev, [key]: value } : prev));
+  };
+
+  const toggleTargetCategory = (slug: BlogTargetCategory, checked: boolean) => {
+    if (!settings) return;
+
+    const current = normalizeTargetCategories(settings.target_categories);
+    const nextSet = new Set(current);
+
+    if (checked) {
+      nextSet.add(slug);
+    } else {
+      nextSet.delete(slug);
+    }
+
+    const nextCategories = orderedCategories
+      .map((category) => category.slug)
+      .filter((categorySlug): categorySlug is BlogTargetCategory =>
+        nextSet.has(categorySlug as BlogTargetCategory),
+      );
+
+    update('target_categories', nextCategories);
+    update(
+      'cta_links',
+      syncCtaLinksFromCategories(nextCategories, settings.cta_links),
+    );
   };
 
   const addKeyword = () => {
@@ -64,6 +118,13 @@ export function BlogAutomationSettingsForm() {
 
   const handleSave = async () => {
     if (!settings) return;
+
+    const targetCategories = normalizeTargetCategories(settings.target_categories);
+    const ctaLinks = syncCtaLinksFromCategories(
+      targetCategories,
+      settings.cta_links,
+    );
+
     setSaving(true);
     try {
       const res = await fetch('/api/admin/blog/automation', {
@@ -74,8 +135,8 @@ export function BlogAutomationSettingsForm() {
           publish_schedule: settings.publish_schedule,
           publish_time: settings.publish_time,
           main_keywords: settings.main_keywords,
-          cta_links: settings.cta_links,
-          target_categories: settings.target_categories,
+          cta_links: ctaLinks,
+          target_categories: targetCategories,
           tone: settings.tone,
           post_length: settings.post_length,
           auto_publish: settings.auto_publish,
@@ -114,7 +175,7 @@ export function BlogAutomationSettingsForm() {
 
   const ctaLinks = settings.cta_links ?? [];
   const keywords = settings.main_keywords ?? [];
-  const targetCategories = settings.target_categories ?? [];
+  const targetCategories = normalizeTargetCategories(settings.target_categories);
 
   return (
     <>
@@ -224,107 +285,105 @@ export function BlogAutomationSettingsForm() {
             className={cn(INPUT_CLASS, 'mb-4')}
           />
           <p className="mb-2 text-xs font-medium text-gray-600">타겟 카테고리</p>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {CATEGORIES.map((cat) => (
-              <label
-                key={cat.slug}
-                className="flex items-center gap-2 text-sm text-gray-700"
-              >
-                <input
-                  type="checkbox"
-                  checked={targetCategories.includes(cat.slug)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      update('target_categories', [...targetCategories, cat.slug]);
-                    } else {
-                      update(
-                        'target_categories',
-                        targetCategories.filter((s) => s !== cat.slug),
-                      );
-                    }
-                  }}
-                />
-                {cat.name}
-              </label>
-            ))}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {orderedCategories.map((cat) => {
+              const slug = cat.slug as BlogTargetCategory;
+              return (
+                <label
+                  key={cat.slug}
+                  className="flex items-center gap-2 rounded-lg border border-gray-100 px-3 py-2 text-sm text-gray-700"
+                >
+                  <input
+                    type="checkbox"
+                    checked={targetCategories.includes(slug)}
+                    onChange={(e) => toggleTargetCategory(slug, e.target.checked)}
+                  />
+                  <span>
+                    {CATEGORY_EMOJI[slug]} {cat.name}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         </Card>
 
-        <Card title="CTA 링크 설정">
+        <Card title="CTA 링크 (타겟 카테고리에 따라 자동 생성됨)">
           <p className="mb-3 text-xs text-gray-500">
-            블로그 글 내에 이 CTA 버튼들이 자동으로 삽입됩니다. (최대 5개)
+            타겟 카테고리를 선택하면 아래 CTA 버튼이 자동으로 블로그 글에 삽입됩니다.
           </p>
-          <div className="space-y-3">
-            {ctaLinks.map((cta, index) => (
-              <div
-                key={cta.id}
-                className="rounded-lg border border-gray-200 p-3 space-y-2"
-              >
-                <input
-                  type="text"
-                  value={cta.label}
-                  onChange={(e) => {
-                    const next = [...ctaLinks];
-                    next[index] = { ...cta, label: e.target.value };
-                    update('cta_links', next);
-                  }}
-                  placeholder="라벨 (예: 무료 이미지 툴 보러가기)"
-                  className={INPUT_CLASS}
-                />
-                <input
-                  type="url"
-                  value={cta.url}
-                  onChange={(e) => {
-                    const next = [...ctaLinks];
-                    next[index] = { ...cta, url: e.target.value };
-                    update('cta_links', next);
-                  }}
-                  placeholder="https://freehub.kr/category/..."
-                  className={INPUT_CLASS}
-                />
-                <div className="flex items-center gap-2">
-                  <select
-                    value={cta.color}
-                    onChange={(e) => {
-                      const next = [...ctaLinks];
-                      next[index] = {
-                        ...cta,
-                        color: e.target.value as CtaColor,
-                      };
-                      update('cta_links', next);
-                    }}
-                    className={INPUT_CLASS}
+          {ctaLinks.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
+              타겟 카테고리를 선택하면 CTA가 자동으로 생성됩니다.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {ctaLinks.map((cta, index) => {
+                const categorySlug = targetCategories[index];
+                const isEditing = editingLabelId === cta.id;
+
+                return (
+                  <div
+                    key={cta.id}
+                    className="rounded-lg border border-gray-200 bg-gray-50 p-4"
                   >
-                    {CTA_COLORS.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      update(
-                        'cta_links',
-                        ctaLinks.filter((_, i) => i !== index),
-                      )
-                    }
-                    className="text-sm text-red-600 hover:underline"
-                  >
-                    삭제
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-          {ctaLinks.length < 5 && (
-            <button
-              type="button"
-              onClick={() => update('cta_links', [...ctaLinks, newCta()])}
-              className="mt-3 text-sm font-medium text-blue-600 hover:underline"
-            >
-              + CTA 추가
-            </button>
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        {categorySlug && (
+                          <p className="mb-1 text-xs font-medium text-gray-500">
+                            {CATEGORY_EMOJI[categorySlug]}{' '}
+                            {orderedCategories.find((c) => c.slug === categorySlug)
+                              ?.name ?? categorySlug}
+                          </p>
+                        )}
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={cta.label}
+                            autoFocus
+                            onChange={(e) => {
+                              const next = ctaLinks.map((item) =>
+                                item.id === cta.id
+                                  ? { ...item, label: e.target.value }
+                                  : item,
+                              );
+                              update('cta_links', next);
+                            }}
+                            onBlur={() => setEditingLabelId(null)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === 'Escape') {
+                                setEditingLabelId(null);
+                              }
+                            }}
+                            className={INPUT_CLASS}
+                          />
+                        ) : (
+                          <p className="text-sm font-medium text-gray-900">
+                            {cta.label || '라벨 없음'}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingLabelId(cta.id)}
+                        className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                        라벨 수정
+                      </button>
+                    </div>
+                    <p className="truncate text-xs text-gray-500">{cta.url}</p>
+                    <span
+                      className={cn(
+                        'mt-2 inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                        CTA_COLOR_BADGE_CLASS[cta.color],
+                      )}
+                    >
+                      {cta.color}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </Card>
 
@@ -392,11 +451,11 @@ export function BlogAutomationSettingsForm() {
           )}
           <pre className="mt-4 overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
 {`{
-  "keyword": "오늘의 키워드",
-  "category": "image",
-  "cta_links": [...],
+  "main_keywords": ["키워드1", "키워드2"],
+  "target_categories": ["image", "text"],
+  "cta_links": [{ "label": "...", "url": "...", "color": "blue" }],
   "tone": "friendly",
-  "length": "medium",
+  "post_length": "medium",
   "auto_publish": true
 }`}
           </pre>
