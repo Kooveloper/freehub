@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Toast, useToast } from '@/components/admin/Toast';
@@ -47,6 +47,7 @@ export function BlogAutomationSettingsForm({
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [settings, setSettings] = useState<BlogAutomationSettings | null>(null);
+  const [expandedCtaIds, setExpandedCtaIds] = useState<Set<string>>(new Set());
 
   const orderedCategories = useMemo(
     () =>
@@ -192,6 +193,18 @@ export function BlogAutomationSettingsForm({
     });
   };
 
+  const toggleCtaExpanded = (id: string) => {
+    setExpandedCtaIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
   return (
     <>
       <div className="mx-auto max-w-3xl space-y-6">
@@ -292,99 +305,131 @@ export function BlogAutomationSettingsForm({
             })}
           </div>
           <p className="mb-3 text-xs text-gray-500">
-            타겟 카테고리를 선택하면 기본 CTA가 자동으로 채워집니다. 필요하면 라벨,
-            URL, 색상을 수정할 수 있습니다.
+            타겟 카테고리를 선택하면 기본 CTA가 자동으로 채워집니다. 각 항목을
+            펼쳐 라벨, URL, 색상을 수정할 수 있습니다.
           </p>
           {ctaLinks.length === 0 ? (
             <p className="rounded-lg border border-dashed border-gray-200 bg-gray-50 px-4 py-6 text-center text-sm text-gray-500">
               타겟 카테고리를 선택하면 CTA가 자동으로 생성됩니다.
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {ctaLinks.map((cta, index) => {
                 const categorySlug =
                   cta.category_slug ?? targetCategories[index] ?? null;
+                const isExpanded = expandedCtaIds.has(cta.id);
+                const categoryName = categorySlug
+                  ? (orderedCategories.find((c) => c.slug === categorySlug)?.name ??
+                    categorySlug)
+                  : 'CTA';
 
                 return (
                   <div
                     key={cta.id}
-                    className="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3"
+                    className="overflow-hidden rounded-lg border border-gray-200 bg-gray-50"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      {categorySlug ? (
-                        <p className="text-xs font-medium text-gray-500">
-                          {CATEGORY_EMOJI[categorySlug]}{' '}
-                          {orderedCategories.find((c) => c.slug === categorySlug)
-                            ?.name ?? categorySlug}
-                        </p>
-                      ) : (
-                        <p className="text-xs font-medium text-gray-500">CTA</p>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleCtaExpanded(cta.id)}
+                        className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-100/80"
+                        aria-expanded={isExpanded}
+                      >
+                        {isExpanded ? (
+                          <ChevronDown className="h-4 w-4 shrink-0 text-gray-400" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" />
+                        )}
+                        <span className="shrink-0 font-medium">
+                          {categorySlug ? (
+                            <>
+                              {CATEGORY_EMOJI[categorySlug]} {categoryName}
+                            </>
+                          ) : (
+                            categoryName
+                          )}
+                        </span>
+                        {!isExpanded && cta.label && (
+                          <span className="truncate text-xs text-gray-400">
+                            {cta.label}
+                          </span>
+                        )}
+                      </button>
                       {categorySlug && (
                         <button
                           type="button"
                           onClick={() => resetCtaToDefault(cta.id, categorySlug)}
-                          className="shrink-0 text-xs font-medium text-blue-600 hover:text-blue-700"
+                          className="shrink-0 px-3 py-2.5 text-xs font-medium text-blue-600 hover:text-blue-700"
                         >
                           기본값 복원
                         </button>
                       )}
                     </div>
 
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">
-                        라벨
-                      </label>
-                      <input
-                        type="text"
-                        value={cta.label}
-                        onChange={(e) => updateCta(cta.id, { label: e.target.value })}
-                        placeholder="CTA 버튼 텍스트"
-                        className={INPUT_CLASS}
-                      />
-                    </div>
+                    {isExpanded && (
+                      <div className="space-y-3 border-t border-gray-200 bg-white px-4 py-4">
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">
+                            라벨
+                          </label>
+                          <input
+                            type="text"
+                            value={cta.label}
+                            onChange={(e) =>
+                              updateCta(cta.id, { label: e.target.value })
+                            }
+                            placeholder="CTA 버튼 텍스트"
+                            className={INPUT_CLASS}
+                          />
+                        </div>
 
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">
-                        URL
-                      </label>
-                      <input
-                        type="url"
-                        value={cta.url}
-                        onChange={(e) => updateCta(cta.id, { url: e.target.value })}
-                        placeholder="https://www.freehub.kr/category/..."
-                        className={INPUT_CLASS}
-                      />
-                    </div>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">
+                            URL
+                          </label>
+                          <input
+                            type="url"
+                            value={cta.url}
+                            onChange={(e) =>
+                              updateCta(cta.id, { url: e.target.value })
+                            }
+                            placeholder="https://www.freehub.kr/category/..."
+                            className={INPUT_CLASS}
+                          />
+                        </div>
 
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-600">
-                        색상
-                      </label>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <select
-                          value={cta.color}
-                          onChange={(e) =>
-                            updateCta(cta.id, { color: e.target.value as CtaColor })
-                          }
-                          className={INPUT_CLASS}
-                        >
-                          {CTA_COLOR_OPTIONS.map((color) => (
-                            <option key={color} value={color}>
-                              {color}
-                            </option>
-                          ))}
-                        </select>
-                        <span
-                          className={cn(
-                            'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
-                            CTA_COLOR_BADGE_CLASS[cta.color],
-                          )}
-                        >
-                          {cta.color}
-                        </span>
+                        <div>
+                          <label className="mb-1 block text-xs font-medium text-gray-600">
+                            색상
+                          </label>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <select
+                              value={cta.color}
+                              onChange={(e) =>
+                                updateCta(cta.id, {
+                                  color: e.target.value as CtaColor,
+                                })
+                              }
+                              className={INPUT_CLASS}
+                            >
+                              {CTA_COLOR_OPTIONS.map((color) => (
+                                <option key={color} value={color}>
+                                  {color}
+                                </option>
+                              ))}
+                            </select>
+                            <span
+                              className={cn(
+                                'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                                CTA_COLOR_BADGE_CLASS[cta.color],
+                              )}
+                            >
+                              {cta.color}
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                 );
               })}
