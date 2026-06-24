@@ -272,6 +272,10 @@ export function BlogAutomationSettingsForm({
           <p className="mt-1 text-xs text-gray-500">
             OFF면 draft로 저장되어 어드민에서 검토 후 수동 발행합니다.
           </p>
+          <p className="mt-2 text-xs text-amber-700">
+            발행 시각은 KST(한국 시간) 기준입니다. 설정한 시·분에 맞춰 실행되려면
+            Vercel Pro 이상(분 단위 Cron)이 필요합니다.
+          </p>
         </Card>
 
         <Card title="키워드 설정">

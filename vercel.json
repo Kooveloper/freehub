@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/blog-trigger",
-      "schedule": "0 * * * *"
+      "schedule": "* * * * *"
     }
   ],
   "headers": [

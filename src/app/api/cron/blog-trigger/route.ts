@@ -33,6 +33,7 @@ export async function GET(request: Request) {
     const settings = await getAutomationSettings();
 
     if (!settings.is_enabled) {
+      console.info('[cron/blog-trigger] skipped: disabled');
       return NextResponse.json({
         skipped: true,
         reason: 'disabled',
@@ -40,6 +41,9 @@ export async function GET(request: Request) {
     }
 
     if (!matchesPublishSchedule(settings.publish_schedule)) {
+      console.info(
+        `[cron/blog-trigger] skipped: schedule_mismatch (${settings.publish_schedule}, kst=${getKstTimeLabel()})`,
+      );
       return NextResponse.json({
         skipped: true,
         reason: 'schedule_mismatch',
@@ -65,6 +69,10 @@ export async function GET(request: Request) {
         reason: 'empty_webhook_url',
       });
     }
+
+    console.info(
+      `[cron/blog-trigger] firing webhook (kst=${getKstTimeLabel()}, publish_time=${settings.publish_time})`,
+    );
 
     const payload = {
       main_keywords: settings.main_keywords,
