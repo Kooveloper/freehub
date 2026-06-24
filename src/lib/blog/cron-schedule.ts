@@ -34,17 +34,26 @@ function getKstDateParts(now = new Date()) {
   };
 }
 
-export function matchesPublishTime(publishTime: string, now = new Date()): boolean {
-  const [hourStr, minuteStr = '0'] = publishTime.trim().split(':');
-  const targetHour = Number(hourStr);
-  const targetMinute = Number(minuteStr);
+export function normalizePublishHour(publishTime: string): string {
+  const [hourStr] = publishTime.trim().split(':');
+  const hour = Number(hourStr);
 
-  if (Number.isNaN(targetHour) || Number.isNaN(targetMinute)) {
+  if (Number.isNaN(hour) || hour < 0 || hour > 23) {
+    return '09:00';
+  }
+
+  return `${String(hour).padStart(2, '0')}:00`;
+}
+
+export function matchesPublishTime(publishTime: string, now = new Date()): boolean {
+  const targetHour = Number(normalizePublishHour(publishTime).split(':')[0]);
+
+  if (Number.isNaN(targetHour)) {
     return false;
   }
 
   const { hour, minute } = getKstDateParts(now);
-  return hour === targetHour && minute === targetMinute;
+  return hour === targetHour && minute === 0;
 }
 
 export function matchesPublishSchedule(

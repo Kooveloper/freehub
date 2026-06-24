@@ -13,6 +13,7 @@ import {
   syncCtaLinksFromCategories,
 } from '@/constants/categoryCta';
 import { normalizeMainKeywords } from '@/lib/blog/keyword-items';
+import { normalizePublishHour } from '@/lib/blog/cron-schedule';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types/tool';
 import type {
@@ -27,6 +28,8 @@ import { isBlogTargetCategory } from '@/types/blog';
 
 const INPUT_CLASS =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
+
+const PUBLISH_HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => hour);
 
 interface BlogAutomationSettingsFormProps {
   categories: Category[];
@@ -77,6 +80,7 @@ export function BlogAutomationSettingsForm({
           main_keywords: mainKeywords,
           target_categories: targetCategories,
           cta_links: ctaLinks,
+          publish_time: normalizePublishHour(data.settings.publish_time),
         });
       })
       .finally(() => setLoading(false));
@@ -123,6 +127,7 @@ export function BlogAutomationSettingsForm({
       targetCategories,
       settings.cta_links,
     );
+    const publishTime = normalizePublishHour(settings.publish_time);
 
     setSaving(true);
     try {
@@ -132,7 +137,7 @@ export function BlogAutomationSettingsForm({
         body: JSON.stringify({
           is_enabled: settings.is_enabled,
           publish_schedule: settings.publish_schedule,
-          publish_time: settings.publish_time,
+          publish_time: publishTime,
           main_keywords: mainKeywords,
           cta_links: ctaLinks,
           target_categories: targetCategories,
@@ -253,14 +258,21 @@ export function BlogAutomationSettingsForm({
             <option value="weekly">주 1회 (매주 월요일)</option>
           </select>
           <label className="mb-1 block text-xs font-medium text-gray-600">
-            발행 시각
+            발행 시각 (KST, 정각)
           </label>
-          <input
-            type="time"
-            value={settings.publish_time}
-            onChange={(e) => update('publish_time', e.target.value)}
+          <select
+            value={normalizePublishHour(settings.publish_time).split(':')[0]}
+            onChange={(e) =>
+              update('publish_time', `${e.target.value.padStart(2, '0')}:00`)
+            }
             className={cn(INPUT_CLASS, 'mb-3')}
-          />
+          >
+            {PUBLISH_HOUR_OPTIONS.map((hour) => (
+              <option key={hour} value={String(hour).padStart(2, '0')}>
+                {String(hour).padStart(2, '0')}:00
+              </option>
+            ))}
+          </select>
           <label className="flex items-center gap-2 text-sm text-gray-700">
             <input
               type="checkbox"
@@ -272,9 +284,8 @@ export function BlogAutomationSettingsForm({
           <p className="mt-1 text-xs text-gray-500">
             OFF면 draft로 저장되어 어드민에서 검토 후 수동 발행합니다.
           </p>
-          <p className="mt-2 text-xs text-amber-700">
-            발행 시각은 KST(한국 시간) 기준입니다. 설정한 시·분에 맞춰 실행되려면
-            Vercel Pro 이상(분 단위 Cron)이 필요합니다.
+          <p className="mt-2 text-xs text-gray-500">
+            발행 시각은 한국 시간(KST) 기준이며, 선택한 시각 정각에 실행됩니다.
           </p>
         </Card>
 
