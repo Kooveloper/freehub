@@ -4,7 +4,10 @@ import type {
   BlogAutomationSettings,
   BlogPost,
   CtaLink,
+  KeywordItem,
 } from '@/types/blog';
+
+import { normalizeMainKeywords } from '@/lib/blog/keyword-items';
 
 import { createClient, createStaticClient } from './server';
 
@@ -23,6 +26,7 @@ function mapSettings(row: Record<string, unknown>): BlogAutomationSettings {
   const cta = row.cta_links;
   return {
     ...(row as unknown as BlogAutomationSettings),
+    main_keywords: normalizeMainKeywords(row.main_keywords),
     cta_links: Array.isArray(cta) ? (cta as CtaLink[]) : [],
   };
 }
@@ -183,7 +187,9 @@ export async function getAutomationSettings(): Promise<BlogAutomationSettings> {
 }
 
 export async function updateAutomationSettings(
-  data: Partial<BlogAutomationSettings>,
+  data: Partial<Omit<BlogAutomationSettings, 'main_keywords'>> & {
+    main_keywords?: KeywordItem[] | null;
+  },
 ): Promise<void> {
   const supabase = createServiceClient();
   const current = await getAutomationSettings();

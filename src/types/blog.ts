@@ -37,6 +37,13 @@ export function isBlogTargetCategory(slug: string): slug is BlogTargetCategory {
   return (BLOG_TARGET_CATEGORY_SLUGS as string[]).includes(slug);
 }
 
+export interface KeywordItem {
+  id: string;
+  keyword: string;
+  category: string;
+  sub_category: string;
+}
+
 export interface CtaLink {
   id: string;
   label: string;
@@ -66,7 +73,7 @@ export interface BlogAutomationSettings {
   is_enabled: boolean;
   publish_schedule: PublishSchedule;
   publish_time: string;
-  main_keywords: string[] | null;
+  main_keywords: KeywordItem[] | null;
   cta_links: CtaLink[] | null;
   target_categories: BlogTargetCategory[] | null;
   tone: string;

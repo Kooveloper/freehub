@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 
 import { Toast, useToast } from '@/components/admin/Toast';
+import { BlogKeywordSettings } from '@/components/admin/BlogKeywordSettings';
 import {
   CATEGORY_EMOJI,
   CTA_COLOR_BADGE_CLASS,
@@ -11,6 +12,7 @@ import {
   getDefaultCtaForCategory,
   syncCtaLinksFromCategories,
 } from '@/constants/categoryCta';
+import { normalizeMainKeywords } from '@/lib/blog/keyword-items';
 import { cn } from '@/lib/utils';
 import type { Category } from '@/types/tool';
 import type {
@@ -45,7 +47,6 @@ export function BlogAutomationSettingsForm({
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [settings, setSettings] = useState<BlogAutomationSettings | null>(null);
-  const [keywordInput, setKeywordInput] = useState('');
 
   const orderedCategories = useMemo(
     () =>
@@ -64,6 +65,7 @@ export function BlogAutomationSettingsForm({
         const targetCategories = normalizeTargetCategories(
           data.settings.target_categories,
         );
+        const mainKeywords = normalizeMainKeywords(data.settings.main_keywords);
         const ctaLinks = syncCtaLinksFromCategories(
           targetCategories,
           data.settings.cta_links,
@@ -71,6 +73,7 @@ export function BlogAutomationSettingsForm({
 
         setSettings({
           ...data.settings,
+          main_keywords: mainKeywords,
           target_categories: targetCategories,
           cta_links: ctaLinks,
         });
@@ -110,19 +113,11 @@ export function BlogAutomationSettingsForm({
     );
   };
 
-  const addKeyword = () => {
-    const value = keywordInput.trim();
-    if (!value || !settings) return;
-    const keywords = settings.main_keywords ?? [];
-    if (keywords.includes(value)) return;
-    update('main_keywords', [...keywords, value]);
-    setKeywordInput('');
-  };
-
   const handleSave = async () => {
     if (!settings) return;
 
     const targetCategories = normalizeTargetCategories(settings.target_categories);
+    const mainKeywords = normalizeMainKeywords(settings.main_keywords);
     const ctaLinks = syncCtaLinksFromCategories(
       targetCategories,
       settings.cta_links,
@@ -137,7 +132,7 @@ export function BlogAutomationSettingsForm({
           is_enabled: settings.is_enabled,
           publish_schedule: settings.publish_schedule,
           publish_time: settings.publish_time,
-          main_keywords: settings.main_keywords,
+          main_keywords: mainKeywords,
           cta_links: ctaLinks,
           target_categories: targetCategories,
           tone: settings.tone,
@@ -267,45 +262,16 @@ export function BlogAutomationSettingsForm({
         </Card>
 
         <Card title="키워드 설정">
-          <p className="mb-2 text-xs text-gray-500">
-            추가된 키워드를 순서대로 순환하며 콘텐츠를 생성합니다.
-          </p>
-          <div className="mb-2 flex flex-wrap gap-1.5">
-            {keywords.map((kw) => (
-              <span
-                key={kw}
-                className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs text-blue-700"
-              >
-                {kw}
-                <button
-                  type="button"
-                  onClick={() =>
-                    update(
-                      'main_keywords',
-                      keywords.filter((k) => k !== kw),
-                    )
-                  }
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-          <input
-            type="text"
-            value={keywordInput}
-            onChange={(e) => setKeywordInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                addKeyword();
-              }
-            }}
-            placeholder="무료 배경 제거, 무료 이미지 생성..."
-            className={cn(INPUT_CLASS, 'mb-4')}
+          <BlogKeywordSettings
+            categories={categories}
+            keywords={keywords}
+            onChange={(nextKeywords) => update('main_keywords', nextKeywords)}
           />
-          <p className="mb-2 text-xs font-medium text-gray-600">타겟 카테고리</p>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        </Card>
+
+        <Card title="CTA 링크 (타겟 카테고리에 따라 자동 생성됨)">
+          <p className="mb-3 text-xs font-medium text-gray-600">타겟 카테고리</p>
+          <div className="mb-6 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {orderedCategories.map((cat) => {
               const slug = cat.slug as BlogTargetCategory;
               return (
@@ -325,9 +291,6 @@ export function BlogAutomationSettingsForm({
               );
             })}
           </div>
-        </Card>
-
-        <Card title="CTA 링크 (타겟 카테고리에 따라 자동 생성됨)">
           <p className="mb-3 text-xs text-gray-500">
             타겟 카테고리를 선택하면 기본 CTA가 자동으로 채워집니다. 필요하면 라벨,
             URL, 색상을 수정할 수 있습니다.
@@ -493,7 +456,14 @@ export function BlogAutomationSettingsForm({
           )}
           <pre className="mt-4 overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
 {`{
-  "main_keywords": ["키워드1", "키워드2"],
+  "main_keywords": [
+    {
+      "id": "uuid",
+      "keyword": "무료 배경 제거",
+      "category": "image",
+      "sub_category": "image-bg-remove"
+    }
+  ],
   "target_categories": ["image", "text"],
   "cta_links": [{ "label": "...", "url": "...", "color": "blue" }],
   "tone": "friendly",

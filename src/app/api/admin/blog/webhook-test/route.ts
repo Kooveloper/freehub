@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-api';
+import { normalizeMainKeywords } from '@/lib/blog/keyword-items';
 import { getAutomationSettings } from '@/lib/supabase/blog-queries';
 
 export async function POST() {
@@ -18,15 +19,13 @@ export async function POST() {
       );
     }
 
-    const keyword = settings.main_keywords?.[0] ?? '무료 AI 도구';
-    const category = settings.target_categories?.[0] ?? 'ai-chat';
-
+    const mainKeywords = normalizeMainKeywords(settings.main_keywords);
     const payload = {
-      keyword,
-      category,
+      main_keywords: mainKeywords,
+      target_categories: settings.target_categories ?? [],
       cta_links: settings.cta_links ?? [],
       tone: settings.tone,
-      length: settings.post_length,
+      post_length: settings.post_length,
       auto_publish: settings.auto_publish,
     };
 
