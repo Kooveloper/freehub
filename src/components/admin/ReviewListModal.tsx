@@ -223,9 +223,11 @@ export function ReviewListModal({
                             {review.tool_slug ? ` (${review.tool_slug})` : ''}
                           </p>
                         )}
-                        <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
-                          {review.content}
-                        </p>
+                        {review.content.trim() && (
+                          <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">
+                            {review.content}
+                          </p>
+                        )}
                         <p className="mt-1 text-xs text-gray-400">
                           좋아요 {review.like_count.toLocaleString('ko-KR')}
                         </p>

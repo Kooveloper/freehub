@@ -48,7 +48,6 @@ export function UserReviewsSection() {
   };
 
   const handleSave = async (reviewId: string) => {
-    if (!editContent.trim()) return;
     setSaving(true);
     try {
       const response = await fetch(`/api/reviews/${reviewId}`, {
@@ -150,7 +149,9 @@ export function UserReviewsSection() {
                         {new Date(review.created_at).toLocaleDateString('ko-KR')}
                       </span>
                     </div>
-                    <p className="mt-2 text-sm text-gray-700">{review.content}</p>
+                    {review.content.trim() && (
+                      <p className="mt-2 text-sm text-gray-700">{review.content}</p>
+                    )}
                   </div>
                   <div className="flex shrink-0 gap-1">
                     <button

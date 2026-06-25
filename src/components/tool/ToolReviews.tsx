@@ -55,9 +55,11 @@ function ReviewItem({
               {formatReviewDate(review.created_at, locale)}
             </span>
           </div>
-          <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
-            {review.content}
-          </p>
+          {review.content.trim() && (
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+              {review.content}
+            </p>
+          )}
           <button
             type="button"
             disabled={liking}
@@ -176,8 +178,6 @@ export function ToolReviews({ toolId }: ToolReviewsProps) {
       showLoginPrompt();
       return;
     }
-
-    if (!formContent.trim()) return;
 
     setSubmitting(true);
     try {
@@ -301,6 +301,9 @@ export function ToolReviews({ toolId }: ToolReviewsProps) {
               disabled={submitting}
             />
           </div>
+          <label className="mt-3 block text-xs font-medium text-gray-600">
+            {t('reviews.contentOptional')}
+          </label>
           <textarea
             value={formContent}
             onChange={(event) => setFormContent(event.target.value)}
@@ -313,7 +316,7 @@ export function ToolReviews({ toolId }: ToolReviewsProps) {
           <div className="mt-3 flex items-center gap-2">
             <button
               type="submit"
-              disabled={submitting || !formContent.trim()}
+              disabled={submitting}
               className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
             >
               {submitting

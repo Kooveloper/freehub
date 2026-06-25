@@ -79,9 +79,6 @@ export async function POST(request: Request) {
   if (Number.isNaN(rating) || rating < 1 || rating > 5) {
     return NextResponse.json({ error: '별점은 1~5 사이여야 합니다.' }, { status: 400 });
   }
-  if (!content) {
-    return NextResponse.json({ error: '리뷰 내용을 입력해 주세요.' }, { status: 400 });
-  }
   if (content.length > 2000) {
     return NextResponse.json({ error: '리뷰는 2000자 이하로 작성해 주세요.' }, { status: 400 });
   }
