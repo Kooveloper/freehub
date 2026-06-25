@@ -2,14 +2,12 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 import { BlogPostDetailView } from '@/components/blog/BlogPostDetailView';
+import { normalizeBlogSlug } from '@/lib/blog-utils';
 import { getLocale } from '@/lib/locale';
 import { buildBlogPostMetadata } from '@/lib/seo/metadata';
-import {
-  getAllBlogSlugs,
-  getBlogPostBySlug,
-} from '@/lib/supabase/queries';
+import { getBlogPostBySlug } from '@/lib/supabase/queries';
 
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -20,7 +18,7 @@ export async function generateMetadata({
 }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const locale = await getLocale();
-  const post = await getBlogPostBySlug(slug);
+  const post = await getBlogPostBySlug(normalizeBlogSlug(slug));
 
   if (!post) {
     return {};
@@ -34,18 +32,9 @@ export async function generateMetadata({
   );
 }
 
-export async function generateStaticParams() {
-  try {
-    const slugs = await getAllBlogSlugs();
-    return slugs.map((slug) => ({ slug }));
-  } catch {
-    return [];
-  }
-}
-
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const post = await getBlogPostBySlug(normalizeBlogSlug(slug));
 
   if (!post) notFound();
 

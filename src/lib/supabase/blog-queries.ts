@@ -7,6 +7,7 @@ import type {
 } from '@/types/blog';
 
 import { normalizeAutomationSettings } from '@/lib/blog/automation-normalize';
+import { normalizeBlogSlug } from '@/lib/blog-utils';
 
 import { createClient, createStaticClient } from './server';
 
@@ -49,11 +50,14 @@ export async function getAllBlogPostsAdmin(): Promise<BlogPost[]> {
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  const normalizedSlug = normalizeBlogSlug(slug);
+  if (!normalizedSlug) return null;
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('status', 'published')
     .maybeSingle();
 
@@ -68,11 +72,14 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 export async function getBlogPostBySlugAdmin(
   slug: string,
 ): Promise<BlogPost | null> {
+  const normalizedSlug = normalizeBlogSlug(slug);
+  if (!normalizedSlug) return null;
+
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from('blog_posts')
     .select('*')
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .maybeSingle();
 
   if (error) {

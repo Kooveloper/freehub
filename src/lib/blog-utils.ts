@@ -15,6 +15,29 @@ export function generateBlogSlug(title: string): string {
   return base || `post-${Date.now()}`;
 }
 
+/** URL·DB에서 읽은 slug 정규화 (/blog/ 접두사·인코딩 제거) */
+export function normalizeBlogSlug(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+
+  const withoutPrefix = trimmed.replace(/^\/blog\//i, '').replace(/^\/+/, '');
+
+  try {
+    return decodeURIComponent(withoutPrefix).trim();
+  } catch {
+    return withoutPrefix.trim();
+  }
+}
+
+/** 저장용 slug — 비어 있으면 제목에서 생성 */
+export function sanitizeBlogSlugForStorage(value: string, title?: string): string {
+  const normalized = normalizeBlogSlug(value);
+  if (normalized) return normalized;
+
+  const fromTitle = title ? generateBlogSlug(title) : '';
+  return fromTitle || `post-${Date.now()}`;
+}
+
 export function getBlogCategoryLabel(slug: string | null | undefined): string {
   if (!slug) return '기타';
   return CATEGORIES.find((c) => c.slug === slug)?.name ?? slug;

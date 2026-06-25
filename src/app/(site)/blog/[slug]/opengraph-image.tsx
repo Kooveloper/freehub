@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-import { getBlogCategoryLabel } from '@/lib/blog-utils';
+import { getBlogCategoryLabel, normalizeBlogSlug } from '@/lib/blog-utils';
 import { createStaticClient } from '@/lib/supabase/server';
 
 export const alt = 'FreeHub 블로그';
@@ -14,12 +14,13 @@ interface OgImageProps {
 
 export default async function Image({ params }: OgImageProps) {
   const { slug } = await params;
+  const normalizedSlug = normalizeBlogSlug(slug);
   const supabase = createStaticClient();
 
   const { data } = await supabase
     .from('blog_posts')
     .select('title, category')
-    .eq('slug', slug)
+    .eq('slug', normalizedSlug)
     .eq('status', 'published')
     .maybeSingle();
 

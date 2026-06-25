@@ -1,9 +1,9 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-api';
-import { generateBlogSlug } from '@/lib/blog-utils';
+import { invalidateBlogCache } from '@/lib/blog/cache-invalidation';
+import { sanitizeBlogSlugForStorage } from '@/lib/blog-utils';
 import type { BlogPostStatus } from '@/types/blog';
 
 function createServiceClient() {
@@ -61,9 +61,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const title = body.title !== undefined ? String(body.title).trim() : existing.title;
   const content =
     body.content !== undefined ? String(body.content).trim() : existing.content;
-  const slugRaw =
-    body.slug !== undefined ? String(body.slug).trim() : existing.slug;
-  const slug = slugRaw || generateBlogSlug(title);
+  const slug = sanitizeBlogSlugForStorage(
+    body.slug !== undefined ? String(body.slug) : String(existing.slug),
+    title,
+  );
   const status = (body.status as BlogPostStatus | undefined) ?? existing.status;
 
   let publishedAt = existing.published_at;
@@ -100,8 +101,8 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  revalidatePath('/blog');
-  revalidatePath(`/blog/${data.slug}`);
+  invalidateBlogCache(existing.slug as string);
+  invalidateBlogCache(data.slug as string);
 
   return NextResponse.json({ post: data });
 }
@@ -116,6 +117,6 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  revalidatePath('/blog');
+  invalidateBlogCache();
   return NextResponse.json({ success: true });
 }

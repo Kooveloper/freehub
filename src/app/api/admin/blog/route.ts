@@ -1,9 +1,9 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-api';
-import { generateBlogSlug } from '@/lib/blog-utils';
+import { invalidateBlogCache } from '@/lib/blog/cache-invalidation';
+import { sanitizeBlogSlugForStorage } from '@/lib/blog-utils';
 import type { BlogPostSource, BlogPostStatus } from '@/types/blog';
 
 function createServiceClient() {
@@ -30,8 +30,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '제목과 본문은 필수입니다.' }, { status: 400 });
   }
 
-  const slugRaw = String(body.slug ?? '').trim();
-  const slug = slugRaw || generateBlogSlug(title);
+  const slug = sanitizeBlogSlugForStorage(String(body.slug ?? ''), title);
   const status = (body.status as BlogPostStatus) ?? 'draft';
   const source = (body.source as BlogPostSource) ?? 'manual';
   const publishedAt =
@@ -61,6 +60,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  revalidatePath('/blog');
+  invalidateBlogCache(slug);
   return NextResponse.json({ post: data });
 }
