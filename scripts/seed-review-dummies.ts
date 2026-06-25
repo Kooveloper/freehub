@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 
 import {
   getSeedReviewTargetCount,
+  randomReviewCreatedAt,
   randomSeedRating,
 } from './review-seed-popularity';
 
@@ -64,12 +65,6 @@ function generateNickname(used: Set<string>): string {
   const fallback = `User${randomInt(10000, 99999)}`;
   used.add(fallback.toLowerCase());
   return fallback;
-}
-
-function randomPastDate(daysBack = 180): string {
-  const now = Date.now();
-  const offsetMs = randomInt(0, daysBack * 24 * 60 * 60 * 1000);
-  return new Date(now - offsetMs).toISOString();
 }
 
 async function listSeedUserIds(supabase: SupabaseClient): Promise<string[]> {
@@ -171,7 +166,46 @@ async function deleteSeedReviews(
   return data?.length ?? 0;
 }
 
+async function reshuffleSeedReviewDates(
+  supabase: SupabaseClient,
+  seedUserIds: string[],
+): Promise<number> {
+  if (seedUserIds.length === 0) return 0;
+
+  const { data, error } = await supabase
+    .from('tool_reviews')
+    .select('id')
+    .in('user_id', seedUserIds);
+
+  if (error) throw new Error(error.message);
+
+  const reviewIds = (data ?? []).map((row) => row.id as string);
+  if (reviewIds.length === 0) return 0;
+
+  const chunkSize = 50;
+  let updated = 0;
+
+  for (let i = 0; i < reviewIds.length; i += chunkSize) {
+    const chunk = reviewIds.slice(i, i + chunkSize);
+    await Promise.all(
+      chunk.map(async (id) => {
+        const createdAt = randomReviewCreatedAt();
+        const { error: updateError } = await supabase
+          .from('tool_reviews')
+          .update({ created_at: createdAt, updated_at: createdAt })
+          .eq('id', id);
+
+        if (updateError) throw new Error(updateError.message);
+        updated += 1;
+      }),
+    );
+  }
+
+  return updated;
+}
+
 async function main() {
+  const datesOnly = process.argv.includes('--dates-only');
   const supabase = createClient(supabaseUrl!, serviceKey!, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -193,6 +227,15 @@ async function main() {
   console.log(
     `시드 사용자 풀: ${userIds.length}명 (신규 사용자 ${createdUsers}, 프로필 ${createdProfiles})`,
   );
+
+  if (datesOnly) {
+    const updated = await reshuffleSeedReviewDates(supabase, userIds);
+    const year = new Date().getFullYear();
+    console.log(
+      `완료 — 시드 리뷰 ${updated}건 작성일을 ${year}년 6월 1일 ~ 오늘 사이로 갱신`,
+    );
+    return;
+  }
 
   const deleted = await deleteSeedReviews(supabase, userIds);
   console.log(`기존 시드 리뷰 ${deleted}건 삭제`);
@@ -228,7 +271,7 @@ async function main() {
       user_id: userId,
       rating: randomSeedRating(),
       content: '',
-      created_at: randomPastDate(),
+      created_at: randomReviewCreatedAt(),
       updated_at: new Date().toISOString(),
     }));
 

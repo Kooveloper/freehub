@@ -124,3 +124,17 @@ export function getSeedReviewTargetCount(slug: string): number {
 export function randomSeedRating(): number {
   return randomInt(0, 10) < 7 ? 5 : 4;
 }
+
+/** 올해 6월 1일 ~ 기준 시각 사이 랜덤 작성일 */
+export function randomReviewCreatedAt(referenceDate = new Date()): string {
+  const year = referenceDate.getFullYear();
+  const start = new Date(year, 5, 1, 0, 0, 0, 0);
+  const endMs = referenceDate.getTime();
+  const startMs = start.getTime();
+
+  if (endMs <= startMs) {
+    return referenceDate.toISOString();
+  }
+
+  return new Date(startMs + randomInt(0, endMs - startMs + 1)).toISOString();
+}
