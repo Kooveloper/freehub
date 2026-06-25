@@ -13,12 +13,16 @@ export async function GET(request: Request) {
   const subCategorySlug = searchParams.get('subCategorySlug');
   const page = Number(searchParams.get('page') ?? '1');
   const pageSize = Number(searchParams.get('pageSize') ?? '20');
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
 
   try {
     const data = await getReviewsForAdmin({
       toolId,
       categorySlug,
       subCategorySlug,
+      from,
+      to,
       page: Number.isNaN(page) ? 1 : page,
       pageSize: Number.isNaN(pageSize) ? 20 : pageSize,
     });

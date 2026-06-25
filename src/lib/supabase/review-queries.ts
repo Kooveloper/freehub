@@ -308,6 +308,8 @@ export async function getReviewsForAdmin(params: {
   toolId?: string | null;
   categorySlug?: string | null;
   subCategorySlug?: string | null;
+  from?: string | null;
+  to?: string | null;
   page?: number;
   pageSize?: number;
 }): Promise<{ reviews: ToolReview[]; total: number }> {
@@ -361,6 +363,13 @@ export async function getReviewsForAdmin(params: {
     countQuery = countQuery.in('tool_id', toolIds);
   }
 
+  if (params.from) {
+    countQuery = countQuery.gte('created_at', params.from);
+  }
+  if (params.to) {
+    countQuery = countQuery.lte('created_at', params.to);
+  }
+
   const { count, error: countError } = await countQuery;
   if (countError) throw new Error(countError.message);
 
@@ -376,6 +385,12 @@ export async function getReviewsForAdmin(params: {
 
   if (toolIds) {
     dataQuery = dataQuery.in('tool_id', toolIds);
+  }
+  if (params.from) {
+    dataQuery = dataQuery.gte('created_at', params.from);
+  }
+  if (params.to) {
+    dataQuery = dataQuery.lte('created_at', params.to);
   }
 
   const { data, error } = await dataQuery;

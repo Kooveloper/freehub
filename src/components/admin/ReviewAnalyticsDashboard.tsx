@@ -7,6 +7,7 @@ import {
   ReviewListModal,
   type ReviewListFilter,
 } from '@/components/admin/ReviewListModal';
+import { ReviewLatestTable } from '@/components/admin/ReviewLatestTable';
 import type { AdminReviewAnalyticsData } from '@/lib/admin/review-analytics';
 import type { AnalyticsPeriod } from '@/lib/admin/analytics';
 import { ADMIN_DASHBOARD_TABLE_CLASS } from '@/components/admin/admin-table';
@@ -20,7 +21,7 @@ const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
   { value: 'custom', label: '기간 지정' },
 ];
 
-type TabId = 'categories' | 'subCategories' | 'tools';
+type TabId = 'categories' | 'subCategories' | 'tools' | 'latest';
 
 function formatRangeLabel(from: string, to: string) {
   const fromDate = new Date(from);
@@ -249,6 +250,7 @@ export function ReviewAnalyticsDashboard() {
                     ['categories', '카테고리'],
                     ['subCategories', '서브카테고리'],
                     ['tools', '서비스'],
+                    ['latest', '최신 리뷰'],
                   ] as const
                 ).map(([tab, label]) => (
                   <button
@@ -273,13 +275,25 @@ export function ReviewAnalyticsDashboard() {
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="이름·슬러그 검색"
+                  placeholder={
+                    activeTab === 'latest'
+                      ? '닉네임·서비스·내용 검색'
+                      : '이름·슬러그 검색'
+                  }
                   className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 />
               </div>
             </div>
 
             <div className="overflow-x-auto">
+              {activeTab === 'latest' && data && (
+                <ReviewLatestTable
+                  from={data.summary.range.from}
+                  to={data.summary.range.to}
+                  search={search}
+                />
+              )}
+
               {activeTab === 'categories' && (
                 <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[640px]')}>
                   <thead>
