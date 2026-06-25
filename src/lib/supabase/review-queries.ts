@@ -1,5 +1,6 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
+import { maskNicknameForDisplay } from '@/lib/nickname';
 import type { ReviewListResponse, ReviewSort, ToolReview } from '@/types/review';
 
 const PAGE_SIZE = 5;
@@ -91,7 +92,11 @@ function mapReviewRow(
   nicknameMap: Map<string, string>,
   likeMeta: { likeCount: number; isLiked: boolean },
   currentUserId?: string | null,
+  maskAuthorNickname = false,
 ): ToolReview {
+  const rawNickname = nicknameMap.get(row.user_id) ?? '익명';
+  const isOwn = currentUserId ? row.user_id === currentUserId : false;
+
   return {
     id: row.id,
     tool_id: row.tool_id,
@@ -100,16 +105,20 @@ function mapReviewRow(
     content: row.content,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    author_nickname: nicknameMap.get(row.user_id) ?? '익명',
+    author_nickname:
+      maskAuthorNickname && !isOwn
+        ? maskNicknameForDisplay(rawNickname)
+        : rawNickname,
     like_count: likeMeta.likeCount,
     is_liked: likeMeta.isLiked,
-    is_own: currentUserId ? row.user_id === currentUserId : false,
+    is_own: isOwn,
   };
 }
 
 async function mapReviewRows(
   rows: ReviewRow[],
   currentUserId?: string | null,
+  maskAuthorNickname = false,
 ): Promise<ToolReview[]> {
   const [nicknameMap, likeMeta] = await Promise.all([
     fetchNicknameMap(rows.map((row) => row.user_id)),
@@ -125,6 +134,7 @@ async function mapReviewRows(
       nicknameMap,
       likeMeta.get(row.id) ?? { likeCount: 0, isLiked: false },
       currentUserId,
+      maskAuthorNickname,
     ),
   );
 }
@@ -203,7 +213,7 @@ export async function getToolReviews(params: {
       });
 
     const pageRows = sorted.slice(from, from + PAGE_SIZE).map(({ row }) => row);
-    const reviews = await mapReviewRows(pageRows, params.currentUserId);
+    const reviews = await mapReviewRows(pageRows, params.currentUserId, true);
 
     const summary = await getToolReviewSummary(params.toolId);
 
@@ -232,7 +242,7 @@ export async function getToolReviews(params: {
   }
 
   const rows = (data ?? []) as ReviewRow[];
-  const reviews = await mapReviewRows(rows, params.currentUserId);
+  const reviews = await mapReviewRows(rows, params.currentUserId, true);
   const summary = await getToolReviewSummary(params.toolId);
 
   let userReview: ToolReview | null = null;

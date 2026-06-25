@@ -7,6 +7,13 @@ export function normalizeNickname(value: string): string {
   return value.trim();
 }
 
+/** 리뷰 공개 표시용 — 앞 3자만 보이고 나머지는 * 처리 */
+export function maskNicknameForDisplay(nickname: string): string {
+  const trimmed = nickname.trim();
+  if (trimmed.length <= 3) return trimmed;
+  return `${trimmed.slice(0, 3)}${'*'.repeat(trimmed.length - 3)}`;
+}
+
 export function validateNickname(value: string): string | null {
   const nickname = normalizeNickname(value);
 

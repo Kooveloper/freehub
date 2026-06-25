@@ -10,7 +10,8 @@
     "type-check": "tsc --noEmit",
     "import-tools": "npx tsx scripts/import-tools-excel.ts",
     "backfill-tools-i18n": "npx tsx scripts/backfill-tools-i18n.ts",
-    "fix-paid-only-en": "npx tsx scripts/fix-paid-only-en.ts"
+    "fix-paid-only-en": "npx tsx scripts/fix-paid-only-en.ts",
+    "seed-review-dummies": "npx tsx scripts/seed-review-dummies.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.16",

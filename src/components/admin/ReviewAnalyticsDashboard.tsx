@@ -41,7 +41,7 @@ export function ReviewAnalyticsDashboard() {
   const [period, setPeriod] = useState<AnalyticsPeriod>('1d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
-  const [activeTab, setActiveTab] = useState<TabId>('categories');
+  const [activeTab, setActiveTab] = useState<TabId>('latest');
   const [search, setSearch] = useState('');
   const [data, setData] = useState<AdminReviewAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -247,10 +247,10 @@ export function ReviewAnalyticsDashboard() {
               <div className="flex flex-wrap gap-2">
                 {(
                   [
+                    ['latest', '최신 리뷰'],
                     ['categories', '카테고리'],
                     ['subCategories', '서브카테고리'],
                     ['tools', '서비스'],
-                    ['latest', '최신 리뷰'],
                   ] as const
                 ).map(([tab, label]) => (
                   <button
