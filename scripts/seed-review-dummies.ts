@@ -3,6 +3,11 @@ import { randomInt } from 'node:crypto';
 import { resolve } from 'node:path';
 import { config } from 'dotenv';
 
+import {
+  getSeedReviewTargetCount,
+  randomSeedRating,
+} from './review-seed-popularity';
+
 config({ path: resolve(process.cwd(), '.env.local') });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -150,6 +155,22 @@ async function ensureSeedUserPool(
   return { userIds, createdUsers, createdProfiles };
 }
 
+async function deleteSeedReviews(
+  supabase: SupabaseClient,
+  seedUserIds: string[],
+): Promise<number> {
+  if (seedUserIds.length === 0) return 0;
+
+  const { data, error } = await supabase
+    .from('tool_reviews')
+    .delete()
+    .in('user_id', seedUserIds)
+    .select('id');
+
+  if (error) throw new Error(error.message);
+  return data?.length ?? 0;
+}
+
 async function main() {
   const supabase = createClient(supabaseUrl!, serviceKey!, {
     auth: { autoRefreshToken: false, persistSession: false },
@@ -173,48 +194,39 @@ async function main() {
     `시드 사용자 풀: ${userIds.length}명 (신규 사용자 ${createdUsers}, 프로필 ${createdProfiles})`,
   );
 
+  const deleted = await deleteSeedReviews(supabase, userIds);
+  console.log(`기존 시드 리뷰 ${deleted}건 삭제`);
+
   let insertedReviews = 0;
-  let skippedTools = 0;
+  let zeroReviewTools = 0;
+  const shuffledUsers = shuffle(userIds);
+  let userCursor = 0;
+
+  const pickUsers = (count: number): string[] => {
+    const picked: string[] = [];
+    for (let i = 0; i < count; i += 1) {
+      picked.push(shuffledUsers[userCursor % shuffledUsers.length]!);
+      userCursor += 1;
+    }
+    return picked;
+  };
 
   for (const tool of tools) {
     const toolId = tool.id as string;
-    const targetCount = randomInt(1, 13);
+    const slug = tool.slug as string;
+    const targetCount = getSeedReviewTargetCount(slug);
 
-    const { count: existingCount, error: countError } = await supabase
-      .from('tool_reviews')
-      .select('id', { count: 'exact', head: true })
-      .eq('tool_id', toolId)
-      .in('user_id', userIds);
-
-    if (countError) throw new Error(countError.message);
-
-    if ((existingCount ?? 0) >= targetCount) {
-      skippedTools += 1;
+    if (targetCount === 0) {
+      zeroReviewTools += 1;
+      console.log(`  · ${tool.name}: 0건`);
       continue;
     }
 
-    const need = targetCount - (existingCount ?? 0);
-
-    const { data: existingReviews } = await supabase
-      .from('tool_reviews')
-      .select('user_id')
-      .eq('tool_id', toolId);
-
-    const usedOnTool = new Set(
-      (existingReviews ?? []).map((row) => row.user_id as string),
-    );
-
-    const candidates = shuffle(userIds.filter((id) => !usedOnTool.has(id))).slice(
-      0,
-      need,
-    );
-
-    if (candidates.length === 0) continue;
-
+    const candidates = pickUsers(targetCount);
     const rows = candidates.map((userId) => ({
       tool_id: toolId,
       user_id: userId,
-      rating: randomInt(1, 6),
+      rating: randomSeedRating(),
       content: '',
       created_at: randomPastDate(),
       updated_at: new Date().toISOString(),
@@ -222,15 +234,17 @@ async function main() {
 
     const { error: insertError } = await supabase.from('tool_reviews').insert(rows);
     if (insertError) {
-      throw new Error(`${tool.slug}: ${insertError.message}`);
+      throw new Error(`${slug}: ${insertError.message}`);
     }
 
     insertedReviews += rows.length;
-    console.log(`  + ${tool.name}: ${rows.length}건 (목표 ${targetCount}건)`);
+    console.log(`  + ${tool.name}: ${rows.length}건`);
   }
 
   console.log('');
-  console.log(`완료 — 리뷰 ${insertedReviews}건 추가, ${skippedTools}개 서비스는 이미 충분함`);
+  console.log(
+    `완료 — 리뷰 ${insertedReviews}건 생성, 리뷰 없음 ${zeroReviewTools}개 서비스`,
+  );
 }
 
 main().catch((error) => {
