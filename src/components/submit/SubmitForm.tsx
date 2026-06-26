@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
@@ -35,6 +35,8 @@ interface SubmitFormProps {
 /** 제보 탭 폼 */
 export function SubmitForm({ tools }: SubmitFormProps) {
   const { t } = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState<SubmitTab>(() =>
     resolveInitialTab(searchParams.get('tab')),
@@ -133,6 +135,10 @@ export function SubmitForm({ tools }: SubmitFormProps) {
     setActiveTab(tab);
     resetStatus();
     setShowSuccessToast(false);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tab);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   useEffect(() => {
@@ -172,25 +178,21 @@ export function SubmitForm({ tools }: SubmitFormProps) {
   return (
     <>
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
-        <div className="flex overflow-x-auto border-b border-gray-200">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => handleTabChange(tab.id)}
-              className={cn(
-                'min-w-[5.5rem] flex-1 whitespace-nowrap px-3 py-3 text-sm font-medium transition-colors',
-                activeTab === tab.id
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700',
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4 p-6 sm:p-8">
+          <Field label={t('submit.requestType')} required>
+            <select
+              value={activeTab}
+              onChange={(e) => handleTabChange(e.target.value as SubmitTab)}
+              className={UI_INPUT_CLASS}
+            >
+              {tabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+
           {activeTab === 'new_tool' && (
             <>
               <Field label={t('submit.toolName')} required>

@@ -191,6 +191,7 @@ export const ko = {
     pageTitle: '요청하기',
     pageDescription: 'FreeHub를 더 정확하고 유용하게 만드는 데 도움을 주세요',
     loading: '요청 양식을 불러오는 중…',
+    requestType: '문의 유형',
     tabNewTool: '새 서비스 요청',
     tabLimitChange: '한도 변경',
     tabBug: '버그/오류',

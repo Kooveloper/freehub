@@ -193,6 +193,7 @@ export const en: Messages = {
     pageTitle: 'Submit a request',
     pageDescription: 'Help us keep FreeHub accurate and useful',
     loading: 'Loading form…',
+    requestType: 'Request type',
     tabNewTool: 'New service request',
     tabLimitChange: 'Limit update',
     tabBug: 'Bug report',
