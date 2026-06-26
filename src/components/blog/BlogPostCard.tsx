@@ -28,7 +28,7 @@ export function BlogPostCard({
       className={cn(
         'group flex flex-col rounded-xl border border-neutral-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md',
         isCarousel
-          ? 'w-[min(calc(100vw-3rem),14rem)] shrink-0 snap-center p-4 sm:w-[15rem]'
+          ? 'w-[min(calc(100vw-3rem),14rem)] shrink-0 snap-center p-4 text-center sm:w-[15rem]'
           : 'min-w-0 p-5',
         className,
       )}
@@ -36,8 +36,8 @@ export function BlogPostCard({
       {post.category && (
         <span
           className={cn(
-            'mb-2 inline-flex w-fit max-w-full truncate rounded-full px-2 py-0.5 text-xs font-medium text-white',
-            isCarousel && 'mb-1.5',
+            'mb-2 inline-flex max-w-full truncate rounded-full px-2 py-0.5 text-xs font-medium text-white',
+            isCarousel ? 'mx-auto mb-1.5' : 'w-fit',
           )}
           style={{ backgroundColor: categoryColor }}
         >
@@ -69,7 +69,7 @@ export function BlogPostCard({
       <div
         className={cn(
           'mt-auto flex items-center gap-2 border-t border-neutral-100 pt-2.5',
-          isCarousel ? 'mt-3' : 'mt-4 pt-3',
+          isCarousel ? 'mt-3 justify-center' : 'mt-4 pt-3',
         )}
       >
         {!isCarousel &&

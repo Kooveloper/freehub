@@ -20,10 +20,12 @@ export async function HomeBlogSection() {
     <section className="border-t border-neutral-200 bg-white px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <HomeSectionTitle title={t('blog.homeSectionTitle')} />
-        <div className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-4 pb-2 sm:-mx-6 sm:gap-4 sm:px-6 lg:-mx-8 lg:px-8">
-          {posts.map((post) => (
-            <BlogPostCard key={post.id} post={post} variant="carousel" />
-          ))}
+        <div className="scrollbar-hide -mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div className="mx-auto flex w-max max-w-full snap-x snap-mandatory justify-center gap-3 sm:gap-4">
+            {posts.map((post) => (
+              <BlogPostCard key={post.id} post={post} variant="carousel" />
+            ))}
+          </div>
         </div>
         <div className="mt-6 text-center">
           <Link
