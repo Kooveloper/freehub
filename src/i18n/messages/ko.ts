@@ -155,7 +155,7 @@ export const ko = {
     subtitle: '무료 AI 툴 활용법과 최신 정보를 전달합니다',
     all: '전체',
     empty: '아직 발행된 글이 없습니다.',
-    homeSectionTitle: '📝 최신 무료 툴 가이드',
+    homeSectionTitle: '📚 읽을거리',
     viewAll: '블로그 전체 보기 →',
   },
   errorPage: {

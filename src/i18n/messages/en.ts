@@ -157,7 +157,7 @@ export const en: Messages = {
     subtitle: 'Guides and tips for free AI tools',
     all: 'All',
     empty: 'No published posts yet.',
-    homeSectionTitle: '📝 Latest free tool guides',
+    homeSectionTitle: '📚 Good reads',
     viewAll: 'View all blog posts →',
   },
   errorPage: {

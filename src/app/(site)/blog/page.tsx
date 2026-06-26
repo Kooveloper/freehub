@@ -114,7 +114,7 @@ export default async function BlogListPage({ searchParams }: BlogListPageProps) 
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map((post) => (
-              <BlogPostCard key={post.id} post={post} className="min-w-0" />
+              <BlogPostCard key={post.id} post={post} />
             ))}
           </div>
         )}
