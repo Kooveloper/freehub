@@ -4,9 +4,14 @@ import { BarChart3, Loader2, Search } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import type {
-  AdminAnalyticsData,
-  AnalyticsPeriod,
+import {
+  resolveClickMetricDisplay,
+  type AdminAnalyticsData,
+  type AnalyticsPeriod,
+  type CategoryViewStat,
+  type ClickMetricFilter,
+  type SubCategoryViewStat,
+  type ToolViewStat,
 } from '@/lib/admin/analytics';
 import { ADMIN_DASHBOARD_TABLE_CLASS } from '@/components/admin/admin-table';
 import { cn } from '@/lib/utils';
@@ -19,7 +24,18 @@ const PERIOD_OPTIONS: { value: AnalyticsPeriod; label: string }[] = [
   { value: 'custom', label: '기간 지정' },
 ];
 
+const CLICK_METRIC_OPTIONS: { value: ClickMetricFilter; label: string }[] = [
+  { value: 'total', label: '클릭 총합' },
+  { value: 'official_site', label: '공식 사이트' },
+  { value: 'cta_start_free', label: '무료로 시작하기' },
+];
+
 type TabId = 'categories' | 'subCategories' | 'tools';
+
+type ClickMetricRow = Pick<
+  CategoryViewStat | SubCategoryViewStat | ToolViewStat,
+  'view_count' | 'click_count' | 'click_breakdown' | 'ctr'
+>;
 
 function formatRangeLabel(from: string, to: string) {
   const fromDate = new Date(from);
@@ -42,12 +58,40 @@ function formatCtr(value: number) {
   })}%`;
 }
 
+function ClickMetricCells({
+  row,
+  filter,
+}: {
+  row: ClickMetricRow;
+  filter: ClickMetricFilter;
+}) {
+  const metrics = resolveClickMetricDisplay(
+    row.view_count,
+    row.click_count,
+    row.click_breakdown,
+    row.ctr,
+    filter,
+  );
+
+  return (
+    <>
+      <td className="px-5 py-3 tabular-nums text-gray-900">
+        {metrics.clicks.toLocaleString('ko-KR')}
+      </td>
+      <td className="px-5 py-3 tabular-nums text-gray-700">
+        {formatCtr(metrics.ctr)}
+      </td>
+    </>
+  );
+}
+
 export function AnalyticsDashboard() {
   const [period, setPeriod] = useState<AnalyticsPeriod>('1d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [activeTab, setActiveTab] = useState<TabId>('categories');
   const [search, setSearch] = useState('');
+  const [clickMetric, setClickMetric] = useState<ClickMetricFilter>('total');
   const [data, setData] = useState<AdminAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -134,6 +178,21 @@ export function AnalyticsDashboard() {
         (row.sub_category_name?.toLowerCase().includes(query) ?? false),
     );
   }, [data, query]);
+
+  const clickMetricLabel =
+    CLICK_METRIC_OPTIONS.find((option) => option.value === clickMetric)?.label ??
+    '클릭 총합';
+
+  const summaryClickMetrics = useMemo(() => {
+    if (!data) return null;
+    return resolveClickMetricDisplay(
+      data.summary.totalViews,
+      data.summary.totalClicks,
+      data.summary.click_breakdown,
+      data.summary.ctr,
+      clickMetric,
+    );
+  }, [data, clickMetric]);
 
   return (
     <div className="space-y-6">
@@ -228,15 +287,19 @@ export function AnalyticsDashboard() {
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm font-medium text-gray-500">기간 클릭수</p>
+              <p className="text-sm font-medium text-gray-500">
+                기간 클릭수 ({clickMetricLabel})
+              </p>
               <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">
-                {data.summary.totalClicks.toLocaleString('ko-KR')}
+                {(summaryClickMetrics?.clicks ?? 0).toLocaleString('ko-KR')}
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-              <p className="text-sm font-medium text-gray-500">CTR</p>
+              <p className="text-sm font-medium text-gray-500">
+                CTR ({clickMetricLabel})
+              </p>
               <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">
-                {formatCtr(data.summary.ctr)}
+                {formatCtr(summaryClickMetrics?.ctr ?? 0)}
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -275,15 +338,34 @@ export function AnalyticsDashboard() {
                 ))}
               </div>
 
-              <div className="relative max-w-xs flex-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="이름·슬러그 검색"
-                  className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <label className="text-sm text-gray-600">
+                  <span className="mb-1 block font-medium">클릭 집계</span>
+                  <select
+                    value={clickMetric}
+                    onChange={(event) =>
+                      setClickMetric(event.target.value as ClickMetricFilter)
+                    }
+                    className="w-full min-w-[10rem] rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 sm:w-auto"
+                  >
+                    {CLICK_METRIC_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="relative max-w-xs flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="search"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder="이름·슬러그 검색"
+                    className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-3 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
               </div>
             </div>
 
@@ -294,8 +376,12 @@ export function AnalyticsDashboard() {
                     <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">카테고리</th>
                       <th className="px-5 py-3 font-medium">기간 조회수</th>
-                      <th className="px-5 py-3 font-medium">기간 클릭수</th>
-                      <th className="px-5 py-3 font-medium">CTR</th>
+                      <th className="px-5 py-3 font-medium">
+                        기간 클릭수 ({clickMetricLabel})
+                      </th>
+                      <th className="px-5 py-3 font-medium">
+                        CTR ({clickMetricLabel})
+                      </th>
                       <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
@@ -324,12 +410,7 @@ export function AnalyticsDashboard() {
                           <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
-                          <td className="px-5 py-3 tabular-nums text-gray-900">
-                            {row.click_count.toLocaleString('ko-KR')}
-                          </td>
-                          <td className="px-5 py-3 tabular-nums text-gray-700">
-                            {formatCtr(row.ctr)}
-                          </td>
+                          <ClickMetricCells row={row} filter={clickMetric} />
                           <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>
@@ -347,8 +428,12 @@ export function AnalyticsDashboard() {
                       <th className="px-5 py-3 font-medium">서브카테고리</th>
                       <th className="px-5 py-3 font-medium">카테고리</th>
                       <th className="px-5 py-3 font-medium">기간 조회수</th>
-                      <th className="px-5 py-3 font-medium">기간 클릭수</th>
-                      <th className="px-5 py-3 font-medium">CTR</th>
+                      <th className="px-5 py-3 font-medium">
+                        기간 클릭수 ({clickMetricLabel})
+                      </th>
+                      <th className="px-5 py-3 font-medium">
+                        CTR ({clickMetricLabel})
+                      </th>
                       <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
@@ -380,12 +465,7 @@ export function AnalyticsDashboard() {
                           <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
-                          <td className="px-5 py-3 tabular-nums text-gray-900">
-                            {row.click_count.toLocaleString('ko-KR')}
-                          </td>
-                          <td className="px-5 py-3 tabular-nums text-gray-700">
-                            {formatCtr(row.ctr)}
-                          </td>
+                          <ClickMetricCells row={row} filter={clickMetric} />
                           <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>
@@ -403,8 +483,12 @@ export function AnalyticsDashboard() {
                       <th className="px-5 py-3 font-medium">서비스</th>
                       <th className="px-5 py-3 font-medium">카테고리 - 서브카테고리</th>
                       <th className="px-5 py-3 font-medium">기간 조회수</th>
-                      <th className="px-5 py-3 font-medium">기간 클릭수</th>
-                      <th className="px-5 py-3 font-medium">CTR</th>
+                      <th className="px-5 py-3 font-medium">
+                        기간 클릭수 ({clickMetricLabel})
+                      </th>
+                      <th className="px-5 py-3 font-medium">
+                        CTR ({clickMetricLabel})
+                      </th>
                       <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
@@ -443,12 +527,7 @@ export function AnalyticsDashboard() {
                           <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
-                          <td className="px-5 py-3 tabular-nums text-gray-900">
-                            {row.click_count.toLocaleString('ko-KR')}
-                          </td>
-                          <td className="px-5 py-3 tabular-nums text-gray-700">
-                            {formatCtr(row.ctr)}
-                          </td>
+                          <ClickMetricCells row={row} filter={clickMetric} />
                           <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>

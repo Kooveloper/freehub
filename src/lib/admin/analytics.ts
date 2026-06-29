@@ -15,16 +15,30 @@ export interface AnalyticsDateRange {
 export interface AnalyticsSummary {
   totalViews: number;
   totalClicks: number;
+  click_breakdown: ClickBreakdown;
   ctr: number;
   uniqueTools: number;
   range: AnalyticsDateRange;
 }
+
+export interface ClickBreakdown {
+  official_site: number;
+  cta_start_free: number;
+}
+
+export type ClickMetricFilter = 'total' | ToolClickType;
+
+export const EMPTY_CLICK_BREAKDOWN: ClickBreakdown = {
+  official_site: 0,
+  cta_start_free: 0,
+};
 
 export interface CategoryViewStat {
   category_slug: string;
   category_name: string;
   view_count: number;
   click_count: number;
+  click_breakdown: ClickBreakdown;
   ctr: number;
   lifetime_view_count: number;
 }
@@ -36,6 +50,7 @@ export interface SubCategoryViewStat {
   category_name: string;
   view_count: number;
   click_count: number;
+  click_breakdown: ClickBreakdown;
   ctr: number;
   lifetime_view_count: number;
 }
@@ -50,6 +65,7 @@ export interface ToolViewStat {
   sub_category_name: string | null;
   view_count: number;
   click_count: number;
+  click_breakdown: ClickBreakdown;
   ctr: number;
   lifetime_view_count: number;
 }
@@ -111,12 +127,44 @@ export function calcCtr(clicks: number, views: number): number {
   return Math.round((clicks / views) * 1000) / 10;
 }
 
+export function resolveClickMetricDisplay(
+  viewCount: number,
+  clickCount: number,
+  breakdown: ClickBreakdown,
+  ctr: number,
+  filter: ClickMetricFilter,
+): { clicks: number; ctr: number } {
+  if (filter === 'total') {
+    return { clicks: clickCount, ctr };
+  }
+
+  const clicks = breakdown[filter];
+  return { clicks, ctr: calcCtr(clicks, viewCount) };
+}
+
 function incrementCount(
   map: Record<string, number>,
   key: string,
   amount = 1,
 ) {
   map[key] = (map[key] ?? 0) + amount;
+}
+
+function incrementClickBreakdown(
+  map: Record<string, ClickBreakdown>,
+  key: string,
+  clickType: ToolClickType,
+) {
+  const current = map[key] ?? { ...EMPTY_CLICK_BREAKDOWN };
+  current[clickType] += 1;
+  map[key] = current;
+}
+
+function getBreakdown(
+  map: Record<string, ClickBreakdown>,
+  key: string,
+): ClickBreakdown {
+  return map[key] ?? { ...EMPTY_CLICK_BREAKDOWN };
 }
 
 /** 집계된 조회 이벤트 (기간 내) */
@@ -137,7 +185,7 @@ export async function getAdminAnalytics(
         .lte('viewed_at', range.to),
       supabase
         .from('tool_click_events')
-        .select('tool_id, category_slug, sub_category')
+        .select('tool_id, category_slug, sub_category, click_type')
         .gte('clicked_at', range.from)
         .lte('clicked_at', range.to),
       supabase.from('categories').select('slug, name'),
@@ -189,6 +237,10 @@ export async function getAdminAnalytics(
   const categoryClickCounts: Record<string, number> = {};
   const subClickCounts: Record<string, number> = {};
   const toolClickCounts: Record<string, number> = {};
+  const categoryClickBreakdown: Record<string, ClickBreakdown> = {};
+  const subClickBreakdown: Record<string, ClickBreakdown> = {};
+  const toolClickBreakdown: Record<string, ClickBreakdown> = {};
+  const summaryClickBreakdown: ClickBreakdown = { ...EMPTY_CLICK_BREAKDOWN };
   const uniqueTools = new Set<string>();
 
   for (const event of eventsRes.data ?? []) {
@@ -208,11 +260,17 @@ export async function getAdminAnalytics(
     const toolId = event.tool_id as string;
     const categorySlug = event.category_slug as string;
     const subSlug = (event.sub_category as string | null) ?? null;
+    const clickType = event.click_type as ToolClickType;
 
     incrementCount(categoryClickCounts, categorySlug);
     incrementCount(toolClickCounts, toolId);
+    incrementClickBreakdown(categoryClickBreakdown, categorySlug, clickType);
+    incrementClickBreakdown(toolClickBreakdown, toolId, clickType);
+    summaryClickBreakdown[clickType] += 1;
+
     if (subSlug) {
       incrementCount(subClickCounts, subSlug);
+      incrementClickBreakdown(subClickBreakdown, subSlug, clickType);
     }
   }
 
@@ -232,11 +290,13 @@ export async function getAdminAnalytics(
       const slug = row.slug as string;
       const viewCount = categoryCounts[slug] ?? 0;
       const clickCount = categoryClickCounts[slug] ?? 0;
+      const clickBreakdown = getBreakdown(categoryClickBreakdown, slug);
       return {
         category_slug: slug,
         category_name: row.name as string,
         view_count: viewCount,
         click_count: clickCount,
+        click_breakdown: clickBreakdown,
         ctr: calcCtr(clickCount, viewCount),
         lifetime_view_count: lifetimeByCategory[slug] ?? 0,
       };
@@ -249,6 +309,7 @@ export async function getAdminAnalytics(
       const categorySlug = row.category_slug as string;
       const viewCount = subCounts[slug] ?? 0;
       const clickCount = subClickCounts[slug] ?? 0;
+      const clickBreakdown = getBreakdown(subClickBreakdown, slug);
       return {
         sub_category_slug: slug,
         sub_category_name: row.name as string,
@@ -256,6 +317,7 @@ export async function getAdminAnalytics(
         category_name: categoryNameMap[categorySlug] ?? categorySlug,
         view_count: viewCount,
         click_count: clickCount,
+        click_breakdown: clickBreakdown,
         ctr: calcCtr(clickCount, viewCount),
         lifetime_view_count: lifetimeBySub[slug] ?? 0,
       };
@@ -266,6 +328,7 @@ export async function getAdminAnalytics(
     .map((tool) => {
       const viewCount = toolCounts[tool.id] ?? 0;
       const clickCount = toolClickCounts[tool.id] ?? 0;
+      const clickBreakdown = getBreakdown(toolClickBreakdown, tool.id);
       return {
         tool_id: tool.id,
         tool_slug: tool.slug,
@@ -278,6 +341,7 @@ export async function getAdminAnalytics(
           : null,
         view_count: viewCount,
         click_count: clickCount,
+        click_breakdown: clickBreakdown,
         ctr: calcCtr(clickCount, viewCount),
         lifetime_view_count: tool.view_count,
       };
@@ -291,6 +355,7 @@ export async function getAdminAnalytics(
     summary: {
       totalViews,
       totalClicks,
+      click_breakdown: summaryClickBreakdown,
       ctr: calcCtr(totalClicks, totalViews),
       uniqueTools: uniqueTools.size,
       range,
