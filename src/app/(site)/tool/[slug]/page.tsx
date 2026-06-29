@@ -210,6 +210,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
                     <ExternalToolLink
                       toolName={tool.name}
                       href={tool.homepage_url}
+                      toolId={tool.id}
+                      clickType="official_site"
                       className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700"
                     >
                       {t('toolDetail.officialSite')}
@@ -300,6 +302,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
               <ExternalToolLink
                 toolName={tool.name}
                 href={ctaUrl}
+                toolId={tool.id}
+                clickType="cta_start_free"
                 trackingClass={TRACK_CTA_START_FREE}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-base font-semibold text-white shadow-sm transition-colors hover:bg-blue-700"
               >

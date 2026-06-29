@@ -1,11 +1,14 @@
 'use client';
 
 import { trackToolClickExternal } from '@/lib/analytics';
+import type { ToolClickType } from '@/types/tool-analytics';
 import { cn } from '@/lib/utils';
 
 interface ExternalToolLinkProps {
   toolName: string;
   href: string;
+  toolId?: string;
+  clickType?: ToolClickType;
   className?: string;
   /** GTM · Google Ads 클릭 트리거용 class */
   trackingClass?: string;
@@ -18,6 +21,8 @@ const NAVIGATION_DELAY_MS = 100;
 export function ExternalToolLink({
   toolName,
   href,
+  toolId,
+  clickType,
   className,
   trackingClass,
   children,
@@ -25,6 +30,16 @@ export function ExternalToolLink({
   const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     trackToolClickExternal(toolName, href);
+
+    if (toolId && clickType) {
+      fetch('/api/clicks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ toolId, clickType }),
+      }).catch(() => {
+        // 클릭 집계 실패는 UX에 영향 없음
+      });
+    }
 
     window.setTimeout(() => {
       window.open(href, '_blank', 'noopener,noreferrer');

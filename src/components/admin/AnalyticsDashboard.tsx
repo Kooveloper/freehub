@@ -35,6 +35,13 @@ function formatRangeLabel(from: string, to: string) {
   return `${fmt(fromDate)} ~ ${fmt(toDate)}`;
 }
 
+function formatCtr(value: number) {
+  return `${value.toLocaleString('ko-KR', {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  })}%`;
+}
+
 export function AnalyticsDashboard() {
   const [period, setPeriod] = useState<AnalyticsPeriod>('1d');
   const [customFrom, setCustomFrom] = useState('');
@@ -134,8 +141,10 @@ export function AnalyticsDashboard() {
         <p className="font-medium">집계 기준</p>
         <p className="mt-1 text-blue-800/80">
           공개 서비스 상세 페이지(/tool/슬러그) 방문만 집계합니다. IP당 24시간 1회 ·
-          홈·카테고리 탭 선택은 포함되지 않습니다. 누적 조회수는 서비스 테이블 기준,
-          기간 조회수는 이벤트 로그 기준입니다.
+          홈·카테고리 탭 선택은 포함되지 않습니다. 기간 클릭수는 상세 페이지의 공식
+          사이트 링크·「지금 무료로 시작하기」 클릭 합계이며, CTR은 기간 클릭수 ÷
+          기간 조회수입니다. 누적 조회수는 서비스 테이블 기준, 기간 조회수·클릭수는
+          이벤트 로그 기준입니다.
         </p>
       </div>
 
@@ -211,11 +220,23 @@ export function AnalyticsDashboard() {
         </div>
       ) : data ? (
         <>
-          <section className="grid gap-4 sm:grid-cols-2">
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-medium text-gray-500">기간 조회수</p>
               <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">
                 {data.summary.totalViews.toLocaleString('ko-KR')}
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-medium text-gray-500">기간 클릭수</p>
+              <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">
+                {data.summary.totalClicks.toLocaleString('ko-KR')}
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+              <p className="text-sm font-medium text-gray-500">CTR</p>
+              <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900">
+                {formatCtr(data.summary.ctr)}
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
@@ -268,11 +289,13 @@ export function AnalyticsDashboard() {
 
             <div className="overflow-x-auto">
               {activeTab === 'categories' && (
-                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[640px]')}>
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[840px]')}>
                   <thead>
                     <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">카테고리</th>
                       <th className="px-5 py-3 font-medium">기간 조회수</th>
+                      <th className="px-5 py-3 font-medium">기간 클릭수</th>
+                      <th className="px-5 py-3 font-medium">CTR</th>
                       <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
@@ -280,7 +303,7 @@ export function AnalyticsDashboard() {
                     {filteredCategories.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={3}
+                          colSpan={5}
                           className="px-5 py-10 text-center text-gray-400"
                         >
                           데이터가 없습니다.
@@ -301,6 +324,12 @@ export function AnalyticsDashboard() {
                           <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
+                          <td className="px-5 py-3 tabular-nums text-gray-900">
+                            {row.click_count.toLocaleString('ko-KR')}
+                          </td>
+                          <td className="px-5 py-3 tabular-nums text-gray-700">
+                            {formatCtr(row.ctr)}
+                          </td>
                           <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>
@@ -312,12 +341,14 @@ export function AnalyticsDashboard() {
               )}
 
               {activeTab === 'subCategories' && (
-                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[720px]')}>
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[960px]')}>
                   <thead>
                     <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">서브카테고리</th>
                       <th className="px-5 py-3 font-medium">카테고리</th>
                       <th className="px-5 py-3 font-medium">기간 조회수</th>
+                      <th className="px-5 py-3 font-medium">기간 클릭수</th>
+                      <th className="px-5 py-3 font-medium">CTR</th>
                       <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
@@ -325,7 +356,7 @@ export function AnalyticsDashboard() {
                     {filteredSubCategories.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={4}
+                          colSpan={6}
                           className="px-5 py-10 text-center text-gray-400"
                         >
                           데이터가 없습니다.
@@ -349,6 +380,12 @@ export function AnalyticsDashboard() {
                           <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
                           </td>
+                          <td className="px-5 py-3 tabular-nums text-gray-900">
+                            {row.click_count.toLocaleString('ko-KR')}
+                          </td>
+                          <td className="px-5 py-3 tabular-nums text-gray-700">
+                            {formatCtr(row.ctr)}
+                          </td>
                           <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}
                           </td>
@@ -360,12 +397,14 @@ export function AnalyticsDashboard() {
               )}
 
               {activeTab === 'tools' && (
-                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[900px]')}>
+                <table className={cn(ADMIN_DASHBOARD_TABLE_CLASS, 'min-w-[1080px]')}>
                   <thead>
                     <tr className="border-b border-gray-100 text-gray-500">
                       <th className="px-5 py-3 font-medium">서비스</th>
                       <th className="px-5 py-3 font-medium">카테고리 - 서브카테고리</th>
                       <th className="px-5 py-3 font-medium">기간 조회수</th>
+                      <th className="px-5 py-3 font-medium">기간 클릭수</th>
+                      <th className="px-5 py-3 font-medium">CTR</th>
                       <th className="px-5 py-3 font-medium">누적 조회수</th>
                     </tr>
                   </thead>
@@ -373,7 +412,7 @@ export function AnalyticsDashboard() {
                     {filteredTools.length === 0 ? (
                       <tr>
                         <td
-                          colSpan={4}
+                          colSpan={6}
                           className="px-5 py-10 text-center text-gray-400"
                         >
                           데이터가 없습니다.
@@ -403,6 +442,12 @@ export function AnalyticsDashboard() {
                           </td>
                           <td className="px-5 py-3 tabular-nums text-gray-900">
                             {row.view_count.toLocaleString('ko-KR')}
+                          </td>
+                          <td className="px-5 py-3 tabular-nums text-gray-900">
+                            {row.click_count.toLocaleString('ko-KR')}
+                          </td>
+                          <td className="px-5 py-3 tabular-nums text-gray-700">
+                            {formatCtr(row.ctr)}
                           </td>
                           <td className="px-5 py-3 tabular-nums text-gray-500">
                             {row.lifetime_view_count.toLocaleString('ko-KR')}

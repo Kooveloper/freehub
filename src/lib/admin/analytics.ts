@@ -1,5 +1,9 @@
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
+import type { ToolClickType } from '@/types/tool-analytics';
+
+export type { ToolClickType } from '@/types/tool-analytics';
+
 export type AnalyticsPeriod = '1d' | '7d' | '30d' | '90d' | 'custom';
 
 export interface AnalyticsDateRange {
@@ -10,6 +14,8 @@ export interface AnalyticsDateRange {
 
 export interface AnalyticsSummary {
   totalViews: number;
+  totalClicks: number;
+  ctr: number;
   uniqueTools: number;
   range: AnalyticsDateRange;
 }
@@ -18,6 +24,8 @@ export interface CategoryViewStat {
   category_slug: string;
   category_name: string;
   view_count: number;
+  click_count: number;
+  ctr: number;
   lifetime_view_count: number;
 }
 
@@ -27,6 +35,8 @@ export interface SubCategoryViewStat {
   category_slug: string;
   category_name: string;
   view_count: number;
+  click_count: number;
+  ctr: number;
   lifetime_view_count: number;
 }
 
@@ -39,6 +49,8 @@ export interface ToolViewStat {
   sub_category: string | null;
   sub_category_name: string | null;
   view_count: number;
+  click_count: number;
+  ctr: number;
   lifetime_view_count: number;
 }
 
@@ -94,6 +106,19 @@ export function resolveAnalyticsRange(
   return { period, from: from.toISOString(), to: toIso };
 }
 
+export function calcCtr(clicks: number, views: number): number {
+  if (views <= 0) return 0;
+  return Math.round((clicks / views) * 1000) / 10;
+}
+
+function incrementCount(
+  map: Record<string, number>,
+  key: string,
+  amount = 1,
+) {
+  map[key] = (map[key] ?? 0) + amount;
+}
+
 /** 집계된 조회 이벤트 (기간 내) */
 export async function getAdminAnalytics(
   period: AnalyticsPeriod,
@@ -103,13 +128,18 @@ export async function getAdminAnalytics(
   const range = resolveAnalyticsRange(period, fromParam, toParam);
   const supabase = createServiceClient();
 
-  const [eventsRes, categoriesRes, subCategoriesRes, toolsRes] =
+  const [eventsRes, clickEventsRes, categoriesRes, subCategoriesRes, toolsRes] =
     await Promise.all([
       supabase
         .from('tool_view_events')
         .select('tool_id, category_slug, sub_category')
         .gte('viewed_at', range.from)
         .lte('viewed_at', range.to),
+      supabase
+        .from('tool_click_events')
+        .select('tool_id, category_slug, sub_category')
+        .gte('clicked_at', range.from)
+        .lte('clicked_at', range.to),
       supabase.from('categories').select('slug, name'),
       supabase.from('sub_categories').select('slug, name, category_slug'),
       supabase
@@ -119,6 +149,9 @@ export async function getAdminAnalytics(
 
   if (eventsRes.error) {
     throw new Error(`조회 이벤트 조회 실패: ${eventsRes.error.message}`);
+  }
+  if (clickEventsRes.error) {
+    throw new Error(`클릭 이벤트 조회 실패: ${clickEventsRes.error.message}`);
   }
   if (categoriesRes.error) {
     throw new Error(`카테고리 조회 실패: ${categoriesRes.error.message}`);
@@ -153,6 +186,9 @@ export async function getAdminAnalytics(
   const categoryCounts: Record<string, number> = {};
   const subCounts: Record<string, number> = {};
   const toolCounts: Record<string, number> = {};
+  const categoryClickCounts: Record<string, number> = {};
+  const subClickCounts: Record<string, number> = {};
+  const toolClickCounts: Record<string, number> = {};
   const uniqueTools = new Set<string>();
 
   for (const event of eventsRes.data ?? []) {
@@ -161,10 +197,22 @@ export async function getAdminAnalytics(
     const subSlug = (event.sub_category as string | null) ?? null;
 
     uniqueTools.add(toolId);
-    categoryCounts[categorySlug] = (categoryCounts[categorySlug] ?? 0) + 1;
-    toolCounts[toolId] = (toolCounts[toolId] ?? 0) + 1;
+    incrementCount(categoryCounts, categorySlug);
+    incrementCount(toolCounts, toolId);
     if (subSlug) {
-      subCounts[subSlug] = (subCounts[subSlug] ?? 0) + 1;
+      incrementCount(subCounts, subSlug);
+    }
+  }
+
+  for (const event of clickEventsRes.data ?? []) {
+    const toolId = event.tool_id as string;
+    const categorySlug = event.category_slug as string;
+    const subSlug = (event.sub_category as string | null) ?? null;
+
+    incrementCount(categoryClickCounts, categorySlug);
+    incrementCount(toolClickCounts, toolId);
+    if (subSlug) {
+      incrementCount(subClickCounts, subSlug);
     }
   }
 
@@ -182,10 +230,14 @@ export async function getAdminAnalytics(
   const categories: CategoryViewStat[] = (categoriesRes.data ?? [])
     .map((row) => {
       const slug = row.slug as string;
+      const viewCount = categoryCounts[slug] ?? 0;
+      const clickCount = categoryClickCounts[slug] ?? 0;
       return {
         category_slug: slug,
         category_name: row.name as string,
-        view_count: categoryCounts[slug] ?? 0,
+        view_count: viewCount,
+        click_count: clickCount,
+        ctr: calcCtr(clickCount, viewCount),
         lifetime_view_count: lifetimeByCategory[slug] ?? 0,
       };
     })
@@ -195,36 +247,51 @@ export async function getAdminAnalytics(
     .map((row) => {
       const slug = row.slug as string;
       const categorySlug = row.category_slug as string;
+      const viewCount = subCounts[slug] ?? 0;
+      const clickCount = subClickCounts[slug] ?? 0;
       return {
         sub_category_slug: slug,
         sub_category_name: row.name as string,
         category_slug: categorySlug,
         category_name: categoryNameMap[categorySlug] ?? categorySlug,
-        view_count: subCounts[slug] ?? 0,
+        view_count: viewCount,
+        click_count: clickCount,
+        ctr: calcCtr(clickCount, viewCount),
         lifetime_view_count: lifetimeBySub[slug] ?? 0,
       };
     })
     .sort((a, b) => b.view_count - a.view_count);
 
   const tools: ToolViewStat[] = [...toolMap.values()]
-    .map((tool) => ({
-      tool_id: tool.id,
-      tool_slug: tool.slug,
-      tool_name: tool.name,
-      category_slug: tool.category_slug,
-      category_name: categoryNameMap[tool.category_slug] ?? tool.category_slug,
-      sub_category: tool.sub_category,
-      sub_category_name: tool.sub_category
-        ? subNameMap[tool.sub_category] ?? tool.sub_category
-        : null,
-      view_count: toolCounts[tool.id] ?? 0,
-      lifetime_view_count: tool.view_count,
-    }))
+    .map((tool) => {
+      const viewCount = toolCounts[tool.id] ?? 0;
+      const clickCount = toolClickCounts[tool.id] ?? 0;
+      return {
+        tool_id: tool.id,
+        tool_slug: tool.slug,
+        tool_name: tool.name,
+        category_slug: tool.category_slug,
+        category_name: categoryNameMap[tool.category_slug] ?? tool.category_slug,
+        sub_category: tool.sub_category,
+        sub_category_name: tool.sub_category
+          ? subNameMap[tool.sub_category] ?? tool.sub_category
+          : null,
+        view_count: viewCount,
+        click_count: clickCount,
+        ctr: calcCtr(clickCount, viewCount),
+        lifetime_view_count: tool.view_count,
+      };
+    })
     .sort((a, b) => b.view_count - a.view_count);
+
+  const totalViews = eventsRes.data?.length ?? 0;
+  const totalClicks = clickEventsRes.data?.length ?? 0;
 
   return {
     summary: {
-      totalViews: eventsRes.data?.length ?? 0,
+      totalViews,
+      totalClicks,
+      ctr: calcCtr(totalClicks, totalViews),
       uniqueTools: uniqueTools.size,
       range,
     },
@@ -234,8 +301,9 @@ export async function getAdminAnalytics(
   };
 }
 
-/** 서비스 상세 조회 이벤트 기록 (모든 분류에 각각 기록) */
-export async function logToolViewEvent(toolId: string): Promise<void> {
+async function resolveToolCategoryRows(
+  toolId: string,
+): Promise<Array<{ category_slug: string; sub_category: string | null }>> {
   const supabase = createServiceClient();
 
   const { data: assignments, error: assignmentError } = await supabase
@@ -244,34 +312,67 @@ export async function logToolViewEvent(toolId: string): Promise<void> {
     .eq('tool_id', toolId)
     .order('sort_order', { ascending: true });
 
-  let rows: Array<{ category_slug: string; sub_category: string | null }> = [];
-
   if (!assignmentError && assignments && assignments.length > 0) {
-    rows = assignments.map((row) => ({
+    return assignments.map((row) => ({
       category_slug: row.category_slug as string,
       sub_category: (row.sub_category as string | null) ?? null,
     }));
-  } else {
-    const { data: tool } = await supabase
-      .from('tools')
-      .select('category_slug, sub_category')
-      .eq('id', toolId)
-      .maybeSingle();
-
-    if (tool) {
-      rows = [
-        {
-          category_slug: tool.category_slug as string,
-          sub_category: (tool.sub_category as string | null) ?? null,
-        },
-      ];
-    }
   }
+
+  const { data: tool } = await supabase
+    .from('tools')
+    .select('category_slug, sub_category')
+    .eq('id', toolId)
+    .maybeSingle();
+
+  if (!tool) return [];
+
+  return [
+    {
+      category_slug: tool.category_slug as string,
+      sub_category: (tool.sub_category as string | null) ?? null,
+    },
+  ];
+}
+
+/** 서비스 상세 외부 링크 클릭 이벤트 기록 */
+export async function logToolClickEvent(
+  toolId: string,
+  clickType: ToolClickType,
+): Promise<void> {
+  const rows = await resolveToolCategoryRows(toolId);
+
+  if (rows.length === 0) {
+    console.error('클릭 이벤트용 서비스 조회 실패: 없음');
+    return;
+  }
+
+  const supabase = createServiceClient();
+  const { error } = await supabase.from('tool_click_events').insert(
+    rows.map((row) => ({
+      tool_id: toolId,
+      category_slug: row.category_slug,
+      sub_category: row.sub_category,
+      click_type: clickType,
+    })),
+  );
+
+  if (error) {
+    console.error('클릭 이벤트 저장 실패:', error.message);
+    throw new Error(error.message);
+  }
+}
+
+/** 서비스 상세 조회 이벤트 기록 (모든 분류에 각각 기록) */
+export async function logToolViewEvent(toolId: string): Promise<void> {
+  const rows = await resolveToolCategoryRows(toolId);
 
   if (rows.length === 0) {
     console.error('조회 이벤트용 서비스 조회 실패: 없음');
     return;
   }
+
+  const supabase = createServiceClient();
 
   const { error } = await supabase.from('tool_view_events').insert(
     rows.map((row) => ({
