@@ -24,12 +24,17 @@ export async function generateMetadata({
     return {};
   }
 
-  return buildBlogPostMetadata(
-    post.title,
-    post.meta_description,
-    post.tags,
-    locale,
-  );
+  return {
+    ...(await buildBlogPostMetadata(
+      post.title,
+      post.meta_description,
+      post.tags,
+      locale,
+    )),
+    alternates: {
+      canonical: `https://freehub.kr/blog/${post.slug}`,
+    },
+  };
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
