@@ -9,7 +9,7 @@ export async function HomeBlogSection() {
   const t = await getTranslations();
   let posts: Awaited<ReturnType<typeof getRecentBlogPosts>> = [];
   try {
-    posts = await getRecentBlogPosts(6);
+    posts = await getRecentBlogPosts(5);
   } catch {
     return null;
   }
@@ -20,12 +20,22 @@ export async function HomeBlogSection() {
     <section className="border-t border-neutral-200 bg-white px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <HomeSectionTitle title={t('blog.homeSectionTitle')} />
-        <div className="scrollbar-hide -mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-          <div className="mx-auto flex w-max max-w-full snap-x snap-mandatory justify-center gap-3 sm:gap-4">
+        <div className="scrollbar-hide -mx-4 overflow-x-auto overscroll-x-contain px-4 pb-2 sm:-mx-6 sm:px-6 lg:hidden lg:px-8">
+          <div className="flex w-max snap-x snap-mandatory gap-3 sm:gap-4">
             {posts.map((post) => (
               <BlogPostCard key={post.id} post={post} variant="carousel" />
             ))}
           </div>
+        </div>
+        <div className="hidden gap-4 lg:grid lg:grid-cols-5">
+          {posts.map((post) => (
+            <BlogPostCard
+              key={post.id}
+              post={post}
+              variant="carousel"
+              className="w-full min-w-0"
+            />
+          ))}
         </div>
         <div className="mt-6 text-center">
           <Link
