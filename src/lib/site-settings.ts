@@ -28,6 +28,8 @@ export function resolveSiteSettings(row: SiteSettings | null): ResolvedSiteSetti
     adsEnabled,
     adsensePublisherId,
     adSlots: resolveAdSlots(row),
+    adInfeedLayoutKey:
+      process.env.NEXT_PUBLIC_ADSENSE_INFEED_LAYOUT_KEY?.trim() || null,
     extraHeadHtml: row?.extra_head_html?.trim() || null,
     extraBodyHtml: row?.extra_body_html?.trim() || null,
   };

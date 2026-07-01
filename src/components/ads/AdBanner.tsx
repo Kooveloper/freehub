@@ -15,6 +15,8 @@ declare global {
 interface AdBannerProps {
   slotKey: keyof AdSlots;
   adFormat?: string;
+  adLayout?: string;
+  adLayoutKey?: string | null;
   fullWidthResponsive?: boolean;
   className?: string;
   style?: React.CSSProperties;
@@ -24,6 +26,8 @@ interface AdBannerProps {
 export function AdBanner({
   slotKey,
   adFormat,
+  adLayout,
+  adLayoutKey,
   fullWidthResponsive = true,
   className,
   style,
@@ -70,6 +74,8 @@ export function AdBanner({
       data-ad-client={adsensePublisherId}
       data-ad-slot={adSlot}
       {...(adFormat ? { 'data-ad-format': adFormat } : {})}
+      {...(adLayout ? { 'data-ad-layout': adLayout } : {})}
+      {...(adLayoutKey ? { 'data-ad-layout-key': adLayoutKey } : {})}
       data-full-width-responsive={fullWidthResponsive ? 'true' : 'false'}
     />
   );

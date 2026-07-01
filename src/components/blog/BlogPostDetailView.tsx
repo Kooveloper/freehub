@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { AdSidebar } from '@/components/ads/AdSidebar';
+import { BlogPostBody } from '@/components/blog/BlogPostBody';
 import { BlogPostCard } from '@/components/blog/BlogPostCard';
 import { BlogViewTracker } from '@/components/blog/BlogViewTracker';
 import { BlogPostingJsonLd } from '@/components/seo/JsonLd';
@@ -9,14 +10,12 @@ import {
   getBlogCategoryColor,
   getBlogCategoryLabel,
 } from '@/lib/blog-utils';
+import { splitBlogContentForMidAd } from '@/lib/blog/split-content-for-ad';
 import {
   getBlogPostsByCategory,
   getRecentBlogPosts,
 } from '@/lib/supabase/queries';
 import type { BlogPost } from '@/types/blog';
-
-const PROSE_CLASS =
-  'prose prose-lg max-w-none prose-headings:text-slate-800 prose-headings:font-bold prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline prose-strong:text-slate-800 prose-table:w-full prose-table:border-collapse prose-th:bg-slate-100 prose-th:p-3 prose-th:text-left prose-td:p-3 prose-td:border prose-td:border-slate-200 prose-img:rounded-lg';
 
 interface BlogPostDetailViewProps {
   post: BlogPost;
@@ -48,6 +47,7 @@ export async function BlogPostDetailView({
   }
 
   const categoryHref = post.category ? `/category/${post.category}` : '/';
+  const contentSplit = splitBlogContentForMidAd(post.content);
 
   return (
     <>
@@ -115,10 +115,7 @@ export async function BlogPostDetailView({
 
             <hr className="my-8 border-neutral-200" />
 
-            <div
-              className={PROSE_CLASS}
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+            <BlogPostBody content={post.content} split={contentSplit} />
 
             {(post.tags ?? []).length > 0 && (
               <div className="mt-10 border-t border-neutral-200 pt-6">

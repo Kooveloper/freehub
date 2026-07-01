@@ -123,7 +123,7 @@ export function SiteSettingsManager() {
               {(
                 [
                   ['ad_slot_home_top', '상단 배너'],
-                  ['ad_slot_in_feed', '인피드'],
+                  ['ad_slot_in_feed', '인피드 (layout-key는 .env NEXT_PUBLIC_ADSENSE_INFEED_LAYOUT_KEY)'],
                   ['ad_slot_sidebar', '사이드바'],
                   ['ad_slot_detail_btm', '상세 하단'],
                   ['ad_slot_blog_mid', '본문 중간'],

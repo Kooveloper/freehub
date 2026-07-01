@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 import { AdBanner } from './AdBanner';
 
-type AdVariant = 'banner' | 'infeed' | 'sidebar';
+type AdVariant = 'banner' | 'infeed' | 'sidebar' | 'inarticle';
 
 interface AdSlotProps {
   slotKey: keyof AdSlots;
@@ -16,6 +16,8 @@ interface AdSlotProps {
   /** 광고가 켜져 있을 때만 적용되는 바깥 래퍼 (여백·레이아웃) */
   outerClassName?: string;
   adFormat?: string;
+  adLayout?: string;
+  adLayoutKey?: string | null;
   fullWidthResponsive?: boolean;
   style?: React.CSSProperties;
   onLoadError?: () => void;
@@ -25,14 +27,16 @@ const CONTAINER_CLASS: Record<AdVariant, string> = {
   banner:
     'overflow-hidden rounded-xl border border-brand-200/40 bg-white/50 shadow-sm backdrop-blur-sm',
   infeed:
-    'min-h-[280px] overflow-hidden rounded-xl border border-brand-200/50 bg-white/70 shadow-sm shadow-brand-900/5',
+    'min-h-[250px] overflow-hidden rounded-xl border border-brand-200/50 bg-white/70 shadow-sm shadow-brand-900/5',
   sidebar: '',
+  inarticle: '',
 };
 
 const AD_CLASS: Record<AdVariant, string> = {
   banner: 'min-h-[90px] w-full',
-  infeed: 'h-full min-h-[280px] w-full',
+  infeed: 'h-full min-h-[250px] w-full',
   sidebar: 'h-[600px] w-[160px]',
+  inarticle: 'w-full',
 };
 
 /**
@@ -45,6 +49,8 @@ export function AdSlot({
   className,
   outerClassName,
   adFormat,
+  adLayout,
+  adLayoutKey,
   fullWidthResponsive,
   style,
   onLoadError,
@@ -57,6 +63,8 @@ export function AdSlot({
     <AdBanner
       slotKey={slotKey}
       adFormat={adFormat}
+      adLayout={adLayout}
+      adLayoutKey={adLayoutKey}
       fullWidthResponsive={fullWidthResponsive ?? variant !== 'sidebar'}
       className={AD_CLASS[variant]}
       style={style}
@@ -64,7 +72,7 @@ export function AdSlot({
     />
   );
 
-  if (variant === 'sidebar') {
+  if (variant === 'sidebar' || variant === 'inarticle') {
     return banner;
   }
 

@@ -24,6 +24,8 @@ export interface ResolvedSiteSettings {
   adsEnabled: boolean;
   adsensePublisherId: string | null;
   adSlots: AdSlots;
+  /** AdSense 인피드 광고 단위 생성 시 발급되는 layout-key */
+  adInfeedLayoutKey: string | null;
   extraHeadHtml: string | null;
   extraBodyHtml: string | null;
 }
