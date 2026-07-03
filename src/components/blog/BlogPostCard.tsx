@@ -36,8 +36,8 @@ export function BlogPostCard({
       {post.category && (
         <span
           className={cn(
-            'mb-2 inline-flex max-w-full truncate rounded-full px-2 py-0.5 text-xs font-medium text-white',
-            isCarousel ? 'mb-1.5' : 'w-fit',
+            'mb-2 inline-flex w-fit max-w-full self-start truncate rounded-full px-2 py-0.5 text-xs font-medium text-white',
+            isCarousel && 'mb-1.5',
           )}
           style={{ backgroundColor: categoryColor }}
         >
