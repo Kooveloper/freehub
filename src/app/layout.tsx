@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { headers } from 'next/headers';
 import Script from 'next/script';
 
 import { SiteBodyTopCode, SiteHeadCode } from '@/components/site/SiteCustomCode';
@@ -8,6 +9,7 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import { getLocale } from '@/lib/locale';
+import { isBlogPostPath } from '@/lib/seo/blog-path';
 import { getSiteSettings } from '@/lib/site-settings';
 
 import './globals.css';
@@ -40,6 +42,8 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const settings = await getSiteSettings();
+  const pathname = (await headers()).get('x-pathname') ?? '';
+  const excludePageSeo = isBlogPostPath(pathname);
 
   return (
     <html
@@ -47,7 +51,10 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <SiteHeadCode html={settings.extraHeadHtml} />
+        <SiteHeadCode
+          html={settings.extraHeadHtml}
+          excludePageSeo={excludePageSeo}
+        />
       </head>
       <body className="flex min-h-full flex-col bg-white text-gray-900">
         <SiteBodyTopCode html={settings.extraBodyHtml} />

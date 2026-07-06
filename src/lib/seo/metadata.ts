@@ -5,7 +5,6 @@ import type { Locale } from '@/i18n/config';
 import {
   buildBlogListSeoCopy,
   buildBlogListSeoKeywords,
-  buildBlogPostSeoCopy,
   buildBlogPostSeoKeywords,
   buildCategorySeoCopy,
   buildCategorySeoKeywords,
@@ -93,12 +92,9 @@ export async function buildBlogPostMetadata(
   tags: string[] | null,
   locale: Locale,
 ): Promise<Metadata> {
-  const base = await getSiteSeoBase(locale);
-  const copy = buildBlogPostSeoCopy(base, postTitle, metaDescription, locale);
-
   return buildPageMetadata({
-    title: copy.title,
-    description: copy.description,
+    title: `${postTitle} | ${APP_NAME}`,
+    description: metaDescription?.trim() || postTitle,
     keywords: buildBlogPostSeoKeywords(tags, locale),
   });
 }

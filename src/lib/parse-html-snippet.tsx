@@ -14,8 +14,32 @@ function parseAttrs(attrString: string): Record<string, string> {
   return attrs;
 }
 
+const PAGE_SEO_META_NAMES = new Set([
+  'description',
+  'twitter:title',
+  'twitter:description',
+]);
+
+const PAGE_SEO_META_PROPERTIES = new Set(['og:title', 'og:description']);
+
+function isPageSeoMeta(attrs: Record<string, string>): boolean {
+  const name = attrs.name?.toLowerCase();
+  const property = attrs.property?.toLowerCase();
+  if (name && PAGE_SEO_META_NAMES.has(name)) return true;
+  if (property && PAGE_SEO_META_PROPERTIES.has(property)) return true;
+  return false;
+}
+
+export interface ParseHtmlSnippetOptions {
+  /** 페이지별 title/description·OG 등 — 블로그 글 등에서 중복 방지 */
+  excludePageSeo?: boolean;
+}
+
 /** head/body에 붙일 HTML 스니펫(meta, link, script, noscript) 파싱 */
-export function parseHtmlSnippet(html: string): ReactNode[] {
+export function parseHtmlSnippet(
+  html: string,
+  options?: ParseHtmlSnippetOptions,
+): ReactNode[] {
   const trimmed = html.trim();
   if (!trimmed) return [];
 
@@ -26,12 +50,15 @@ export function parseHtmlSnippet(html: string): ReactNode[] {
   let match: RegExpExecArray | null;
   while ((match = metaRegex.exec(trimmed)) !== null) {
     const attrs = parseAttrs(match[1]);
+    if (options?.excludePageSeo && isPageSeoMeta(attrs)) continue;
     nodes.push(<meta key={`meta-${index++}`} {...attrs} />);
   }
 
-  const titleRegex = /<title>([\s\S]*?)<\/title>/gi;
-  while ((match = titleRegex.exec(trimmed)) !== null) {
-    nodes.push(<title key={`title-${index++}`}>{match[1]}</title>);
+  if (!options?.excludePageSeo) {
+    const titleRegex = /<title>([\s\S]*?)<\/title>/gi;
+    while ((match = titleRegex.exec(trimmed)) !== null) {
+      nodes.push(<title key={`title-${index++}`}>{match[1]}</title>);
+    }
   }
 
   const linkRegex = /<link\s+([^>]+?)\s*\/?>/gi;
