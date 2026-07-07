@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-api';
 import { invalidateBlogCache } from '@/lib/blog/cache-invalidation';
+import { scheduleBlogIndexingRequest } from '@/lib/blog/google-indexing';
 import { sanitizeBlogSlugForStorage } from '@/lib/blog-utils';
 import type { BlogPostSource, BlogPostStatus } from '@/types/blog';
 
@@ -61,5 +62,8 @@ export async function POST(request: Request) {
   }
 
   invalidateBlogCache(slug);
+  if (status === 'published' && data?.id) {
+    scheduleBlogIndexingRequest(String(data.id), slug);
+  }
   return NextResponse.json({ post: data });
 }

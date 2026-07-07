@@ -4,6 +4,10 @@
     {
       "path": "/api/cron/blog-trigger",
       "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/blog-indexing",
+      "schedule": "0 19 * * *"
     }
   ],
   "headers": [

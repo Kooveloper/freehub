@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAdmin } from '@/lib/admin-api';
 import { invalidateBlogCache } from '@/lib/blog/cache-invalidation';
+import { scheduleBlogIndexingRequest } from '@/lib/blog/google-indexing';
 import { sanitizeBlogSlugForStorage } from '@/lib/blog-utils';
 import type { BlogPostStatus } from '@/types/blog';
 
@@ -103,6 +104,17 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   invalidateBlogCache(existing.slug as string);
   invalidateBlogCache(data.slug as string);
+
+  const becamePublished =
+    status === 'published' && existing.status !== 'published';
+  const republishedWhileLive =
+    status === 'published' &&
+    existing.status === 'published' &&
+    slug !== existing.slug;
+
+  if ((becamePublished || republishedWhileLive) && data?.id) {
+    scheduleBlogIndexingRequest(String(data.id), slug);
+  }
 
   return NextResponse.json({ post: data });
 }
