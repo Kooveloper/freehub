@@ -20,7 +20,11 @@ const PAGE_SEO_META_NAMES = new Set([
   'twitter:description',
 ]);
 
-const PAGE_SEO_META_PROPERTIES = new Set(['og:title', 'og:description']);
+const PAGE_SEO_META_PROPERTIES = new Set([
+  'og:title',
+  'og:description',
+  'og:url',
+]);
 
 function isPageSeoMeta(attrs: Record<string, string>): boolean {
   const name = attrs.name?.toLowerCase();
@@ -28,6 +32,11 @@ function isPageSeoMeta(attrs: Record<string, string>): boolean {
   if (name && PAGE_SEO_META_NAMES.has(name)) return true;
   if (property && PAGE_SEO_META_PROPERTIES.has(property)) return true;
   return false;
+}
+
+function isPageSeoLink(attrs: Record<string, string>): boolean {
+  const rel = attrs.rel?.toLowerCase() ?? '';
+  return rel === 'canonical' || rel.split(/\s+/).includes('canonical');
 }
 
 export interface ParseHtmlSnippetOptions {
@@ -64,6 +73,7 @@ export function parseHtmlSnippet(
   const linkRegex = /<link\s+([^>]+?)\s*\/?>/gi;
   while ((match = linkRegex.exec(trimmed)) !== null) {
     const attrs = parseAttrs(match[1]);
+    if (options?.excludePageSeo && isPageSeoLink(attrs)) continue;
     nodes.push(<link key={`link-${index++}`} {...attrs} />);
   }
 

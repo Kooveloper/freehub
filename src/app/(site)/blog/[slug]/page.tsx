@@ -24,6 +24,9 @@ export async function generateMetadata({
     return {};
   }
 
+  const baseUrl =
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '') ?? 'https://freehub.kr';
+
   return {
     ...(await buildBlogPostMetadata(
       post.title,
@@ -32,7 +35,7 @@ export async function generateMetadata({
       locale,
     )),
     alternates: {
-      canonical: `https://freehub.kr/blog/${post.slug}`,
+      canonical: `${baseUrl}/blog/${post.slug}`,
     },
   };
 }
