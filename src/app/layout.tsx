@@ -9,7 +9,7 @@ import { FavoritesProvider } from '@/contexts/FavoritesContext';
 import { LocaleProvider } from '@/contexts/LocaleContext';
 import { SiteSettingsProvider } from '@/contexts/SiteSettingsContext';
 import { getLocale } from '@/lib/locale';
-import { isBlogPostPath } from '@/lib/seo/blog-path';
+import { shouldExcludeAdminHeadSeo } from '@/lib/seo/blog-path';
 import { getSiteSettings } from '@/lib/site-settings';
 
 import './globals.css';
@@ -43,7 +43,7 @@ export default async function RootLayout({
   const locale = await getLocale();
   const settings = await getSiteSettings();
   const pathname = (await headers()).get('x-pathname') ?? '';
-  const excludePageSeo = isBlogPostPath(pathname);
+  const excludePageSeo = shouldExcludeAdminHeadSeo(pathname);
 
   return (
     <html
